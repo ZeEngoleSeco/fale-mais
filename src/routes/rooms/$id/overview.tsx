@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Users, Clock, Mic, Star } from "lucide-react";
 
 export const Route = createFileRoute("/rooms/$id/overview")({
-  head: () => ({ meta: [{ title: "Visão geral — Fale+" }] }),
+  head: () => ({ meta: [{ title: "Visão geral — Fala que eu te escuto+" }] }),
   component: Overview,
 });
 

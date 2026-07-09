@@ -26,7 +26,7 @@ export function BrandLogo({ className, size = 40 }: { className?: string; size?:
 export function BrandWordmark({ className }: { className?: string }) {
   return (
     <span className={cn("text-2xl font-extrabold tracking-tight", className)}>
-      <span className="text-foreground">Fale</span>
+      <span className="text-foreground">Fala que eu te escuto</span>
       <span className="text-gradient-brand">+</span>
     </span>
   );

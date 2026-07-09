@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 
 export const Route = createFileRoute("/profile")({
-  head: () => ({ meta: [{ title: "Perfil — Fale+" }] }),
+  head: () => ({ meta: [{ title: "Perfil — Fala que eu te escuto+" }] }),
   component: ProfilePage,
 });
 

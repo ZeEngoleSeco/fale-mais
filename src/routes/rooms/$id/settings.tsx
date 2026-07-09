@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronRight, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/rooms/$id/settings")({
-  head: () => ({ meta: [{ title: "Configurações da sala — Fale+" }] }),
+  head: () => ({ meta: [{ title: "Configurações da sala — Fala que eu te escuto+" }] }),
   component: RoomSettings,
 });
 

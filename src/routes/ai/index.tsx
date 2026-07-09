@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Sparkles, MessageSquare, Lightbulb, Dumbbell, TrendingUp, History, Wind, Wand2 } from "lucide-react";
 
 export const Route = createFileRoute("/ai/")({
-  head: () => ({ meta: [{ title: "IA — Fale+" }] }),
+  head: () => ({ meta: [{ title: "IA — Fala que eu te escuto+" }] }),
   component: AIPage,
 });
 

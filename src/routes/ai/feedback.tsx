@@ -7,7 +7,7 @@ import { Star } from "lucide-react";
 import { useState } from "react";
 
 export const Route = createFileRoute("/ai/feedback")({
-  head: () => ({ meta: [{ title: "Feedback — Fale+" }] }),
+  head: () => ({ meta: [{ title: "Feedback — Fala que eu te escuto+" }] }),
   component: Feedback,
 });
 
