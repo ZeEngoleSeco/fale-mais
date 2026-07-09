@@ -18,6 +18,7 @@ import { Route as RoomsCreateRouteImport } from './routes/rooms/create'
 import { Route as AiSuggestionsRouteImport } from './routes/ai/suggestions'
 import { Route as AiInsightsRouteImport } from './routes/ai/insights'
 import { Route as AiHistoryRouteImport } from './routes/ai/history'
+import { Route as AiFeedbackRouteImport } from './routes/ai/feedback'
 import { Route as AiExercisesRouteImport } from './routes/ai/exercises'
 import { Route as AiChatRouteImport } from './routes/ai/chat'
 import { Route as RoomsIdIndexRouteImport } from './routes/rooms/$id/index'
@@ -71,6 +72,11 @@ const AiHistoryRoute = AiHistoryRouteImport.update({
   path: '/ai/history',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AiFeedbackRoute = AiFeedbackRouteImport.update({
+  id: '/ai/feedback',
+  path: '/ai/feedback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AiExercisesRoute = AiExercisesRouteImport.update({
   id: '/ai/exercises',
   path: '/ai/exercises',
@@ -113,6 +119,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/ai/chat': typeof AiChatRoute
   '/ai/exercises': typeof AiExercisesRoute
+  '/ai/feedback': typeof AiFeedbackRoute
   '/ai/history': typeof AiHistoryRoute
   '/ai/insights': typeof AiInsightsRoute
   '/ai/suggestions': typeof AiSuggestionsRoute
@@ -131,6 +138,7 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/ai/chat': typeof AiChatRoute
   '/ai/exercises': typeof AiExercisesRoute
+  '/ai/feedback': typeof AiFeedbackRoute
   '/ai/history': typeof AiHistoryRoute
   '/ai/insights': typeof AiInsightsRoute
   '/ai/suggestions': typeof AiSuggestionsRoute
@@ -150,6 +158,7 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/ai/chat': typeof AiChatRoute
   '/ai/exercises': typeof AiExercisesRoute
+  '/ai/feedback': typeof AiFeedbackRoute
   '/ai/history': typeof AiHistoryRoute
   '/ai/insights': typeof AiInsightsRoute
   '/ai/suggestions': typeof AiSuggestionsRoute
@@ -170,6 +179,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/ai/chat'
     | '/ai/exercises'
+    | '/ai/feedback'
     | '/ai/history'
     | '/ai/insights'
     | '/ai/suggestions'
@@ -188,6 +198,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/ai/chat'
     | '/ai/exercises'
+    | '/ai/feedback'
     | '/ai/history'
     | '/ai/insights'
     | '/ai/suggestions'
@@ -206,6 +217,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/ai/chat'
     | '/ai/exercises'
+    | '/ai/feedback'
     | '/ai/history'
     | '/ai/insights'
     | '/ai/suggestions'
@@ -225,6 +237,7 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRoute
   AiChatRoute: typeof AiChatRoute
   AiExercisesRoute: typeof AiExercisesRoute
+  AiFeedbackRoute: typeof AiFeedbackRoute
   AiHistoryRoute: typeof AiHistoryRoute
   AiInsightsRoute: typeof AiInsightsRoute
   AiSuggestionsRoute: typeof AiSuggestionsRoute
@@ -303,6 +316,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AiHistoryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ai/feedback': {
+      id: '/ai/feedback'
+      path: '/ai/feedback'
+      fullPath: '/ai/feedback'
+      preLoaderRoute: typeof AiFeedbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ai/exercises': {
       id: '/ai/exercises'
       path: '/ai/exercises'
@@ -361,6 +381,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRoute,
   AiChatRoute: AiChatRoute,
   AiExercisesRoute: AiExercisesRoute,
+  AiFeedbackRoute: AiFeedbackRoute,
   AiHistoryRoute: AiHistoryRoute,
   AiInsightsRoute: AiInsightsRoute,
   AiSuggestionsRoute: AiSuggestionsRoute,
