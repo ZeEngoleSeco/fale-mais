@@ -13,6 +13,7 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RoomsIndexRouteImport } from './routes/rooms/index'
+import { Route as RoomsCreateRouteImport } from './routes/rooms/create'
 
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
@@ -34,17 +35,24 @@ const RoomsIndexRoute = RoomsIndexRouteImport.update({
   path: '/rooms/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RoomsCreateRoute = RoomsCreateRouteImport.update({
+  id: '/rooms/create',
+  path: '/rooms/create',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/home': typeof HomeRoute
   '/profile': typeof ProfileRoute
+  '/rooms/create': typeof RoomsCreateRoute
   '/rooms/': typeof RoomsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/home': typeof HomeRoute
   '/profile': typeof ProfileRoute
+  '/rooms/create': typeof RoomsCreateRoute
   '/rooms': typeof RoomsIndexRoute
 }
 export interface FileRoutesById {
@@ -52,20 +60,22 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/home': typeof HomeRoute
   '/profile': typeof ProfileRoute
+  '/rooms/create': typeof RoomsCreateRoute
   '/rooms/': typeof RoomsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/home' | '/profile' | '/rooms/'
+  fullPaths: '/' | '/home' | '/profile' | '/rooms/create' | '/rooms/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/home' | '/profile' | '/rooms'
-  id: '__root__' | '/' | '/home' | '/profile' | '/rooms/'
+  to: '/' | '/home' | '/profile' | '/rooms/create' | '/rooms'
+  id: '__root__' | '/' | '/home' | '/profile' | '/rooms/create' | '/rooms/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   HomeRoute: typeof HomeRoute
   ProfileRoute: typeof ProfileRoute
+  RoomsCreateRoute: typeof RoomsCreateRoute
   RoomsIndexRoute: typeof RoomsIndexRoute
 }
 
@@ -99,6 +109,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RoomsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rooms/create': {
+      id: '/rooms/create'
+      path: '/rooms/create'
+      fullPath: '/rooms/create'
+      preLoaderRoute: typeof RoomsCreateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -106,6 +123,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   HomeRoute: HomeRoute,
   ProfileRoute: ProfileRoute,
+  RoomsCreateRoute: RoomsCreateRoute,
   RoomsIndexRoute: RoomsIndexRoute,
 }
 export const routeTree = rootRouteImport
