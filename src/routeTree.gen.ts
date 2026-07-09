@@ -16,6 +16,7 @@ import { Route as RoomsIndexRouteImport } from './routes/rooms/index'
 import { Route as EventsIndexRouteImport } from './routes/events/index'
 import { Route as AiIndexRouteImport } from './routes/ai/index'
 import { Route as RoomsCreateRouteImport } from './routes/rooms/create'
+import { Route as EventsCreateRouteImport } from './routes/events/create'
 import { Route as AiSuggestionsRouteImport } from './routes/ai/suggestions'
 import { Route as AiInsightsRouteImport } from './routes/ai/insights'
 import { Route as AiHistoryRouteImport } from './routes/ai/history'
@@ -61,6 +62,11 @@ const AiIndexRoute = AiIndexRouteImport.update({
 const RoomsCreateRoute = RoomsCreateRouteImport.update({
   id: '/rooms/create',
   path: '/rooms/create',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EventsCreateRoute = EventsCreateRouteImport.update({
+  id: '/events/create',
+  path: '/events/create',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AiSuggestionsRoute = AiSuggestionsRouteImport.update({
@@ -129,6 +135,7 @@ export interface FileRoutesByFullPath {
   '/ai/history': typeof AiHistoryRoute
   '/ai/insights': typeof AiInsightsRoute
   '/ai/suggestions': typeof AiSuggestionsRoute
+  '/events/create': typeof EventsCreateRoute
   '/rooms/create': typeof RoomsCreateRoute
   '/ai/': typeof AiIndexRoute
   '/events/': typeof EventsIndexRoute
@@ -149,6 +156,7 @@ export interface FileRoutesByTo {
   '/ai/history': typeof AiHistoryRoute
   '/ai/insights': typeof AiInsightsRoute
   '/ai/suggestions': typeof AiSuggestionsRoute
+  '/events/create': typeof EventsCreateRoute
   '/rooms/create': typeof RoomsCreateRoute
   '/ai': typeof AiIndexRoute
   '/events': typeof EventsIndexRoute
@@ -170,6 +178,7 @@ export interface FileRoutesById {
   '/ai/history': typeof AiHistoryRoute
   '/ai/insights': typeof AiInsightsRoute
   '/ai/suggestions': typeof AiSuggestionsRoute
+  '/events/create': typeof EventsCreateRoute
   '/rooms/create': typeof RoomsCreateRoute
   '/ai/': typeof AiIndexRoute
   '/events/': typeof EventsIndexRoute
@@ -192,6 +201,7 @@ export interface FileRouteTypes {
     | '/ai/history'
     | '/ai/insights'
     | '/ai/suggestions'
+    | '/events/create'
     | '/rooms/create'
     | '/ai/'
     | '/events/'
@@ -212,6 +222,7 @@ export interface FileRouteTypes {
     | '/ai/history'
     | '/ai/insights'
     | '/ai/suggestions'
+    | '/events/create'
     | '/rooms/create'
     | '/ai'
     | '/events'
@@ -232,6 +243,7 @@ export interface FileRouteTypes {
     | '/ai/history'
     | '/ai/insights'
     | '/ai/suggestions'
+    | '/events/create'
     | '/rooms/create'
     | '/ai/'
     | '/events/'
@@ -253,6 +265,7 @@ export interface RootRouteChildren {
   AiHistoryRoute: typeof AiHistoryRoute
   AiInsightsRoute: typeof AiInsightsRoute
   AiSuggestionsRoute: typeof AiSuggestionsRoute
+  EventsCreateRoute: typeof EventsCreateRoute
   RoomsCreateRoute: typeof RoomsCreateRoute
   AiIndexRoute: typeof AiIndexRoute
   EventsIndexRoute: typeof EventsIndexRoute
@@ -313,6 +326,13 @@ declare module '@tanstack/react-router' {
       path: '/rooms/create'
       fullPath: '/rooms/create'
       preLoaderRoute: typeof RoomsCreateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/events/create': {
+      id: '/events/create'
+      path: '/events/create'
+      fullPath: '/events/create'
+      preLoaderRoute: typeof EventsCreateRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ai/suggestions': {
@@ -405,6 +425,7 @@ const rootRouteChildren: RootRouteChildren = {
   AiHistoryRoute: AiHistoryRoute,
   AiInsightsRoute: AiInsightsRoute,
   AiSuggestionsRoute: AiSuggestionsRoute,
+  EventsCreateRoute: EventsCreateRoute,
   RoomsCreateRoute: RoomsCreateRoute,
   AiIndexRoute: AiIndexRoute,
   EventsIndexRoute: EventsIndexRoute,
