@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as RoomsIndexRouteImport } from './routes/rooms/index'
 import { Route as AiIndexRouteImport } from './routes/ai/index'
 import { Route as RoomsCreateRouteImport } from './routes/rooms/create'
+import { Route as AiChatRouteImport } from './routes/ai/chat'
 import { Route as RoomsIdIndexRouteImport } from './routes/rooms/$id/index'
 import { Route as RoomsIdSettingsRouteImport } from './routes/rooms/$id/settings'
 import { Route as RoomsIdParticipantsRouteImport } from './routes/rooms/$id/participants'
@@ -51,6 +52,11 @@ const RoomsCreateRoute = RoomsCreateRouteImport.update({
   path: '/rooms/create',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AiChatRoute = AiChatRouteImport.update({
+  id: '/ai/chat',
+  path: '/ai/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RoomsIdIndexRoute = RoomsIdIndexRouteImport.update({
   id: '/rooms/$id/',
   path: '/rooms/$id/',
@@ -81,6 +87,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/home': typeof HomeRoute
   '/profile': typeof ProfileRoute
+  '/ai/chat': typeof AiChatRoute
   '/rooms/create': typeof RoomsCreateRoute
   '/ai/': typeof AiIndexRoute
   '/rooms/': typeof RoomsIndexRoute
@@ -94,6 +101,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/home': typeof HomeRoute
   '/profile': typeof ProfileRoute
+  '/ai/chat': typeof AiChatRoute
   '/rooms/create': typeof RoomsCreateRoute
   '/ai': typeof AiIndexRoute
   '/rooms': typeof RoomsIndexRoute
@@ -108,6 +116,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/home': typeof HomeRoute
   '/profile': typeof ProfileRoute
+  '/ai/chat': typeof AiChatRoute
   '/rooms/create': typeof RoomsCreateRoute
   '/ai/': typeof AiIndexRoute
   '/rooms/': typeof RoomsIndexRoute
@@ -123,6 +132,7 @@ export interface FileRouteTypes {
     | '/'
     | '/home'
     | '/profile'
+    | '/ai/chat'
     | '/rooms/create'
     | '/ai/'
     | '/rooms/'
@@ -136,6 +146,7 @@ export interface FileRouteTypes {
     | '/'
     | '/home'
     | '/profile'
+    | '/ai/chat'
     | '/rooms/create'
     | '/ai'
     | '/rooms'
@@ -149,6 +160,7 @@ export interface FileRouteTypes {
     | '/'
     | '/home'
     | '/profile'
+    | '/ai/chat'
     | '/rooms/create'
     | '/ai/'
     | '/rooms/'
@@ -163,6 +175,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   HomeRoute: typeof HomeRoute
   ProfileRoute: typeof ProfileRoute
+  AiChatRoute: typeof AiChatRoute
   RoomsCreateRoute: typeof RoomsCreateRoute
   AiIndexRoute: typeof AiIndexRoute
   RoomsIndexRoute: typeof RoomsIndexRoute
@@ -217,6 +230,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RoomsCreateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ai/chat': {
+      id: '/ai/chat'
+      path: '/ai/chat'
+      fullPath: '/ai/chat'
+      preLoaderRoute: typeof AiChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/rooms/$id/': {
       id: '/rooms/$id/'
       path: '/rooms/$id'
@@ -259,6 +279,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   HomeRoute: HomeRoute,
   ProfileRoute: ProfileRoute,
+  AiChatRoute: AiChatRoute,
   RoomsCreateRoute: RoomsCreateRoute,
   AiIndexRoute: AiIndexRoute,
   RoomsIndexRoute: RoomsIndexRoute,
