@@ -17,6 +17,7 @@ import { Route as RoomsCreateRouteImport } from './routes/rooms/create'
 import { Route as RoomsIdIndexRouteImport } from './routes/rooms/$id/index'
 import { Route as RoomsIdSettingsRouteImport } from './routes/rooms/$id/settings'
 import { Route as RoomsIdParticipantsRouteImport } from './routes/rooms/$id/participants'
+import { Route as RoomsIdOverviewRouteImport } from './routes/rooms/$id/overview'
 import { Route as RoomsIdInviteRouteImport } from './routes/rooms/$id/invite'
 
 const ProfileRoute = ProfileRouteImport.update({
@@ -59,6 +60,11 @@ const RoomsIdParticipantsRoute = RoomsIdParticipantsRouteImport.update({
   path: '/rooms/$id/participants',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RoomsIdOverviewRoute = RoomsIdOverviewRouteImport.update({
+  id: '/rooms/$id/overview',
+  path: '/rooms/$id/overview',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RoomsIdInviteRoute = RoomsIdInviteRouteImport.update({
   id: '/rooms/$id/invite',
   path: '/rooms/$id/invite',
@@ -72,6 +78,7 @@ export interface FileRoutesByFullPath {
   '/rooms/create': typeof RoomsCreateRoute
   '/rooms/': typeof RoomsIndexRoute
   '/rooms/$id/invite': typeof RoomsIdInviteRoute
+  '/rooms/$id/overview': typeof RoomsIdOverviewRoute
   '/rooms/$id/participants': typeof RoomsIdParticipantsRoute
   '/rooms/$id/settings': typeof RoomsIdSettingsRoute
   '/rooms/$id/': typeof RoomsIdIndexRoute
@@ -83,6 +90,7 @@ export interface FileRoutesByTo {
   '/rooms/create': typeof RoomsCreateRoute
   '/rooms': typeof RoomsIndexRoute
   '/rooms/$id/invite': typeof RoomsIdInviteRoute
+  '/rooms/$id/overview': typeof RoomsIdOverviewRoute
   '/rooms/$id/participants': typeof RoomsIdParticipantsRoute
   '/rooms/$id/settings': typeof RoomsIdSettingsRoute
   '/rooms/$id': typeof RoomsIdIndexRoute
@@ -95,6 +103,7 @@ export interface FileRoutesById {
   '/rooms/create': typeof RoomsCreateRoute
   '/rooms/': typeof RoomsIndexRoute
   '/rooms/$id/invite': typeof RoomsIdInviteRoute
+  '/rooms/$id/overview': typeof RoomsIdOverviewRoute
   '/rooms/$id/participants': typeof RoomsIdParticipantsRoute
   '/rooms/$id/settings': typeof RoomsIdSettingsRoute
   '/rooms/$id/': typeof RoomsIdIndexRoute
@@ -108,6 +117,7 @@ export interface FileRouteTypes {
     | '/rooms/create'
     | '/rooms/'
     | '/rooms/$id/invite'
+    | '/rooms/$id/overview'
     | '/rooms/$id/participants'
     | '/rooms/$id/settings'
     | '/rooms/$id/'
@@ -119,6 +129,7 @@ export interface FileRouteTypes {
     | '/rooms/create'
     | '/rooms'
     | '/rooms/$id/invite'
+    | '/rooms/$id/overview'
     | '/rooms/$id/participants'
     | '/rooms/$id/settings'
     | '/rooms/$id'
@@ -130,6 +141,7 @@ export interface FileRouteTypes {
     | '/rooms/create'
     | '/rooms/'
     | '/rooms/$id/invite'
+    | '/rooms/$id/overview'
     | '/rooms/$id/participants'
     | '/rooms/$id/settings'
     | '/rooms/$id/'
@@ -142,6 +154,7 @@ export interface RootRouteChildren {
   RoomsCreateRoute: typeof RoomsCreateRoute
   RoomsIndexRoute: typeof RoomsIndexRoute
   RoomsIdInviteRoute: typeof RoomsIdInviteRoute
+  RoomsIdOverviewRoute: typeof RoomsIdOverviewRoute
   RoomsIdParticipantsRoute: typeof RoomsIdParticipantsRoute
   RoomsIdSettingsRoute: typeof RoomsIdSettingsRoute
   RoomsIdIndexRoute: typeof RoomsIdIndexRoute
@@ -205,6 +218,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RoomsIdParticipantsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rooms/$id/overview': {
+      id: '/rooms/$id/overview'
+      path: '/rooms/$id/overview'
+      fullPath: '/rooms/$id/overview'
+      preLoaderRoute: typeof RoomsIdOverviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/rooms/$id/invite': {
       id: '/rooms/$id/invite'
       path: '/rooms/$id/invite'
@@ -222,6 +242,7 @@ const rootRouteChildren: RootRouteChildren = {
   RoomsCreateRoute: RoomsCreateRoute,
   RoomsIndexRoute: RoomsIndexRoute,
   RoomsIdInviteRoute: RoomsIdInviteRoute,
+  RoomsIdOverviewRoute: RoomsIdOverviewRoute,
   RoomsIdParticipantsRoute: RoomsIdParticipantsRoute,
   RoomsIdSettingsRoute: RoomsIdSettingsRoute,
   RoomsIdIndexRoute: RoomsIdIndexRoute,
