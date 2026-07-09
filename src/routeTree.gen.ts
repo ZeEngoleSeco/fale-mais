@@ -17,6 +17,7 @@ import { Route as RoomsCreateRouteImport } from './routes/rooms/create'
 import { Route as RoomsIdIndexRouteImport } from './routes/rooms/$id/index'
 import { Route as RoomsIdSettingsRouteImport } from './routes/rooms/$id/settings'
 import { Route as RoomsIdParticipantsRouteImport } from './routes/rooms/$id/participants'
+import { Route as RoomsIdInviteRouteImport } from './routes/rooms/$id/invite'
 
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
@@ -58,6 +59,11 @@ const RoomsIdParticipantsRoute = RoomsIdParticipantsRouteImport.update({
   path: '/rooms/$id/participants',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RoomsIdInviteRoute = RoomsIdInviteRouteImport.update({
+  id: '/rooms/$id/invite',
+  path: '/rooms/$id/invite',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -65,6 +71,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/rooms/create': typeof RoomsCreateRoute
   '/rooms/': typeof RoomsIndexRoute
+  '/rooms/$id/invite': typeof RoomsIdInviteRoute
   '/rooms/$id/participants': typeof RoomsIdParticipantsRoute
   '/rooms/$id/settings': typeof RoomsIdSettingsRoute
   '/rooms/$id/': typeof RoomsIdIndexRoute
@@ -75,6 +82,7 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/rooms/create': typeof RoomsCreateRoute
   '/rooms': typeof RoomsIndexRoute
+  '/rooms/$id/invite': typeof RoomsIdInviteRoute
   '/rooms/$id/participants': typeof RoomsIdParticipantsRoute
   '/rooms/$id/settings': typeof RoomsIdSettingsRoute
   '/rooms/$id': typeof RoomsIdIndexRoute
@@ -86,6 +94,7 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/rooms/create': typeof RoomsCreateRoute
   '/rooms/': typeof RoomsIndexRoute
+  '/rooms/$id/invite': typeof RoomsIdInviteRoute
   '/rooms/$id/participants': typeof RoomsIdParticipantsRoute
   '/rooms/$id/settings': typeof RoomsIdSettingsRoute
   '/rooms/$id/': typeof RoomsIdIndexRoute
@@ -98,6 +107,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/rooms/create'
     | '/rooms/'
+    | '/rooms/$id/invite'
     | '/rooms/$id/participants'
     | '/rooms/$id/settings'
     | '/rooms/$id/'
@@ -108,6 +118,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/rooms/create'
     | '/rooms'
+    | '/rooms/$id/invite'
     | '/rooms/$id/participants'
     | '/rooms/$id/settings'
     | '/rooms/$id'
@@ -118,6 +129,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/rooms/create'
     | '/rooms/'
+    | '/rooms/$id/invite'
     | '/rooms/$id/participants'
     | '/rooms/$id/settings'
     | '/rooms/$id/'
@@ -129,6 +141,7 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRoute
   RoomsCreateRoute: typeof RoomsCreateRoute
   RoomsIndexRoute: typeof RoomsIndexRoute
+  RoomsIdInviteRoute: typeof RoomsIdInviteRoute
   RoomsIdParticipantsRoute: typeof RoomsIdParticipantsRoute
   RoomsIdSettingsRoute: typeof RoomsIdSettingsRoute
   RoomsIdIndexRoute: typeof RoomsIdIndexRoute
@@ -192,6 +205,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RoomsIdParticipantsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rooms/$id/invite': {
+      id: '/rooms/$id/invite'
+      path: '/rooms/$id/invite'
+      fullPath: '/rooms/$id/invite'
+      preLoaderRoute: typeof RoomsIdInviteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -201,6 +221,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRoute,
   RoomsCreateRoute: RoomsCreateRoute,
   RoomsIndexRoute: RoomsIndexRoute,
+  RoomsIdInviteRoute: RoomsIdInviteRoute,
   RoomsIdParticipantsRoute: RoomsIdParticipantsRoute,
   RoomsIdSettingsRoute: RoomsIdSettingsRoute,
   RoomsIdIndexRoute: RoomsIdIndexRoute,
