@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Lightbulb, ChevronRight } from "lucide-react";
 
 export const Route = createFileRoute("/ai/suggestions")({
-  head: () => ({ meta: [{ title: "Sugestões da IA — Fala que eu te escuto+" }] }),
+  head: () => ({ meta: [{ title: "Sugestões da IA — Fala que eu te escuto" }] }),
   component: Suggestions,
 });
 

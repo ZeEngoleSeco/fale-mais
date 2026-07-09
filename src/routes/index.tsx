@@ -9,8 +9,8 @@ import { useState } from "react";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Entrar — Fala que eu te escuto+" },
-      { name: "description", content: "Entre no Fala que eu te escuto+ e comece a evoluir sua oratória hoje." },
+      { title: "Entrar — Fala que eu te escuto" },
+      { name: "description", content: "Entre no Fala que eu te escuto e comece a evoluir sua oratória hoje." },
     ],
   }),
   component: LoginPage,

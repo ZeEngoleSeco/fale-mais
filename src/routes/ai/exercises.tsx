@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Play } from "lucide-react";
 
 export const Route = createFileRoute("/ai/exercises")({
-  head: () => ({ meta: [{ title: "Exercícios — Fala que eu te escuto+" }] }),
+  head: () => ({ meta: [{ title: "Exercícios — Fala que eu te escuto" }] }),
   component: Exercises,
 });
 

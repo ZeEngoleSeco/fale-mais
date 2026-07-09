@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 export const Route = createFileRoute("/home")({
   head: () => ({
     meta: [
-      { title: "Início — Fala que eu te escuto+" },
+      { title: "Início — Fala que eu te escuto" },
       { name: "description", content: "Seu painel diário para praticar oratória com IA, salas e eventos." },
     ],
   }),
@@ -31,7 +31,7 @@ function HomePage() {
             <BrandLogo size={40} />
             <div>
               <p className="text-xs text-muted-foreground">Olá,</p>
-              <p className="text-base font-semibold">Bem-vindo ao Fala que eu te escuto+</p>
+              <p className="text-base font-semibold">Bem-vindo ao Fala que eu te escuto</p>
             </div>
           </div>
           <button className="flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-card">

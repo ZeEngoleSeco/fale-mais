@@ -9,7 +9,7 @@ import { ImagePlus } from "lucide-react";
 import { useState } from "react";
 
 export const Route = createFileRoute("/events/create")({
-  head: () => ({ meta: [{ title: "Criar evento — Fala que eu te escuto+" }] }),
+  head: () => ({ meta: [{ title: "Criar evento — Fala que eu te escuto" }] }),
   component: CreateEvent,
 });
 

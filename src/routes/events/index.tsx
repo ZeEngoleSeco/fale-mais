@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Search, MapPin, Calendar, Plus, Users } from "lucide-react";
 
 export const Route = createFileRoute("/events/")({
-  head: () => ({ meta: [{ title: "Eventos — Fala que eu te escuto+" }] }),
+  head: () => ({ meta: [{ title: "Eventos — Fala que eu te escuto" }] }),
   component: EventsPage,
 });
 
@@ -52,7 +52,7 @@ function EventsPage() {
         <Card className="mt-4 overflow-hidden rounded-3xl border-0 p-0 shadow-lift">
           <div className="bg-gradient-brand p-5 text-white">
             <Badge className="rounded-full bg-white/20 text-white">Em destaque</Badge>
-            <h3 className="mt-2 text-lg font-bold">Semana da Oratória Fala que eu te escuto+</h3>
+            <h3 className="mt-2 text-lg font-bold">Semana da Oratória Fala que eu te escuto</h3>
             <p className="mt-1 text-sm opacity-90">7 dias de workshops, treinos e palestras.</p>
           </div>
         </Card>

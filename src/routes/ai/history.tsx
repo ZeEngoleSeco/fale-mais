@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { ChevronRight } from "lucide-react";
 
 export const Route = createFileRoute("/ai/history")({
-  head: () => ({ meta: [{ title: "Histórico — Fala que eu te escuto+" }] }),
+  head: () => ({ meta: [{ title: "Histórico — Fala que eu te escuto" }] }),
   component: History,
 });
 

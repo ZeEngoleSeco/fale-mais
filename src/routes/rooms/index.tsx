@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/rooms/")({
-  head: () => ({ meta: [{ title: "Salas — Fala que eu te escuto+" }] }),
+  head: () => ({ meta: [{ title: "Salas — Fala que eu te escuto" }] }),
   component: RoomsPage,
 });
 

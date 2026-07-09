@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Mic, Video, MonitorUp, Phone, Timer, Send } from "lucide-react";
 
 export const Route = createFileRoute("/events/online/$id")({
-  head: () => ({ meta: [{ title: "Evento online — Fala que eu te escuto+" }] }),
+  head: () => ({ meta: [{ title: "Evento online — Fala que eu te escuto" }] }),
   component: OnlineEvent,
 });
 
