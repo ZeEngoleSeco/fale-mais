@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Copy, Share2, QrCode } from "lucide-react";
 
 export const Route = createFileRoute("/rooms/$id/invite")({
-  head: () => ({ meta: [{ title: "Convites — Fale+" }] }),
+  head: () => ({ meta: [{ title: "Convites — Fala que eu te escuto" }] }),
   component: Invite,
 });
 

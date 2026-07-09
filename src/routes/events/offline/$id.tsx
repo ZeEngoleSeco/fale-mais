@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { MapPin, Users, Calendar, CheckCircle2 } from "lucide-react";
 
 export const Route = createFileRoute("/events/offline/$id")({
-  head: () => ({ meta: [{ title: "Evento presencial — Fale+" }] }),
+  head: () => ({ meta: [{ title: "Evento presencial — Fala que eu te escuto" }] }),
   component: OfflineEvent,
 });
 
@@ -42,7 +42,7 @@ function OfflineEvent() {
           <div className="mt-2 flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-brand text-sm font-bold text-white">FM</div>
             <div>
-              <p className="text-sm font-semibold">Comunidade Fale+ SP</p>
+              <p className="text-sm font-semibold">Comunidade Fala que eu te escuto SP</p>
               <p className="text-xs text-muted-foreground">18 eventos realizados</p>
             </div>
           </div>

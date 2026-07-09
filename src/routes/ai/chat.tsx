@@ -5,7 +5,7 @@ import { Send, Mic, Sparkles } from "lucide-react";
 import { useState } from "react";
 
 export const Route = createFileRoute("/ai/chat")({
-  head: () => ({ meta: [{ title: "Chat com a IA — Fale+" }] }),
+  head: () => ({ meta: [{ title: "Chat com a IA — Fala que eu te escuto" }] }),
   component: ChatPage,
 });
 
@@ -13,7 +13,7 @@ type Msg = { from: "ai" | "me"; text: string };
 
 function ChatPage() {
   const [msgs, setMsgs] = useState<Msg[]>([
-    { from: "ai", text: "Olá! Sou seu mentor Fale+. Vamos treinar algo hoje?" },
+    { from: "ai", text: "Olá! Sou seu mentor Fala que eu te escuto. Vamos treinar algo hoje?" },
     { from: "me", text: "Quero praticar um pitch de 60 segundos." },
     { from: "ai", text: "Ótimo! Me conte sobre o produto e o público-alvo e criaremos juntos." },
   ]);
@@ -30,7 +30,7 @@ function ChatPage() {
 
   return (
     <AppShell hideNav>
-      <PageHeader title="Mentor Fale+" subtitle="Assistente de oratória" back="/ai" />
+      <PageHeader title="Mentor Fala que eu te escuto" subtitle="Assistente de oratória" back="/ai" />
       <div className="flex flex-col gap-3 px-5 pb-40">
         {msgs.map((m, i) => (
           <div key={i} className={`flex ${m.from === "me" ? "justify-end" : "items-start gap-2"}`}>

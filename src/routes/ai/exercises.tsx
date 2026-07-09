@@ -5,12 +5,12 @@ import { Badge } from "@/components/ui/badge";
 import { Play } from "lucide-react";
 
 export const Route = createFileRoute("/ai/exercises")({
-  head: () => ({ meta: [{ title: "Exercícios — Fale+" }] }),
+  head: () => ({ meta: [{ title: "Exercícios — Fala que eu te escuto" }] }),
   component: Exercises,
 });
 
 const list = [
-  { name: "Improviso", desc: "Fale por 60s sobre um tema surpresa", time: "1 min", lvl: "Fácil" },
+  { name: "Improviso", desc: "Fala que eu te escuto por 60s sobre um tema surpresa", time: "1 min", lvl: "Fácil" },
   { name: "Pitch", desc: "Estruture um pitch para investidores", time: "3 min", lvl: "Médio" },
   { name: "Apresentação", desc: "Simule uma apresentação completa", time: "10 min", lvl: "Difícil" },
   { name: "Respiração", desc: "Técnica 4-7-8 para acalmar", time: "5 min", lvl: "Fácil" },

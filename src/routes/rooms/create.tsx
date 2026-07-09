@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { useState } from "react";
 
 export const Route = createFileRoute("/rooms/create")({
-  head: () => ({ meta: [{ title: "Criar sala — Fale+" }] }),
+  head: () => ({ meta: [{ title: "Criar sala — Fala que eu te escuto" }] }),
   component: CreateRoomPage,
 });
 
