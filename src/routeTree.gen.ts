@@ -29,6 +29,7 @@ import { Route as RoomsIdParticipantsRouteImport } from './routes/rooms/$id/part
 import { Route as RoomsIdOverviewRouteImport } from './routes/rooms/$id/overview'
 import { Route as RoomsIdInviteRouteImport } from './routes/rooms/$id/invite'
 import { Route as EventsOnlineIdRouteImport } from './routes/events/online/$id'
+import { Route as EventsOfflineIdRouteImport } from './routes/events/offline/$id'
 
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
@@ -130,6 +131,11 @@ const EventsOnlineIdRoute = EventsOnlineIdRouteImport.update({
   path: '/events/online/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EventsOfflineIdRoute = EventsOfflineIdRouteImport.update({
+  id: '/events/offline/$id',
+  path: '/events/offline/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -146,6 +152,7 @@ export interface FileRoutesByFullPath {
   '/ai/': typeof AiIndexRoute
   '/events/': typeof EventsIndexRoute
   '/rooms/': typeof RoomsIndexRoute
+  '/events/offline/$id': typeof EventsOfflineIdRoute
   '/events/online/$id': typeof EventsOnlineIdRoute
   '/rooms/$id/invite': typeof RoomsIdInviteRoute
   '/rooms/$id/overview': typeof RoomsIdOverviewRoute
@@ -168,6 +175,7 @@ export interface FileRoutesByTo {
   '/ai': typeof AiIndexRoute
   '/events': typeof EventsIndexRoute
   '/rooms': typeof RoomsIndexRoute
+  '/events/offline/$id': typeof EventsOfflineIdRoute
   '/events/online/$id': typeof EventsOnlineIdRoute
   '/rooms/$id/invite': typeof RoomsIdInviteRoute
   '/rooms/$id/overview': typeof RoomsIdOverviewRoute
@@ -191,6 +199,7 @@ export interface FileRoutesById {
   '/ai/': typeof AiIndexRoute
   '/events/': typeof EventsIndexRoute
   '/rooms/': typeof RoomsIndexRoute
+  '/events/offline/$id': typeof EventsOfflineIdRoute
   '/events/online/$id': typeof EventsOnlineIdRoute
   '/rooms/$id/invite': typeof RoomsIdInviteRoute
   '/rooms/$id/overview': typeof RoomsIdOverviewRoute
@@ -215,6 +224,7 @@ export interface FileRouteTypes {
     | '/ai/'
     | '/events/'
     | '/rooms/'
+    | '/events/offline/$id'
     | '/events/online/$id'
     | '/rooms/$id/invite'
     | '/rooms/$id/overview'
@@ -237,6 +247,7 @@ export interface FileRouteTypes {
     | '/ai'
     | '/events'
     | '/rooms'
+    | '/events/offline/$id'
     | '/events/online/$id'
     | '/rooms/$id/invite'
     | '/rooms/$id/overview'
@@ -259,6 +270,7 @@ export interface FileRouteTypes {
     | '/ai/'
     | '/events/'
     | '/rooms/'
+    | '/events/offline/$id'
     | '/events/online/$id'
     | '/rooms/$id/invite'
     | '/rooms/$id/overview'
@@ -282,6 +294,7 @@ export interface RootRouteChildren {
   AiIndexRoute: typeof AiIndexRoute
   EventsIndexRoute: typeof EventsIndexRoute
   RoomsIndexRoute: typeof RoomsIndexRoute
+  EventsOfflineIdRoute: typeof EventsOfflineIdRoute
   EventsOnlineIdRoute: typeof EventsOnlineIdRoute
   RoomsIdInviteRoute: typeof RoomsIdInviteRoute
   RoomsIdOverviewRoute: typeof RoomsIdOverviewRoute
@@ -432,6 +445,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsOnlineIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/events/offline/$id': {
+      id: '/events/offline/$id'
+      path: '/events/offline/$id'
+      fullPath: '/events/offline/$id'
+      preLoaderRoute: typeof EventsOfflineIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -450,6 +470,7 @@ const rootRouteChildren: RootRouteChildren = {
   AiIndexRoute: AiIndexRoute,
   EventsIndexRoute: EventsIndexRoute,
   RoomsIndexRoute: RoomsIndexRoute,
+  EventsOfflineIdRoute: EventsOfflineIdRoute,
   EventsOnlineIdRoute: EventsOnlineIdRoute,
   RoomsIdInviteRoute: RoomsIdInviteRoute,
   RoomsIdOverviewRoute: RoomsIdOverviewRoute,
