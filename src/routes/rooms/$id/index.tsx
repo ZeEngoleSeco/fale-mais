@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 
 export const Route = createFileRoute("/rooms/$id/")({
-  head: () => ({ meta: [{ title: "Sala — Fala que eu te escuto" }] }),
+  head: () => ({ meta: [{ title: "Sala — Fale+" }] }),
   component: RoomPage,
 });
 

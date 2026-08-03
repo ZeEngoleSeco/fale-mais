@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 
 export const Route = createFileRoute("/ai/insights")({
-  head: () => ({ meta: [{ title: "Insights — Fala que eu te escuto" }] }),
+  head: () => ({ meta: [{ title: "Insights — Fale+" }] }),
   component: Insights,
 });
 
