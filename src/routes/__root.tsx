@@ -19,7 +19,7 @@ function NotFoundComponent() {
         <h1 className="text-7xl font-bold text-gradient-brand">404</h1>
         <h2 className="mt-4 text-xl font-semibold text-foreground">Página não encontrada</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Essa tela ainda não existe no Fala que eu te escuto.
+          Essa tela ainda não existe no Fale+.
         </p>
         <div className="mt-6">
           <Link
@@ -74,10 +74,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { title: "Fala que eu te escuto — Vença o medo de falar em público" },
-      { name: "description", content: "Fala que eu te escuto é um app que combina IA, prática em grupo e eventos para você desenvolver oratória com confiança." },
-      { name: "author", content: "Fala que eu te escuto" },
-      { property: "og:title", content: "Fala que eu te escuto — Vença o medo de falar em público" },
+      { title: "Fale+ — Vença o medo de falar em público" },
+      { name: "description", content: "Fale+ é um app que combina IA, prática em grupo e eventos para você desenvolver oratória com confiança." },
+      { name: "author", content: "Fale+" },
+      { property: "og:title", content: "Fale+ — Vença o medo de falar em público" },
       { property: "og:description", content: "IA, salas de prática e eventos para desenvolver sua oratória." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

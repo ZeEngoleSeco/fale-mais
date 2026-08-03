@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { MoreVertical } from "lucide-react";
 
 export const Route = createFileRoute("/rooms/$id/participants")({
-  head: () => ({ meta: [{ title: "Participantes — Fala que eu te escuto" }] }),
+  head: () => ({ meta: [{ title: "Participantes — Fale+" }] }),
   component: Participants,
 });
 
