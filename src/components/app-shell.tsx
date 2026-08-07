@@ -67,15 +67,14 @@ export function AppShell({
         {!hideNav && (
           <nav
             aria-label="Navegação principal"
-            className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-md px-4 pb-[max(env(safe-area-inset-bottom),0.75rem)]"
+            className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-md px-4 pb-[max(env(safe-area-inset-bottom),0.75rem)] lg:hidden"
           >
             <div className="rounded-3xl border border-border/60 bg-card/90 px-2 py-2 shadow-lift backdrop-blur-xl">
               <ul className="flex items-center justify-between">
                 {tabs.map((t) => {
-                  const active =
-                    pathname === t.to ||
-                    (t.to !== "/home" && pathname.startsWith(t.to));
+                  const active = isActive(t.to);
                   const Icon = t.icon;
+
                   return (
                     <li key={t.to} className="flex-1">
                       <Link
