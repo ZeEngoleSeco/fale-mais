@@ -14,7 +14,7 @@ function Overview() {
     <AppShell>
       <PageHeader title="Visão geral" subtitle={`Sala ${id}`} back="/rooms/$id" />
       <div className="px-5 space-y-4">
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <Metric icon={Users} label="Participantes" value="12" />
           <Metric icon={Clock} label="Tempo médio" value="4m 32s" />
           <Metric icon={Mic} label="Apresentações" value="47" />
