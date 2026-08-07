@@ -2,6 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, Users, Sparkles, Calendar, User } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { BrandLogo, BrandWordmark } from "@/components/brand";
 
 const tabs = [
   { to: "/home", label: "Início", icon: Home },
