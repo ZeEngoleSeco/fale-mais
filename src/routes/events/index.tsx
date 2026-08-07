@@ -58,7 +58,7 @@ function EventsPage() {
         </Card>
 
         <h3 className="mt-6 mb-2 text-sm font-semibold text-muted-foreground">Próximos eventos</h3>
-        <div className="space-y-3">
+        <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0 xl:grid-cols-3">
           {events.map((e) => (
             <Link
               key={e.id}

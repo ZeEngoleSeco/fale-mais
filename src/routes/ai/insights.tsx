@@ -33,7 +33,7 @@ function Insights() {
           </div>
         </Card>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <Card className="rounded-3xl p-4">
             <p className="text-xs font-semibold text-emerald-600">Pontos fortes</p>
             <ul className="mt-2 space-y-1 text-sm">

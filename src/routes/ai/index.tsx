@@ -41,7 +41,7 @@ function AIPage() {
           </Link>
         </Card>
 
-        <div className="mt-5 grid grid-cols-2 gap-3">
+        <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
           {actions.map((a) => (
             <Link
               key={a.label}

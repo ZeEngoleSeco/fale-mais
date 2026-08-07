@@ -60,7 +60,7 @@ function HomePage() {
 
       <section className="px-5">
         <h3 className="mb-3 text-sm font-semibold text-muted-foreground">Atalhos</h3>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-5">
           {shortcuts.map((s) => (
             <Link
               key={s.to}
