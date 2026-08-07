@@ -61,7 +61,10 @@ export function AppShell({
         </aside>
       )}
       <div className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-background lg:mx-0 lg:max-w-none lg:flex-1">
-        <main className={cn("flex-1 pb-28 lg:pb-10", className)}>{children}</main>
+        <main className={cn("mx-auto w-full flex-1 pb-28 lg:max-w-6xl lg:px-6 lg:pb-10", className)}>
+          {children}
+        </main>
+
 
 
         {!hideNav && (
