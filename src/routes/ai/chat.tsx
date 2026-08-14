@@ -54,7 +54,7 @@ function ChatPage() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && send()}
-            placeholder="Digite sua mensagem..."
+            placeholder="Digite seu comentario..."
             className="h-10 flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0"
           />
           <button className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary">
