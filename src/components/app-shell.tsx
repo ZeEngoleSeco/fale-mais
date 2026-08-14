@@ -3,6 +3,7 @@ import { Home, Users, Sparkles, Calendar, User } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { BrandLogo, BrandWordmark } from "@/components/brand";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const tabs = [
   { to: "/home", label: "Início", icon: Home },
@@ -34,7 +35,7 @@ export function AppShell({
             <BrandLogo size={36} />
             <BrandWordmark />
           </Link>
-          <nav aria-label="Navegação principal">
+          <nav aria-label="Navegação principal" className="flex-1">
             <ul className="space-y-1">
               {tabs.map((t) => {
                 const active = isActive(t.to);
@@ -58,14 +59,16 @@ export function AppShell({
               })}
             </ul>
           </nav>
+          <div className="mt-auto flex items-center justify-between rounded-2xl border border-border/60 bg-card/80 p-3">
+            <span className="text-xs font-semibold text-muted-foreground">Alternar tema</span>
+            <ThemeToggle />
+          </div>
         </aside>
       )}
       <div className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-background lg:mx-0 lg:max-w-none lg:flex-1">
         <main className={cn("mx-auto w-full flex-1 pb-28 lg:max-w-6xl lg:px-6 lg:pb-10", className)}>
           {children}
         </main>
-
-
 
         {!hideNav && (
           <nav
@@ -118,11 +121,13 @@ export function PageHeader({
   subtitle,
   action,
   back,
+  showThemeToggle = true,
 }: {
   title: string;
   subtitle?: string;
   action?: ReactNode;
   back?: string;
+  showThemeToggle?: boolean;
 }) {
   return (
     <header className="sticky top-0 z-30 bg-background/85 px-5 pt-6 pb-4 backdrop-blur-xl">
@@ -143,7 +148,9 @@ export function PageHeader({
           )}
         </div>
         {action}
+        {showThemeToggle && <ThemeToggle className="lg:hidden" />}
       </div>
     </header>
   );
 }
+
