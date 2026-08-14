@@ -30,7 +30,7 @@ function ChatPage() {
 
   return (
     <AppShell hideNav>
-      <PageHeader title="Mentor Fale+" subtitle="Assistente de oratória" back="/ai" />
+      <PageHeader title="Mentor Thorel" subtitle="Seu assistente de oratória" back="/ai" />
       <div className="flex flex-col gap-3 px-5 pb-40">
         {msgs.map((m, i) => (
           <div key={i} className={`flex ${m.from === "me" ? "justify-end" : "items-start gap-2"}`}>
