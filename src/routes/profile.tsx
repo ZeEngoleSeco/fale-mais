@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Settings, Edit3, Mic, Users, Trophy, ChevronRight } from "lucide-react";
+import { Settings, Edit3, Mic, Users, Trophy, ChevronRight, Palette } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { ThemeSelector } from "@/components/theme-toggle";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({ meta: [{ title: "Perfil — Fale+" }] }),
@@ -52,6 +53,19 @@ function ProfilePage() {
           </button>
         </Card>
 
+        <Card className="mt-6 rounded-3xl border-border p-5">
+          <div className="flex items-center gap-2 text-sm font-semibold">
+            <Palette className="h-4 w-4 text-primary" />
+            <span>Aparência e Tema</span>
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Escolha como você prefere visualizar a plataforma Fale+.
+          </p>
+          <div className="mt-4">
+            <ThemeSelector />
+          </div>
+        </Card>
+
         <div className="mt-6 space-y-2">
           <ProfileRow to="/ai/insights" label="Meus insights" desc="Pontos fortes e evolução" />
           <ProfileRow to="/ai/history" label="Histórico" desc="Todas as sessões" />
@@ -87,3 +101,4 @@ function ProfileRow({ to, label, desc }: { to: string; label: string; desc: stri
     </Link>
   );
 }
+
