@@ -13,7 +13,7 @@ type Msg = { from: "ai" | "me"; text: string };
 
 function ChatPage() {
   const [msgs, setMsgs] = useState<Msg[]>([
-    { from: "ai", text: "Olá! Sou seu mentor Fale+. Vamos treinar algo hoje?" },
+    { from: "ai", text: "Ola, eu sou a IA do Fale+, como você está se sentindo hoje?" },
     { from: "me", text: "Quero praticar um pitch de 60 segundos." },
     { from: "ai", text: "Ótimo! Me conte sobre o produto e o público-alvo e criaremos juntos." },
   ]);
