@@ -4,7 +4,8 @@ import { AppShell } from "@/components/app-shell";
 import { BrandLogo } from "@/components/brand";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CURRENT_USER, MOCK_ROOMS, MOCK_EVENTS } from "@/data/mock-data";
+import { MOCK_ROOMS, MOCK_EVENTS } from "@/data/mock-data";
+import { useCurrentUser } from "@/lib/user-store";
 
 export const Route = createFileRoute("/home")({
   head: () => ({
@@ -25,6 +26,7 @@ const shortcuts = [
 ] as const;
 
 function HomePage() {
+  const { user } = useCurrentUser();
   const activeRooms = MOCK_ROOMS.filter((r) => r.isLive).slice(0, 2);
   const featuredEvent = MOCK_EVENTS[0];
 
@@ -35,11 +37,11 @@ function HomePage() {
           <div className="flex items-center gap-3">
             <BrandLogo size={40} />
             <div>
-              <p className="text-xs text-muted-foreground">Olá, {CURRENT_USER.name} 👋</p>
+              <p className="text-xs text-muted-foreground">Olá, {user.name} 👋</p>
               <div className="flex items-center gap-1.5">
                 <p className="text-base font-semibold">Bem-vindo ao Fale+</p>
                 <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
-                  Nv. {CURRENT_USER.level}
+                  Nv. {user.level}
                 </span>
               </div>
             </div>
@@ -48,8 +50,8 @@ function HomePage() {
             to="/profile"
             className="flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-card shadow-sm hover:bg-secondary"
           >
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-brand text-xs font-bold text-white">
-              {CURRENT_USER.initials}
+            <div className={`flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br ${user.avatarColor} text-xs font-bold text-white`}>
+              {user.initials}
             </div>
           </Link>
         </div>
@@ -57,10 +59,10 @@ function HomePage() {
         <Card className="mt-5 overflow-hidden rounded-3xl border-0 bg-gradient-brand p-5 text-white shadow-lift">
           <div className="flex items-center justify-between text-xs font-medium opacity-90">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1">
-              <Flame className="h-3.5 w-3.5 text-amber-300 fill-amber-300" /> Sequência de {CURRENT_USER.streakDays} dias
+              <Flame className="h-3.5 w-3.5 text-amber-300 fill-amber-300" /> Sequência de {user.streakDays} dias
             </span>
             <span className="rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-semibold">
-              {CURRENT_USER.xp} / {CURRENT_USER.xpNextLevel} XP
+              {user.xp} / {user.xpNextLevel} XP
             </span>
           </div>
           <h2 className="mt-3 text-xl font-bold leading-tight">
@@ -90,15 +92,15 @@ function HomePage() {
       <section className="px-5">
         <div className="grid grid-cols-3 gap-2 rounded-2xl border border-border bg-card/60 p-3 text-center">
           <div>
-            <p className="text-base font-extrabold text-foreground">{CURRENT_USER.stats.presentations}</p>
+            <p className="text-base font-extrabold text-foreground">{user.stats.presentations}</p>
             <p className="text-[10px] text-muted-foreground">Apresentações</p>
           </div>
           <div className="border-x border-border/60">
-            <p className="text-base font-extrabold text-primary">{CURRENT_USER.stats.averageScore}</p>
+            <p className="text-base font-extrabold text-primary">{user.stats.averageScore}</p>
             <p className="text-[10px] text-muted-foreground">Nota Média</p>
           </div>
           <div>
-            <p className="text-base font-extrabold text-foreground">{CURRENT_USER.stats.achievementsCount}</p>
+            <p className="text-base font-extrabold text-foreground">{user.stats.achievementsCount}</p>
             <p className="text-[10px] text-muted-foreground">Conquistas</p>
           </div>
         </div>

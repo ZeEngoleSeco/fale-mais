@@ -1,16 +1,16 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Mail, Lock, User as UserIcon, ArrowRight, Sparkles, CheckCircle2 } from "lucide-react";
+import { Mail, Lock, User as UserIcon, ArrowRight, Sparkles, CheckCircle2, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BrandLogo, BrandWordmark } from "@/components/brand";
 import { useState } from "react";
-import { MOCK_USERS, type UserProfile } from "@/data/mock-data";
+import { useCurrentUser } from "@/lib/user-store";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Entrar — Fale+" },
+      { title: "Entrar / Cadastro — Fale+" },
       { name: "description", content: "Entre no Fale+ e comece a evoluir sua oratória hoje." },
     ],
   }),
@@ -19,21 +19,24 @@ export const Route = createFileRoute("/")({
 
 function LoginPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const { registerUser, loginUser } = useCurrentUser();
+  const [mode, setMode] = useState<"signin" | "signup">("signup");
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("ana.lima@exemplo.com");
-  const [password, setPassword] = useState("••••••••");
-  const [selectedUser, setSelectedUser] = useState<UserProfile>(MOCK_USERS[0]);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState("");
 
-  const handleSelectDemo = (user: UserProfile) => {
-    setSelectedUser(user);
-    setEmail(user.email);
-    setName(user.name);
-    setPassword("fale-mais-2026");
-  };
-
-  const handleQuickLogin = (user: UserProfile) => {
-    handleSelectDemo(user);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (mode === "signup") {
+      const targetName = name.trim() || "Novo Orador";
+      const targetEmail = email.trim() || "usuario@fale-mais.com";
+      const targetRole = role.trim() || "Orador em Evolução";
+      registerUser(targetName, targetEmail, targetRole);
+    } else {
+      const targetEmail = email.trim() || "usuario@fale-mais.com";
+      loginUser(targetEmail, password);
+    }
     navigate({ to: "/home" });
   };
 
@@ -46,101 +49,94 @@ function LoginPage() {
         </div>
 
         <div className="mt-8">
-          <h1 className="text-3xl font-extrabold tracking-tight">
-            {mode === "signin" ? "Bem-vindo de volta" : "Crie sua conta"}
+          <div className="inline-flex rounded-full bg-secondary p-1 text-xs font-semibold">
+            <button
+              type="button"
+              onClick={() => setMode("signup")}
+              className={`rounded-full px-4 py-1.5 transition ${
+                mode === "signup"
+                  ? "bg-gradient-brand text-white shadow-soft font-bold"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Criar Conta
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("signin")}
+              className={`rounded-full px-4 py-1.5 transition ${
+                mode === "signin"
+                  ? "bg-gradient-brand text-white shadow-soft font-bold"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Já tenho conta
+            </button>
+          </div>
+
+          <h1 className="mt-5 text-3xl font-extrabold tracking-tight">
+            {mode === "signin" ? "Bem-vindo de volta" : "Crie seu perfil"}
           </h1>
-          <p className="mt-2 text-[15px] text-muted-foreground">
+          <p className="mt-2 text-[15px] text-muted-foreground leading-relaxed">
             {mode === "signin"
-              ? "Continue sua jornada para vencer o medo de falar em público."
-              : "Junte-se a milhares de pessoas evoluindo sua oratória."}
+              ? "Acesse com seu e-mail para continuar seus treinos de fala."
+              : "Cadastre-se para destravar sua oratória com treinos práticos e IA."}
           </p>
         </div>
 
-        {/* Demo Fast Login Selector */}
-        <div className="mt-6 rounded-3xl border border-border bg-card/80 p-4 shadow-sm">
-          <div className="flex items-center gap-2 text-xs font-semibold text-primary">
-            <Sparkles className="h-3.5 w-3.5" />
-            <span>Contas de Demonstração (1 Clique)</span>
-          </div>
-          <div className="mt-3 grid grid-cols-1 gap-2">
-            {MOCK_USERS.map((user) => {
-              const isSelected = selectedUser.id === user.id;
-              return (
-                <button
-                  key={user.id}
-                  type="button"
-                  onClick={() => handleQuickLogin(user)}
-                  className={`flex items-center gap-3 rounded-2xl p-2.5 text-left transition-all border ${
-                    isSelected
-                      ? "border-primary/50 bg-primary/5 shadow-soft"
-                      : "border-border/60 bg-secondary/40 hover:bg-secondary"
-                  }`}
-                >
-                  <div
-                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${user.avatarColor} text-xs font-bold text-white shadow-soft`}
-                  >
-                    {user.initials}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5">
-                      <p className="truncate text-xs font-bold text-foreground">{user.name}</p>
-                      <span className="rounded-full bg-primary/10 px-1.5 py-0.2 text-[9px] font-semibold text-primary">
-                        Nv. {user.level}
-                      </span>
-                    </div>
-                    <p className="truncate text-[11px] text-muted-foreground">{user.role}</p>
-                  </div>
-                  <span className="rounded-full bg-gradient-brand px-2.5 py-1 text-[10px] font-semibold text-white shadow-soft">
-                    Entrar
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        <form
-          className="mt-6 space-y-4"
-          onSubmit={(e) => {
-            e.preventDefault();
-            navigate({ to: "/home" });
-          }}
-        >
+        <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
           {mode === "signup" && (
-            <Field id="name" label="Nome" icon={<UserIcon className="h-4 w-4" />}>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Como devemos te chamar?"
-                className="h-12 pl-10 rounded-2xl"
-              />
-            </Field>
+            <>
+              <Field id="name" label="Nome Completo" icon={<UserIcon className="h-4 w-4" />}>
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Ex: Vilson Paixão"
+                  className="h-12 pl-10 rounded-2xl"
+                  required
+                />
+              </Field>
+
+              <Field id="role" label="Cargo ou Objetivo com Oratória (Opcional)" icon={<Briefcase className="h-4 w-4" />}>
+                <Input
+                  id="role"
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  placeholder="Ex: Desenvolvedor, Palestrante, Líder..."
+                  className="h-12 pl-10 rounded-2xl"
+                />
+              </Field>
+            </>
           )}
-          <Field id="email" label="Email" icon={<Mail className="h-4 w-4" />}>
+
+          <Field id="email" label="E-mail" icon={<Mail className="h-4 w-4" />}>
             <Input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="voce@email.com"
+              placeholder="seu.email@exemplo.com"
               className="h-12 pl-10 rounded-2xl"
+              required
             />
           </Field>
+
           <Field id="password" label="Senha" icon={<Lock className="h-4 w-4" />}>
             <Input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
+              placeholder="Digite sua senha"
               className="h-12 pl-10 rounded-2xl"
+              required
             />
           </Field>
 
           {mode === "signin" && (
             <div className="flex justify-end">
-              <button type="button" className="text-sm font-medium text-primary hover:underline">
+              <button type="button" className="text-xs font-semibold text-primary hover:underline">
                 Esqueci minha senha
               </button>
             </div>
@@ -150,7 +146,7 @@ function LoginPage() {
             type="submit"
             className="h-12 w-full rounded-2xl bg-gradient-brand text-base font-semibold shadow-soft hover:opacity-95"
           >
-            {mode === "signin" ? "Entrar na plataforma" : "Cadastrar conta"}
+            {mode === "signin" ? "Entrar na plataforma" : "Criar conta e começar"}
             <ArrowRight className="ml-1 h-4 w-4" />
           </Button>
         </form>
@@ -167,7 +163,7 @@ function LoginPage() {
         </p>
 
         <Link to="/home" className="mt-3 text-center text-xs text-muted-foreground/70 hover:text-foreground">
-          Explorar como visitante →
+          Acessar diretamente →
         </Link>
       </div>
     </div>
