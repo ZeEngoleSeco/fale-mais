@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell, PageHeader } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Play, Sparkles, CheckCircle2, Clock, Dumbbell, X, Volume2 } from "lucide-react";
+import { Play, Sparkles, CheckCircle2, Clock, Dumbbell, X } from "lucide-react";
 import { MOCK_EXERCISES, type ExerciseItem } from "@/data/mock-data";
 import { useState } from "react";
 
@@ -25,19 +25,41 @@ function Exercises() {
   return (
     <AppShell>
       <PageHeader title="Exercícios" back="/ai" />
+
+      {/* Categorias de filtro */}
+      <div className="flex gap-2 overflow-x-auto px-5 pb-3 scrollbar-none">
+        {cats.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setSelectedCat(cat)}
+            className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+              selectedCat === cat
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "bg-secondary/80 text-muted-foreground hover:bg-secondary hover:text-foreground"
+            }`}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
       <div className="px-5 space-y-3 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0 xl:grid-cols-3">
-        {list.map((e) => (
-          <Card key={e.name} className="rounded-3xl border-border p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0 flex-1">
-                <p className="text-[20px] font-semibold">{e.name}</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">{e.desc}</p>
-                <div className="mt-2 flex gap-2">
-                  <Badge variant="secondary" className="rounded-full text-[15px]">{e.time}</Badge>
-                  <Badge variant="outline" className="rounded-full text-[15px]">{e.lvl}</Badge>
+        {filteredList.length === 0 ? (
+          <Card className="col-span-full p-8 text-center text-muted-foreground rounded-3xl border-dashed">
+            <Dumbbell className="mx-auto h-8 w-8 opacity-40 mb-2" />
+            <p className="text-sm font-medium">Nenhum exercício encontrado nesta categoria.</p>
+          </Card>
+        ) : (
+          filteredList.map((e) => (
+            <Card key={e.id} className="flex flex-col justify-between rounded-3xl border-border p-4 transition hover:shadow-soft">
+              <div className="space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <h3 className="text-[15px] font-bold text-foreground">{e.name}</h3>
+                  <Badge variant="secondary" className="rounded-full text-[10px] shrink-0 font-medium">
+                    {e.category}
+                  </Badge>
                 </div>
-                <h3 className="mt-2 text-[15px] font-bold text-foreground">{e.name}</h3>
-                <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{e.desc}</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">{e.desc}</p>
               </div>
 
               <div className="mt-4 flex items-center justify-between border-t border-border/50 pt-3">
@@ -49,10 +71,10 @@ function Exercises() {
                     variant="outline"
                     className={`rounded-full text-[10px] ${
                       e.level === "Iniciante"
-                        ? "text-emerald-600 border-emerald-500/30"
+                        ? "text-emerald-600 border-emerald-500/30 dark:text-emerald-400"
                         : e.level === "Médio"
-                        ? "text-amber-600 border-amber-500/30"
-                        : "text-rose-600 border-rose-500/30"
+                        ? "text-amber-600 border-amber-500/30 dark:text-amber-400"
+                        : "text-rose-600 border-rose-500/30 dark:text-rose-400"
                     }`}
                   >
                     {e.level}
@@ -64,14 +86,14 @@ function Exercises() {
                     setActiveExercise(e);
                     setIsCompleted(false);
                   }}
-                  className="flex h-10 items-center gap-1.5 rounded-full bg-gradient-brand px-4 text-xs font-semibold text-white shadow-soft transition hover:opacity-90"
+                  className="flex h-10 items-center gap-1.5 rounded-full bg-gradient-brand px-4 text-xs font-semibold text-white shadow-soft transition hover:opacity-90 active:scale-95"
                 >
                   <Play className="h-3.5 w-3.5 fill-current" /> Treinar
                 </button>
               </div>
             </Card>
-          ))}
-        </div>
+          ))
+        )}
       </div>
 
       {/* Modal / Card Interativo de Execução do Exercício */}
@@ -87,7 +109,7 @@ function Exercises() {
               </div>
               <button
                 onClick={() => setActiveExercise(null)}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-muted-foreground hover:text-foreground"
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-muted-foreground hover:text-foreground transition"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -107,7 +129,7 @@ function Exercises() {
               </ul>
             </div>
 
-            {activeExercise.tips.length > 0 && (
+            {activeExercise.tips && activeExercise.tips.length > 0 && (
               <div className="mt-3 space-y-1 rounded-2xl bg-primary/5 border border-primary/20 p-3.5 text-xs text-primary">
                 <p className="font-bold flex items-center gap-1">
                   <Sparkles className="h-3.5 w-3.5" /> Dica do Mentor:
