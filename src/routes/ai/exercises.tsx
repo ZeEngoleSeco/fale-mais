@@ -27,11 +27,11 @@ function Exercises() {
           <Card key={e.name} className="rounded-3xl border-border p-4">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
-                <p className="text-[15px] font-semibold">{e.name}</p>
+                <p className="text-[20px] font-semibold">{e.name}</p>
                 <p className="mt-0.5 text-xs text-muted-foreground">{e.desc}</p>
                 <div className="mt-2 flex gap-2">
-                  <Badge variant="secondary" className="rounded-full text-[10px]">{e.time}</Badge>
-                  <Badge variant="outline" className="rounded-full text-[10px]">{e.lvl}</Badge>
+                  <Badge variant="secondary" className="rounded-full text-[15px]">{e.time}</Badge>
+                  <Badge variant="outline" className="rounded-full text-[15px]">{e.lvl}</Badge>
                 </div>
               </div>
               <button className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-brand text-white shadow-soft">

@@ -9,31 +9,31 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ProfileRouteImport } from './routes/profile'
-import { Route as HomeRouteImport } from './routes/home'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as RoomsIndexRouteImport } from './routes/rooms/index'
-import { Route as EventsIndexRouteImport } from './routes/events/index'
+import { Route as HomeRouteImport } from './routes/home'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as AiIndexRouteImport } from './routes/ai/index'
-import { Route as RoomsCreateRouteImport } from './routes/rooms/create'
-import { Route as EventsCreateRouteImport } from './routes/events/create'
-import { Route as AiSuggestionsRouteImport } from './routes/ai/suggestions'
-import { Route as AiInsightsRouteImport } from './routes/ai/insights'
-import { Route as AiHistoryRouteImport } from './routes/ai/history'
-import { Route as AiFeedbackRouteImport } from './routes/ai/feedback'
-import { Route as AiExercisesRouteImport } from './routes/ai/exercises'
 import { Route as AiChatRouteImport } from './routes/ai/chat'
-import { Route as RoomsIdIndexRouteImport } from './routes/rooms/$id/index'
-import { Route as RoomsIdSettingsRouteImport } from './routes/rooms/$id/settings'
-import { Route as RoomsIdParticipantsRouteImport } from './routes/rooms/$id/participants'
-import { Route as RoomsIdOverviewRouteImport } from './routes/rooms/$id/overview'
-import { Route as RoomsIdInviteRouteImport } from './routes/rooms/$id/invite'
-import { Route as EventsOnlineIdRouteImport } from './routes/events/online/$id'
+import { Route as AiExercisesRouteImport } from './routes/ai/exercises'
+import { Route as AiFeedbackRouteImport } from './routes/ai/feedback'
+import { Route as AiHistoryRouteImport } from './routes/ai/history'
+import { Route as AiInsightsRouteImport } from './routes/ai/insights'
+import { Route as AiSuggestionsRouteImport } from './routes/ai/suggestions'
+import { Route as EventsIndexRouteImport } from './routes/events/index'
+import { Route as EventsCreateRouteImport } from './routes/events/create'
+import { Route as RoomsIndexRouteImport } from './routes/rooms/index'
+import { Route as RoomsCreateRouteImport } from './routes/rooms/create'
 import { Route as EventsOfflineIdRouteImport } from './routes/events/offline/$id'
+import { Route as EventsOnlineIdRouteImport } from './routes/events/online/$id'
+import { Route as RoomsIdIndexRouteImport } from './routes/rooms/$id/index'
+import { Route as RoomsIdInviteRouteImport } from './routes/rooms/$id/invite'
+import { Route as RoomsIdOverviewRouteImport } from './routes/rooms/$id/overview'
+import { Route as RoomsIdParticipantsRouteImport } from './routes/rooms/$id/participants'
+import { Route as RoomsIdSettingsRouteImport } from './routes/rooms/$id/settings'
 
-const ProfileRoute = ProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HomeRoute = HomeRouteImport.update({
@@ -41,19 +41,9 @@ const HomeRoute = HomeRouteImport.update({
   path: '/home',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RoomsIndexRoute = RoomsIndexRouteImport.update({
-  id: '/rooms/',
-  path: '/rooms/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EventsIndexRoute = EventsIndexRouteImport.update({
-  id: '/events/',
-  path: '/events/',
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AiIndexRoute = AiIndexRouteImport.update({
@@ -61,34 +51,9 @@ const AiIndexRoute = AiIndexRouteImport.update({
   path: '/ai/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RoomsCreateRoute = RoomsCreateRouteImport.update({
-  id: '/rooms/create',
-  path: '/rooms/create',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EventsCreateRoute = EventsCreateRouteImport.update({
-  id: '/events/create',
-  path: '/events/create',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AiSuggestionsRoute = AiSuggestionsRouteImport.update({
-  id: '/ai/suggestions',
-  path: '/ai/suggestions',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AiInsightsRoute = AiInsightsRouteImport.update({
-  id: '/ai/insights',
-  path: '/ai/insights',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AiHistoryRoute = AiHistoryRouteImport.update({
-  id: '/ai/history',
-  path: '/ai/history',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AiFeedbackRoute = AiFeedbackRouteImport.update({
-  id: '/ai/feedback',
-  path: '/ai/feedback',
+const AiChatRoute = AiChatRouteImport.update({
+  id: '/ai/chat',
+  path: '/ai/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AiExercisesRoute = AiExercisesRouteImport.update({
@@ -96,34 +61,49 @@ const AiExercisesRoute = AiExercisesRouteImport.update({
   path: '/ai/exercises',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AiChatRoute = AiChatRouteImport.update({
-  id: '/ai/chat',
-  path: '/ai/chat',
+const AiFeedbackRoute = AiFeedbackRouteImport.update({
+  id: '/ai/feedback',
+  path: '/ai/feedback',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RoomsIdIndexRoute = RoomsIdIndexRouteImport.update({
-  id: '/rooms/$id/',
-  path: '/rooms/$id/',
+const AiHistoryRoute = AiHistoryRouteImport.update({
+  id: '/ai/history',
+  path: '/ai/history',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RoomsIdSettingsRoute = RoomsIdSettingsRouteImport.update({
-  id: '/rooms/$id/settings',
-  path: '/rooms/$id/settings',
+const AiInsightsRoute = AiInsightsRouteImport.update({
+  id: '/ai/insights',
+  path: '/ai/insights',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RoomsIdParticipantsRoute = RoomsIdParticipantsRouteImport.update({
-  id: '/rooms/$id/participants',
-  path: '/rooms/$id/participants',
+const AiSuggestionsRoute = AiSuggestionsRouteImport.update({
+  id: '/ai/suggestions',
+  path: '/ai/suggestions',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RoomsIdOverviewRoute = RoomsIdOverviewRouteImport.update({
-  id: '/rooms/$id/overview',
-  path: '/rooms/$id/overview',
+const EventsIndexRoute = EventsIndexRouteImport.update({
+  id: '/events/',
+  path: '/events/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RoomsIdInviteRoute = RoomsIdInviteRouteImport.update({
-  id: '/rooms/$id/invite',
-  path: '/rooms/$id/invite',
+const EventsCreateRoute = EventsCreateRouteImport.update({
+  id: '/events/create',
+  path: '/events/create',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RoomsIndexRoute = RoomsIndexRouteImport.update({
+  id: '/rooms/',
+  path: '/rooms/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RoomsCreateRoute = RoomsCreateRouteImport.update({
+  id: '/rooms/create',
+  path: '/rooms/create',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EventsOfflineIdRoute = EventsOfflineIdRouteImport.update({
+  id: '/events/offline/$id',
+  path: '/events/offline/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EventsOnlineIdRoute = EventsOnlineIdRouteImport.update({
@@ -131,9 +111,29 @@ const EventsOnlineIdRoute = EventsOnlineIdRouteImport.update({
   path: '/events/online/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EventsOfflineIdRoute = EventsOfflineIdRouteImport.update({
-  id: '/events/offline/$id',
-  path: '/events/offline/$id',
+const RoomsIdIndexRoute = RoomsIdIndexRouteImport.update({
+  id: '/rooms/$id/',
+  path: '/rooms/$id/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RoomsIdInviteRoute = RoomsIdInviteRouteImport.update({
+  id: '/rooms/$id/invite',
+  path: '/rooms/$id/invite',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RoomsIdOverviewRoute = RoomsIdOverviewRouteImport.update({
+  id: '/rooms/$id/overview',
+  path: '/rooms/$id/overview',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RoomsIdParticipantsRoute = RoomsIdParticipantsRouteImport.update({
+  id: '/rooms/$id/participants',
+  path: '/rooms/$id/participants',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RoomsIdSettingsRoute = RoomsIdSettingsRouteImport.update({
+  id: '/rooms/$id/settings',
+  path: '/rooms/$id/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -305,11 +305,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/profile': {
-      id: '/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof ProfileRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/home': {
@@ -319,25 +319,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HomeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/rooms/': {
-      id: '/rooms/'
-      path: '/rooms'
-      fullPath: '/rooms/'
-      preLoaderRoute: typeof RoomsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/events/': {
-      id: '/events/'
-      path: '/events'
-      fullPath: '/events/'
-      preLoaderRoute: typeof EventsIndexRouteImport
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ai/': {
@@ -347,46 +333,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AiIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/rooms/create': {
-      id: '/rooms/create'
-      path: '/rooms/create'
-      fullPath: '/rooms/create'
-      preLoaderRoute: typeof RoomsCreateRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/events/create': {
-      id: '/events/create'
-      path: '/events/create'
-      fullPath: '/events/create'
-      preLoaderRoute: typeof EventsCreateRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/ai/suggestions': {
-      id: '/ai/suggestions'
-      path: '/ai/suggestions'
-      fullPath: '/ai/suggestions'
-      preLoaderRoute: typeof AiSuggestionsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/ai/insights': {
-      id: '/ai/insights'
-      path: '/ai/insights'
-      fullPath: '/ai/insights'
-      preLoaderRoute: typeof AiInsightsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/ai/history': {
-      id: '/ai/history'
-      path: '/ai/history'
-      fullPath: '/ai/history'
-      preLoaderRoute: typeof AiHistoryRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/ai/feedback': {
-      id: '/ai/feedback'
-      path: '/ai/feedback'
-      fullPath: '/ai/feedback'
-      preLoaderRoute: typeof AiFeedbackRouteImport
+    '/ai/chat': {
+      id: '/ai/chat'
+      path: '/ai/chat'
+      fullPath: '/ai/chat'
+      preLoaderRoute: typeof AiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ai/exercises': {
@@ -396,46 +347,67 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AiExercisesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/ai/chat': {
-      id: '/ai/chat'
-      path: '/ai/chat'
-      fullPath: '/ai/chat'
-      preLoaderRoute: typeof AiChatRouteImport
+    '/ai/feedback': {
+      id: '/ai/feedback'
+      path: '/ai/feedback'
+      fullPath: '/ai/feedback'
+      preLoaderRoute: typeof AiFeedbackRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/rooms/$id/': {
-      id: '/rooms/$id/'
-      path: '/rooms/$id'
-      fullPath: '/rooms/$id/'
-      preLoaderRoute: typeof RoomsIdIndexRouteImport
+    '/ai/history': {
+      id: '/ai/history'
+      path: '/ai/history'
+      fullPath: '/ai/history'
+      preLoaderRoute: typeof AiHistoryRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/rooms/$id/settings': {
-      id: '/rooms/$id/settings'
-      path: '/rooms/$id/settings'
-      fullPath: '/rooms/$id/settings'
-      preLoaderRoute: typeof RoomsIdSettingsRouteImport
+    '/ai/insights': {
+      id: '/ai/insights'
+      path: '/ai/insights'
+      fullPath: '/ai/insights'
+      preLoaderRoute: typeof AiInsightsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/rooms/$id/participants': {
-      id: '/rooms/$id/participants'
-      path: '/rooms/$id/participants'
-      fullPath: '/rooms/$id/participants'
-      preLoaderRoute: typeof RoomsIdParticipantsRouteImport
+    '/ai/suggestions': {
+      id: '/ai/suggestions'
+      path: '/ai/suggestions'
+      fullPath: '/ai/suggestions'
+      preLoaderRoute: typeof AiSuggestionsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/rooms/$id/overview': {
-      id: '/rooms/$id/overview'
-      path: '/rooms/$id/overview'
-      fullPath: '/rooms/$id/overview'
-      preLoaderRoute: typeof RoomsIdOverviewRouteImport
+    '/events/': {
+      id: '/events/'
+      path: '/events'
+      fullPath: '/events/'
+      preLoaderRoute: typeof EventsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/rooms/$id/invite': {
-      id: '/rooms/$id/invite'
-      path: '/rooms/$id/invite'
-      fullPath: '/rooms/$id/invite'
-      preLoaderRoute: typeof RoomsIdInviteRouteImport
+    '/events/create': {
+      id: '/events/create'
+      path: '/events/create'
+      fullPath: '/events/create'
+      preLoaderRoute: typeof EventsCreateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rooms/': {
+      id: '/rooms/'
+      path: '/rooms'
+      fullPath: '/rooms/'
+      preLoaderRoute: typeof RoomsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rooms/create': {
+      id: '/rooms/create'
+      path: '/rooms/create'
+      fullPath: '/rooms/create'
+      preLoaderRoute: typeof RoomsCreateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/events/offline/$id': {
+      id: '/events/offline/$id'
+      path: '/events/offline/$id'
+      fullPath: '/events/offline/$id'
+      preLoaderRoute: typeof EventsOfflineIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/events/online/$id': {
@@ -445,11 +417,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsOnlineIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/events/offline/$id': {
-      id: '/events/offline/$id'
-      path: '/events/offline/$id'
-      fullPath: '/events/offline/$id'
-      preLoaderRoute: typeof EventsOfflineIdRouteImport
+    '/rooms/$id/': {
+      id: '/rooms/$id/'
+      path: '/rooms/$id'
+      fullPath: '/rooms/$id/'
+      preLoaderRoute: typeof RoomsIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rooms/$id/invite': {
+      id: '/rooms/$id/invite'
+      path: '/rooms/$id/invite'
+      fullPath: '/rooms/$id/invite'
+      preLoaderRoute: typeof RoomsIdInviteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rooms/$id/overview': {
+      id: '/rooms/$id/overview'
+      path: '/rooms/$id/overview'
+      fullPath: '/rooms/$id/overview'
+      preLoaderRoute: typeof RoomsIdOverviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rooms/$id/participants': {
+      id: '/rooms/$id/participants'
+      path: '/rooms/$id/participants'
+      fullPath: '/rooms/$id/participants'
+      preLoaderRoute: typeof RoomsIdParticipantsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rooms/$id/settings': {
+      id: '/rooms/$id/settings'
+      path: '/rooms/$id/settings'
+      fullPath: '/rooms/$id/settings'
+      preLoaderRoute: typeof RoomsIdSettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -481,3 +481,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
