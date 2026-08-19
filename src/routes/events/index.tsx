@@ -59,7 +59,7 @@ function EventsPage() {
           />
         </div>
 
-        <div className="flex gap-2 overflow-x-auto pb-2 -mx-5 px-5 no-scrollbar">
+        <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 no-scrollbar">
           {cats.map((c) => (
             <button
               key={c}
@@ -77,7 +77,7 @@ function EventsPage() {
 
         {/* Banner Destaque */}
         <Card className="overflow-hidden rounded-3xl border-0 p-0 shadow-lift">
-          <div className="bg-gradient-brand p-5 text-white">
+          <div className="bg-gradient-brand p-4 text-white">
             <div className="flex items-center gap-1.5 text-xs font-bold opacity-90">
               <Sparkles className="h-3.5 w-3.5" /> EM DESTAQUE
             </div>
@@ -113,10 +113,10 @@ function EventsPage() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5">
-                          <Badge variant="secondary" className="rounded-full text-[10px] px-2 py-0">
+                          <Badge variant="secondary" className="rounded-full text-[10px] px-2 py-3">
                             {e.kind}
                           </Badge>
-                          <Badge variant="outline" className="rounded-full text-[10px] px-2 py-0">
+                          <Badge variant="outline" className="rounded-full text-[10px] px-2 py-3">
                             {e.category}
                           </Badge>
                         </div>
