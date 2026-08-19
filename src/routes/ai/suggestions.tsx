@@ -25,7 +25,7 @@ function Suggestions() {
   return (
     <AppShell>
       <PageHeader
-        title="Sugestões Personalizadas"
+        title="Sugestões Diferenciadas"
         subtitle="Dicas praticas baseadas nos seus ultimos trabalhos"
         back="/ai"
       />
