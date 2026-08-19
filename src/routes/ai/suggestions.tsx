@@ -26,7 +26,7 @@ function Suggestions() {
     <AppShell>
       <PageHeader
         title="Sugestões Personalizadas"
-        subtitle="Dicas práticas baseadas nas suas últimas apresentações"
+        subtitle="Dicas praticas baseadas nos seus ultimos trabalhos"
         back="/ai"
       />
       <div className="px-5 space-y-3 pb-12">
@@ -46,14 +46,14 @@ function Suggestions() {
                     {item.category}
                   </Badge>
                   <h3 className="text-sm font-bold text-foreground leading-snug">{item.title}</h3>
-                  <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{item.detail}</p>
+                  <p className="mt-4 text-xs text-muted-foreground leading-relaxed">{item.detail}</p>
                 </div>
               </div>
 
-              <div className="mt-2 pt-2.5 border-t border-border/50 flex justify-end">
+              <div className="mt-3 pt-2.8 border-t border-border/50 flex justify-end">
                 <Link
                   to="/ai/chat"
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                  className="inline-flex items-center gap-2 text-xs font-itallicbold text-primary hover:underline"
                 >
                   Praticar dica com a IA <ChevronRight className="h-3.5 w-3.5" />
                 </Link>
