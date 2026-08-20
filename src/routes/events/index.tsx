@@ -7,9 +7,11 @@ import { Search, MapPin, Calendar, Plus, Users, Sparkles } from "lucide-react";
 import { MOCK_EVENTS, type EventItem } from "@/data/mock-data";
 import { useState, useMemo } from "react";
 
+
 export const Route = createFileRoute("/events/")({
   head: () => ({ meta: [{ title: "Eventos & Workshops — Fale+" }] }),
   component: EventsPage,
+  
 });
 
 const cats = ["Todos", "Online", "Presencial", "Pitch", "Workshop", "Masterclass", "Meetup"];
@@ -48,7 +50,7 @@ function EventsPage() {
           </Link>
         }
       />
-      <div className="px-5 space-y-4">
+      <div className="px-5 space-y-4"> 
         <div className="relative">
           <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -66,7 +68,7 @@ function EventsPage() {
               onClick={() => setSelectedCat(c)}
               className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold transition ${
                 selectedCat === c
-                  ? "bg-gradient-brand text-white shadow-soft"
+                  ? "bg-gradient-brand text-white inset-shadow-sm soft-shadow"
                   : "bg-secondary text-foreground hover:bg-secondary/80"
               }`}
             >
@@ -76,7 +78,7 @@ function EventsPage() {
         </div>
 
         {/* Banner Destaque */}
-        <Card className="overflow-hidden rounded-3xl border-0 p-0 shadow-lift">
+        <Card className="overflow-hidden rounded-3xl border-0 p-0 bg-indigo-500 shadow-lg shadow-xl/30">
           <div className="bg-gradient-brand p-4 text-white">
             <div className="flex items-center gap-1.5 text-xs font-bold opacity-90">
               <Sparkles className="h-3.5 w-3.5" /> EM DESTAQUE
@@ -91,7 +93,7 @@ function EventsPage() {
         </Card>
 
         <div>
-          <h3 className="text-sm font-bold text-muted-foreground mb-3">Agenda de Eventos ({filteredEvents.length})</h3>
+          <h3 className="text-sm font-bold text-muted-foreground mb-3 shadow-xl">Agenda de Eventos ({filteredEvents.length})</h3>
           <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0 xl:grid-cols-3">
             {filteredEvents.length === 0 ? (
               <div className="col-span-full py-10 text-center text-muted-foreground">
