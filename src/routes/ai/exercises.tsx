@@ -29,10 +29,10 @@ function Exercises() {
       {/* Categorias de filtro */}
       <div className="flex gap-2 overflow-x-auto px-5 pb-3 scrollbar-none">
         {cats.map((cat) => (
-          <button
+          <button 
             key={cat}
             onClick={() => setSelectedCat(cat)}
-            className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+            className={`shadow-lg shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold transition ${
               selectedCat === cat
                 ? "bg-primary text-primary-foreground shadow-sm"
                 : "bg-secondary/80 text-muted-foreground hover:bg-secondary hover:text-foreground"
