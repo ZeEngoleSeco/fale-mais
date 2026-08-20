@@ -29,10 +29,10 @@ function Exercises() {
       {/* Categorias de filtro */}
       <div className="flex gap-2 overflow-x-auto px-5 pb-3 scrollbar-none">
         {cats.map((cat) => (
-          <button
+          <button 
             key={cat}
             onClick={() => setSelectedCat(cat)}
-            className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+            className={`shadow-lg shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold transition ${
               selectedCat === cat
                 ? "bg-primary text-primary-foreground shadow-sm"
                 : "bg-secondary/80 text-muted-foreground hover:bg-secondary hover:text-foreground"
@@ -51,7 +51,7 @@ function Exercises() {
           </Card>
         ) : (
           filteredList.map((e) => (
-            <Card key={e.id} className="flex flex-col justify-between rounded-3xl border-border p-4 transition hover:shadow-soft">
+            <Card key={e.id} className="shadow-lg flex flex-col justify-between rounded-3xl border-border p-4 transition hover:shadow-soft">
               <div className="space-y-2">
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="text-[15px] font-bold text-foreground">{e.name}</h3>
@@ -86,7 +86,7 @@ function Exercises() {
                     setActiveExercise(e);
                     setIsCompleted(false);
                   }}
-                  className="flex h-10 items-center gap-1.5 rounded-full bg-gradient-brand px-4 text-xs font-semibold text-white shadow-soft transition hover:opacity-90 active:scale-95"
+                  className="shadow-lg flex h-10 items-center gap-1.5 rounded-full bg-gradient-brand px-4 text-xs font-semibold text-white shadow-soft transition hover:opacity-90 active:scale-95"
                 >
                   <Play className="h-3.5 w-3.5 fill-current" /> Treinar
                 </button>
@@ -99,7 +99,7 @@ function Exercises() {
       {/* Modal / Card Interativo de Execução do Exercício */}
       {activeExercise && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <Card className="w-full max-w-md rounded-3xl border-border bg-card p-6 shadow-lift max-h-[90vh] overflow-y-auto">
+          <Card className="- w-full max-w-md rounded-3xl border-border bg-card p-6 shadow-lift max-h-[90vh] overflow-y-auto">
             <div className="flex items-start justify-between">
               <div>
                 <Badge className="bg-gradient-brand text-white rounded-full text-[10px]">
@@ -135,7 +135,7 @@ function Exercises() {
                   <Sparkles className="h-3.5 w-3.5" /> Dica do Mentor:
                 </p>
                 {activeExercise.tips.map((t, idx) => (
-                  <p key={idx} className="text-[11px] text-foreground/90">{t}</p>
+                  <p key={idx} className=" text-[11px] text-foreground/90">{t}</p>
                 ))}
               </div>
             )}
