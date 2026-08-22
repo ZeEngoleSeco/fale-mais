@@ -94,10 +94,10 @@ export function ChatPage() {
     <AppShell hideNav>
       <PageHeader title="Mentor Thorel (IA)" subtitle="Treinamento guiado de oratória" back="/ai" />
 
-      <div className="flex flex-col gap-3 px-5 pb-44">
+      <div className="flex flex-col gap-3 px-4 sm:px-6 pb-48 lg:pb-40 w-full max-w-md lg:max-w-4xl xl:max-w-5xl mx-auto">
         {msgs.map((m) => (
           <div key={m.id} className={`flex flex-col ${m.from === "me" ? "items-end" : "items-start"}`}>
-            <div className={`flex items-start gap-2.5 max-w-[88%] ${m.from === "me" ? "flex-row-reverse" : ""}`}>
+            <div className={`flex items-start gap-2.5 max-w-[90%] sm:max-w-[80%] lg:max-w-[72%] ${m.from === "me" ? "flex-row-reverse" : ""}`}>
               {m.from === "ai" && (
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-brand text-white shadow-soft">
                   <Bot className="h-4 w-4" />
@@ -138,51 +138,53 @@ export function ChatPage() {
         )}
       </div>
 
-      {/* Prompts Rápidos e Input Fixo */}
-      <div className="fixed inset-x-0 bottom-0 z-30 mx-auto w-full max-w-md bg-background/90 px-4 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-2 backdrop-blur-xl border-t border-border/40">
-        <div className="flex gap-2 overflow-x-auto pb-2 -mx-2 px-2 no-scrollbar">
-          {QUICK_PROMPTS.map((p) => (
-            <button
-              key={p}
-              onClick={() => send(p)}
-              className="shrink-0 rounded-full border border-border/80 bg-card px-3 py-1 text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition"
-            >
-              {p}
-            </button>
-          ))}
-        </div>
+      {/* Prompts Rápidos e Input Fixo Responsivo */}
+      <div className="fixed inset-x-0 bottom-0 z-30 lg:left-64 bg-background/90 backdrop-blur-xl border-t border-border/40 transition-all">
+        <div className="mx-auto w-full max-w-md lg:max-w-4xl xl:max-w-5xl px-4 sm:px-6 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-2.5">
+          <div className="flex gap-2 overflow-x-auto pb-2 -mx-2 px-2 no-scrollbar">
+            {QUICK_PROMPTS.map((p) => (
+              <button
+                key={p}
+                onClick={() => send(p)}
+                className="shrink-0 rounded-full border border-border/80 bg-card px-3.5 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition shadow-xs"
+              >
+                {p}
+              </button>
+            ))}
+          </div>
 
-        <div className="mt-1 flex items-center gap-2 rounded-full border border-border bg-card p-1.5 shadow-lift">
-          <Input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && send()}
-            placeholder={isRecording ? "Gravando áudio..." : "Pergunte ao mentor ou pratique seu texto..."}
-            className="h-10 flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0 text-xs sm:text-sm"
-          />
-          <button
-            onClick={() => {
-              setIsRecording(!isRecording);
-              if (!isRecording) {
-                setTimeout(() => {
-                  setIsRecording(false);
-                  send("Pratiquei um trecho em áudio de 20 segundos focando em modulação e pausas.");
-                }, 3000);
-              }
-            }}
-            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition ${
-              isRecording ? "bg-rose-600 text-white animate-pulse" : "bg-secondary text-foreground hover:bg-secondary/80"
-            }`}
-            title="Gravar fala por microfone"
-          >
-            {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-          </button>
-          <button
-            onClick={() => send()}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-brand text-white shadow-soft hover:opacity-90 transition"
-          >
-            <Send className="h-4 w-4" />
-          </button>
+          <div className="mt-1 flex items-center gap-2 rounded-full border border-border bg-card p-1.5 sm:p-2 shadow-lift">
+            <Input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && send()}
+              placeholder={isRecording ? "Gravando áudio..." : "Pergunte ao mentor ou pratique seu texto..."}
+              className="h-10 sm:h-11 flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0 text-xs sm:text-sm px-3"
+            />
+            <button
+              onClick={() => {
+                setIsRecording(!isRecording);
+                if (!isRecording) {
+                  setTimeout(() => {
+                    setIsRecording(false);
+                    send("Pratiquei um trecho em áudio de 20 segundos focando em modulação e pausas.");
+                  }, 3000);
+                }
+              }}
+              className={`flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-full transition ${
+                isRecording ? "bg-rose-600 text-white animate-pulse" : "bg-secondary text-foreground hover:bg-secondary/80"
+              }`}
+              title="Gravar fala por microfone"
+            >
+              {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+            </button>
+            <button
+              onClick={() => send()}
+              className="flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-full bg-gradient-brand text-white shadow-soft hover:opacity-90 transition"
+            >
+              <Send className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       </div>
     </AppShell>

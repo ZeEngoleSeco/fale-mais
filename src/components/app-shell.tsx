@@ -29,42 +29,40 @@ export function AppShell({
 
   return (
     <div className="min-h-screen bg-background lg:flex">
-      {!hideNav && (
-        <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-border/60 bg-card/40 px-4 py-6 lg:flex">
-          <Link to="/home" className="mb-8 flex items-center gap-3 px-2">
-            <BrandLogo size={36} />
-            <BrandWordmark />
-          </Link>
-          <nav aria-label="Navegação principal" className="flex-1">
-            <ul className="space-y-1">
-              {tabs.map((t) => {
-                const active = isActive(t.to);
-                const Icon = t.icon;
-                return (
-                  <li key={t.to}>
-                    <Link
-                      to={t.to}
-                      className={cn(
-                        "flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-semibold transition-all",
-                        active
-                          ? "bg-gradient-brand text-white shadow-soft"
-                          : "text-muted-foreground hover:bg-secondary hover:text-foreground",
-                      )}
-                    >
-                      <Icon className="h-[18px] w-[18px] shrink-0" strokeWidth={2.25} />
-                      <span className="truncate">{t.label}</span>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
-          <div className="mt-auto flex items-center justify-between rounded-2xl border border-border/60 bg-card/80 p-3">
-            <span className="text-xs font-semibold text-muted-foreground">Alternar tema</span>
-            <ThemeToggle />
-          </div>
-        </aside>
-      )}
+      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-border/60 bg-card/40 px-4 py-6 lg:flex">
+        <Link to="/home" className="mb-8 flex items-center gap-3 px-2">
+          <BrandLogo size={36} />
+          <BrandWordmark />
+        </Link>
+        <nav aria-label="Navegação principal" className="flex-1">
+          <ul className="space-y-1">
+            {tabs.map((t) => {
+              const active = isActive(t.to);
+              const Icon = t.icon;
+              return (
+                <li key={t.to}>
+                  <Link
+                    to={t.to}
+                    className={cn(
+                      "flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-semibold transition-all",
+                      active
+                        ? "bg-gradient-brand text-white shadow-soft"
+                        : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+                    )}
+                  >
+                    <Icon className="h-[18px] w-[18px] shrink-0" strokeWidth={2.25} />
+                    <span className="truncate">{t.label}</span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+        <div className="mt-auto flex items-center justify-between rounded-2xl border border-border/60 bg-card/80 p-3">
+          <span className="text-xs font-semibold text-muted-foreground">Alternar tema</span>
+          <ThemeToggle />
+        </div>
+      </aside>
       <div className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-background lg:mx-0 lg:max-w-none lg:flex-1">
         <main className={cn("mx-auto w-full flex-1 pb-28 lg:max-w-6xl lg:px-6 lg:pb-10", className)}>
           {children}
