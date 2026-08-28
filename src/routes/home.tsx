@@ -48,7 +48,7 @@ function HomePage() {
           </div>
           <Link
             to="/profile"
-            className="flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-card shadow-sm hover:bg-secondary"
+            className="flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-card shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.12)] dark:hover:shadow-[0_4px_12px_rgba(255,255,255,0.2)] hover:bg-secondary"
           >
             <div className={`flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br ${user.avatarColor} text-xs font-bold text-white`}>
               {user.initials}
@@ -56,7 +56,7 @@ function HomePage() {
           </Link>
         </div>
 
-        <Card className="mt-5 overflow-hidden rounded-3xl border-0 bg-gradient-brand p-5 text-white shadow-lift">
+        <Card className="mt-5 overflow-hidden rounded-3xl border-0 bg-gradient-brand p-5 text-white shadow-lift transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl dark:hover:shadow-[0_12px_32px_rgba(255,255,255,0.25)]">
           <div className="flex items-center justify-between text-xs font-medium opacity-90">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1">
               <Flame className="h-3.5 w-3.5 text-amber-300 fill-amber-300" /> Sequência de {user.streakDays} dias
@@ -74,13 +74,13 @@ function HomePage() {
           <div className="mt-4 flex items-center gap-2">
             <Link
               to="/ai/chat"
-              className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-4 py-2 text-sm font-semibold text-primary shadow hover:bg-white"
+              className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-4 py-2 text-sm font-semibold text-primary shadow hover:bg-white transition-all hover:shadow-md"
             >
               Começar treino <TrendingUp className="h-3.5 w-3.5" />
             </Link>
             <Link
               to="/ai/exercises"
-              className="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-2 text-xs font-semibold text-white hover:bg-white/25"
+              className="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-2 text-xs font-semibold text-white hover:bg-white/25 transition-all"
             >
               Ver exercícios
             </Link>
@@ -114,7 +114,7 @@ function HomePage() {
             <Link
               key={s.to}
               to={s.to}
-              className="group flex flex-col justify-between rounded-3xl border border-border bg-card p-4 transition hover:shadow-soft hover:-translate-y-0.5"
+              className="group flex flex-col justify-between rounded-3xl border border-border bg-card p-4 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_12px_28px_-4px_rgba(0,0,0,0.18)] dark:hover:shadow-[0_12px_28px_-4px_rgba(255,255,255,0.2)]"
             >
               <div className={`flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br ${s.color} text-white shadow-soft`}>
                 <s.icon className="h-5 w-5" />
@@ -145,7 +145,7 @@ function HomePage() {
 
         <div className="mt-3 space-y-3 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
           {activeRooms.map((room) => (
-            <Card key={room.id} className="rounded-3xl border-border p-4">
+            <Card key={room.id} className="rounded-3xl border-border p-4 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_12px_28px_-4px_rgba(0,0,0,0.18)] dark:hover:shadow-[0_12px_28px_-4px_rgba(255,255,255,0.2)]">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
@@ -170,7 +170,7 @@ function HomePage() {
                 <Link
                   to="/rooms/$id"
                   params={{ id: room.id }}
-                  className="shrink-0 rounded-full bg-gradient-brand px-3.5 py-1.5 text-xs font-semibold text-white shadow-soft"
+                  className="shrink-0 rounded-full bg-gradient-brand px-3.5 py-1.5 text-xs font-semibold text-white shadow-soft transition-all hover:shadow-md"
                 >
                   Entrar
                 </Link>
@@ -192,7 +192,7 @@ function HomePage() {
             params={{ id: featuredEvent.id }}
             className="mt-3 block"
           >
-            <Card className="rounded-3xl border-border p-4 transition hover:shadow-soft">
+            <Card className="rounded-3xl border-border p-4 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_12px_28px_-4px_rgba(0,0,0,0.18)] dark:hover:shadow-[0_12px_28px_-4px_rgba(255,255,255,0.2)]">
               <div className="flex items-start gap-3">
                 <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-2xl bg-gradient-soft text-primary">
                   <span className="text-[10px] font-semibold uppercase">{featuredEvent.date.split(",")[0]}</span>
@@ -218,7 +218,7 @@ function HomePage() {
           <h3 className="text-sm font-semibold text-muted-foreground">Retomar treino</h3>
           <Link to="/ai/history" className="text-xs font-semibold text-primary">Ver histórico</Link>
         </div>
-        <Card className="mt-3 flex items-center gap-3 rounded-3xl border-border p-4">
+        <Card className="mt-3 flex items-center gap-3 rounded-3xl border-border p-4 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_12px_28px_-4px_rgba(0,0,0,0.18)] dark:hover:shadow-[0_12px_28px_-4px_rgba(255,255,255,0.2)]">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-soft">
             <Sparkles className="h-5 w-5 text-primary" />
           </div>
@@ -228,7 +228,7 @@ function HomePage() {
           </div>
           <Link
             to="/ai/chat"
-            className="rounded-full bg-secondary px-3.5 py-1.5 text-xs font-semibold hover:bg-primary hover:text-white transition"
+            className="rounded-full bg-secondary px-3.5 py-1.5 text-xs font-semibold hover:bg-primary hover:text-white transition-all hover:shadow-md"
           >
             Treinar
           </Link>

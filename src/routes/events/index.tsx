@@ -57,7 +57,7 @@ function EventsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar por título, cidade ou categoria..."
-            className="h-12 rounded-2xl pl-10"
+            className="h-12 rounded-2xl pl-10 transition-shadow hover:shadow-md dark:hover:shadow-[0_4px_12px_rgba(255,255,255,0.15)]"
           />
         </div>
 
@@ -66,10 +66,10 @@ function EventsPage() {
             <button
               key={c}
               onClick={() => setSelectedCat(c)}
-              className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+              className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_6px_16px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_6px_18px_rgba(255,255,255,0.25)] ${
                 selectedCat === c
-                  ? "bg-gradient-brand text-white inset-shadow-sm soft-shadow"
-                  : "bg-secondary text-foreground hover:bg-secondary/80"
+                  ? "bg-gradient-brand text-white shadow-soft"
+                  : "bg-secondary text-foreground hover:bg-secondary/90"
               }`}
             >
               {c}
@@ -78,7 +78,7 @@ function EventsPage() {
         </div>
 
         {/* Banner Destaque */}
-        <Card className="overflow-hidden rounded-3xl border-0 p-0 bg-indigo-500 shadow-lg shadow-xl/30">
+        <Card className="overflow-hidden rounded-3xl border-0 p-0 bg-indigo-500 shadow-lg shadow-xl/30 transition-all duration-200 hover:shadow-2xl dark:hover:shadow-[0_12px_32px_rgba(255,255,255,0.25)] hover:-translate-y-1">
           <div className="bg-gradient-brand p-4 text-white">
             <div className="flex items-center gap-1.5 text-xs font-bold opacity-90">
               <Sparkles className="h-3.5 w-3.5" /> EM DESTAQUE
@@ -93,7 +93,7 @@ function EventsPage() {
         </Card>
 
         <div>
-          <h3 className="text-sm font-bold text-muted-foreground mb-3 shadow-xl">Agenda de Eventos ({filteredEvents.length})</h3>
+          <h3 className="text-sm font-bold text-muted-foreground mb-3">Agenda de Eventos ({filteredEvents.length})</h3>
           <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0 xl:grid-cols-3">
             {filteredEvents.length === 0 ? (
               <div className="col-span-full py-10 text-center text-muted-foreground">
@@ -107,7 +107,7 @@ function EventsPage() {
                   params={{ id: e.id }}
                   className="block"
                 >
-                  <Card className="rounded-3xl border-border p-4.5 transition hover:shadow-soft hover:-translate-y-0.5">
+                  <Card className="rounded-3xl border-border p-4.5 transition-all duration-200 hover:shadow-[0_12px_28px_-4px_rgba(0,0,0,0.18)] dark:hover:shadow-[0_12px_28px_-4px_rgba(255,255,255,0.2)] hover:-translate-y-1">
                     <div className="flex items-start gap-3.5">
                       <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-2xl bg-gradient-soft text-primary font-bold">
                         <span className="text-[10px] font-semibold uppercase">{e.date.split(",")[0]}</span>
