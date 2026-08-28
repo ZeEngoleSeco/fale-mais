@@ -41,7 +41,7 @@ function AIPage() {
             <p className="mt-1 text-lg opacity-90">Escolha uma ação ou converse comigo.</p>
             <Link
               to="/ai/chat"
-              className="mt-5 rounded-full bg-white px-5 py-2.5 text-lg font-semibold text-primary shadow"
+              className="mt-5 rounded-full bg-white px-5 py-2.5 text-lg font-semibold text-primary shadow-md hover-lift-pc"
             >
               Conversar com a IA
             </Link>
