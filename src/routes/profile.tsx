@@ -109,11 +109,20 @@ function ProfilePage() {
       <div className="px-5 space-y-5">
         {/* Main Profile Card */}
         <Card className="flex flex-col items-center rounded-3xl border-border p-6 text-center shadow-sm relative overflow-hidden">
-          <div className="relative">
-            <div className={`flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br ${user.avatarColor} text-3xl font-bold text-white shadow-lift`}>
-              {user.initials}
+          <div className="relative flex items-center justify-center my-1">
+            {/* Glowing Aura Background (Softened Purple & Blue Glow) */}
+            <div className="absolute -inset-2 rounded-full bg-gradient-to-r from-purple-600 via-indigo-500 to-blue-500 opacity-55 blur-lg" />
+
+            {/* Circular Gradient Border Frame (Purple & Blue) */}
+            <div className="relative rounded-full p-[3px] bg-gradient-to-tr from-purple-600 via-indigo-500 to-blue-500 shadow-[0_0_18px_rgba(147,51,234,0.45),0_0_10px_rgba(37,99,235,0.35)]">
+              <div className="rounded-full bg-card p-1">
+                <div className={`flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br ${user.avatarColor} text-3xl font-bold text-white shadow-inner`}>
+                  {user.initials}
+                </div>
+              </div>
             </div>
-            <span className="absolute -bottom-1 -right-1 rounded-full bg-background px-2.5 py-0.5 text-xs font-bold text-primary shadow border border-border">
+
+            <span className="absolute -bottom-1 -right-1 z-10 rounded-full bg-background px-2.5 py-0.5 text-xs font-bold text-primary shadow border border-purple-500/30">
               Nv. {user.level}
             </span>
           </div>
