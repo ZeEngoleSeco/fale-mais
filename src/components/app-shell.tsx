@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Users, Sparkles, Calendar, User } from "lucide-react";
+import { Home, Users, Bot, Calendar, User } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { BrandLogo, BrandWordmark } from "@/components/brand";
@@ -8,7 +8,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 const tabs = [
   { to: "/home", label: "Início", icon: Home },
   { to: "/rooms", label: "Salas", icon: Users },
-  { to: "/ai", label: "IA", icon: Sparkles },
+  { to: "/ai", label: "IA", icon: Bot },
   { to: "/events", label: "Eventos", icon: Calendar },
   { to: "/profile", label: "Perfil", icon: User },
 ] as const;

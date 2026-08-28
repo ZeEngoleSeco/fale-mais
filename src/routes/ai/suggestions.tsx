@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell, PageHeader } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Lightbulb, ChevronRight, Sparkles, Clock, Volume2, UserCheck, Wind, VolumeX } from "lucide-react";
+import { Lightbulb, ChevronRight, Target, Clock, Volume2, UserCheck, Wind, VolumeX } from "lucide-react";
 import { MOCK_SUGGESTIONS } from "@/data/mock-data";
 
 export const Route = createFileRoute("/ai/suggestions")({
@@ -17,7 +17,7 @@ const getIcon = (iconName: string) => {
     case "UserCheck": return UserCheck;
     case "Wind": return Wind;
     case "VolumeX": return VolumeX;
-    default: return Sparkles;
+    default: return Target;
   }
 };
 

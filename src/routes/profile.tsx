@@ -1,5 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Settings, Edit3, Mic, Users, Trophy, ChevronRight, Palette, Flame, Clock, Star, Award, LogOut, CheckCircle2, Lock, X, User, ArrowRight } from "lucide-react";
+import {
+  Settings, Edit3, Mic, Users, Trophy, ChevronRight, Palette, Flame, Clock, Star, Award, LogOut, CheckCircle2, Lock, X, User, ArrowRight, Compass, Wind, Target, Brain, ShieldCheck, Zap, HeartHandshake, Lightbulb, GraduationCap, Volume2, Crown, Medal
+} from "lucide-react";
 import { AppShell, PageHeader } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -11,6 +13,33 @@ import { Button } from "@/components/ui/button";
 import { ThemeSelector } from "@/components/theme-toggle";
 import { useCurrentUser } from "@/lib/user-store";
 import { useState } from "react";
+
+const ICON_MAP: Record<string, React.ElementType> = {
+  Mic,
+  Flame,
+  Trophy,
+  Wind,
+  Users,
+  Compass,
+  Target,
+  Brain,
+  ShieldCheck,
+  Clock,
+  Zap,
+  HeartHandshake,
+  Lightbulb,
+  GraduationCap,
+  Volume2,
+  Crown,
+  Medal,
+  Award,
+  Star,
+};
+
+function GetBadgeIcon({ name, unlocked }: { name: string; unlocked: boolean }) {
+  const IconComp = ICON_MAP[name] || Trophy;
+  return <IconComp className="h-4 w-4" />;
+}
 
 export const Route = createFileRoute("/profile")({
   head: () => ({ meta: [{ title: "Perfil — Fale+" }] }),
@@ -27,6 +56,17 @@ function ProfilePage() {
   const [editRole, setEditRole] = useState(user.role);
   const [editBio, setEditBio] = useState(user.bio);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [badgeFilter, setBadgeFilter] = useState<"all" | "unlocked" | "locked">("all");
+
+  const unlockedCount = user.badges.filter((b) => b.unlocked).length;
+  const totalBadgesCount = user.badges.length;
+  const badgesProgress = totalBadgesCount > 0 ? Math.round((unlockedCount / totalBadgesCount) * 100) : 0;
+
+  const filteredBadges = user.badges.filter((b) => {
+    if (badgeFilter === "unlocked") return b.unlocked;
+    if (badgeFilter === "locked") return !b.unlocked;
+    return true;
+  });
 
   const handleOpenEdit = () => {
     setEditName(user.name);
@@ -119,44 +159,127 @@ function ProfilePage() {
         </Card>
 
         {/* Conquistas / Badges */}
-        <Card className="rounded-3xl border-border p-5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Award className="h-4 w-4 text-primary" />
-              <h3 className="text-sm font-bold">Conquistas & Distintivos</h3>
+        <Card className="rounded-3xl border-border p-5 shadow-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="flex items-center gap-2">
+                <Award className="h-5 w-5 text-primary" />
+                <h3 className="text-base font-extrabold text-foreground">Conquistas & Desafios de Oratória</h3>
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Evolua sua comunicação e receba recompensas praticando com frequência.
+              </p>
             </div>
-            <span className="text-xs text-muted-foreground font-medium">
-              {user.badges.filter(b => b.unlocked).length} de {user.badges.length} desbloqueados
-            </span>
+
+            <div className="flex items-center gap-2 bg-secondary/60 rounded-2xl px-3 py-1.5 self-start sm:self-auto border border-border/40">
+              <Trophy className="h-4 w-4 text-amber-500" />
+              <span className="text-xs font-bold text-foreground">
+                {unlockedCount} de {totalBadgesCount} Desbloqueados
+              </span>
+            </div>
           </div>
 
-          <div className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-            {user.badges.map((badge) => (
+          {/* Barra de Progresso Geral */}
+          <div className="mt-3.5 rounded-2xl bg-secondary/40 p-3 border border-border/40">
+            <div className="mb-1.5 flex items-center justify-between text-xs">
+              <span className="font-semibold text-muted-foreground">Progresso de Conquistas</span>
+              <span className="font-extrabold text-primary">{badgesProgress}% Concluído</span>
+            </div>
+            <Progress value={badgesProgress} className="h-2 rounded-full" />
+          </div>
+
+          {/* Filtros em Abas */}
+          <div className="mt-4 flex items-center gap-1.5 overflow-x-auto pb-1">
+            <button
+              onClick={() => setBadgeFilter("all")}
+              className={`rounded-full px-3.5 py-1 text-xs font-bold transition ${
+                badgeFilter === "all"
+                  ? "bg-primary text-primary-foreground shadow-xs"
+                  : "bg-secondary text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Todas ({totalBadgesCount})
+            </button>
+            <button
+              onClick={() => setBadgeFilter("unlocked")}
+              className={`rounded-full px-3.5 py-1 text-xs font-bold transition ${
+                badgeFilter === "unlocked"
+                  ? "bg-emerald-600 text-white shadow-xs"
+                  : "bg-secondary text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Desbloqueadas ({unlockedCount})
+            </button>
+            <button
+              onClick={() => setBadgeFilter("locked")}
+              className={`rounded-full px-3.5 py-1 text-xs font-bold transition ${
+                badgeFilter === "locked"
+                  ? "bg-amber-600 text-white shadow-xs"
+                  : "bg-secondary text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Em andamento ({totalBadgesCount - unlockedCount})
+            </button>
+          </div>
+
+          {/* Grid de Conquistas */}
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {filteredBadges.map((badge) => (
               <div
                 key={badge.id}
-                className={`flex items-start gap-3 rounded-2xl border p-3 transition ${
+                className={`group relative flex items-start gap-3 rounded-2xl border p-3.5 transition-all duration-200 ${
                   badge.unlocked
-                    ? "border-primary/30 bg-primary/5"
-                    : "border-border/50 bg-secondary/30 opacity-60"
+                    ? "border-primary/30 bg-card hover:border-primary/60 hover:shadow-md hover-lift-pc"
+                    : "border-border/60 bg-secondary/20 opacity-75 hover:opacity-100"
                 }`}
               >
                 <div
-                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+                  className={`relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl transition-transform group-hover:scale-105 ${
                     badge.unlocked
                       ? "bg-gradient-brand text-white shadow-soft"
                       : "bg-muted text-muted-foreground"
                   }`}
                 >
-                  {badge.unlocked ? <Trophy className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
+                  <GetBadgeIcon name={badge.icon} unlocked={badge.unlocked} />
+                  {!badge.unlocked && (
+                    <div className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-background border border-border text-muted-foreground">
+                      <Lock className="h-2.5 w-2.5" />
+                    </div>
+                  )}
                 </div>
+
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-1">
-                    <p className="truncate text-xs font-bold text-foreground">{badge.title}</p>
-                    {badge.unlocked && (
-                      <span className="text-[9px] font-semibold text-emerald-600 dark:text-emerald-400">Desbloqueado</span>
+                    <p className="truncate text-xs font-extrabold text-foreground">{badge.title}</p>
+                    {badge.category && (
+                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                        badge.unlocked 
+                          ? "bg-primary/10 text-primary" 
+                          : "bg-muted text-muted-foreground"
+                      }`}>
+                        {badge.category}
+                      </span>
                     )}
                   </div>
-                  <p className="mt-0.5 text-[11px] text-muted-foreground leading-tight">{badge.description}</p>
+
+                  <p className="mt-1 text-[11px] text-muted-foreground leading-snug">{badge.description}</p>
+
+                  <div className="mt-2 flex items-center justify-between text-[10px]">
+                    {badge.xpReward && (
+                      <span className="font-bold text-amber-600 dark:text-amber-400">
+                        +{badge.xpReward} XP
+                      </span>
+                    )}
+                    {badge.unlocked ? (
+                      <span className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">
+                        <CheckCircle2 className="h-3 w-3" /> {badge.unlockedAt || "Desbloqueado"}
+                      </span>
+                    ) : (
+                      <span className="font-medium text-muted-foreground/80 flex items-center gap-0.5">
+                        <Lock className="h-3 w-3" /> Em andamento
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}

@@ -3,7 +3,7 @@ import { AppShell, PageHeader } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Mic, MicOff, Video, VideoOff, MonitorUp, Phone, Timer, Send, Users, Sparkles, Heart } from "lucide-react";
+import { Mic, MicOff, Video, VideoOff, MonitorUp, Phone, Timer, Send, Users, Heart } from "lucide-react";
 import { MOCK_EVENTS } from "@/data/mock-data";
 import { useState } from "react";
 

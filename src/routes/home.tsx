@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Users, Sparkles, Calendar, Dumbbell, User, Bell, Flame, TrendingUp, Radio, MapPin, ChevronRight, Trophy } from "lucide-react";
+import { Users, Bot, Calendar, Dumbbell, User, Bell, Flame, TrendingUp, Radio, MapPin, ChevronRight, Trophy } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { BrandLogo } from "@/components/brand";
 import { Card } from "@/components/ui/card";
@@ -19,7 +19,7 @@ export const Route = createFileRoute("/home")({
 
 const shortcuts = [
   { to: "/rooms", label: "Salas de prática", desc: "Pratique com pessoas reais", icon: Users, color: "from-blue-500 to-blue-600" },
-  { to: "/ai", label: "IA", desc: "Treine com seu mentor virtual", icon: Sparkles, color: "from-violet-500 to-fuchsia-500" },
+  { to: "/ai", label: "IA", desc: "Treine com seu mentor virtual", icon: Bot, color: "from-violet-500 to-fuchsia-500" },
   { to: "/events", label: "Eventos", desc: "Online e presenciais", icon: Calendar, color: "from-sky-500 to-cyan-500" },
   { to: "/ai/exercises", label: "Exercícios", desc: "Improviso, pitch e respiração", icon: Dumbbell, color: "from-emerald-500 to-teal-500" },
   { to: "/profile", label: "Perfil", desc: "Progresso e nível", icon: User, color: "from-indigo-500 to-purple-600" },
@@ -220,7 +220,7 @@ function HomePage() {
         </div>
         <Card className="mt-3 flex items-center gap-3 rounded-3xl border-border p-4 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_12px_28px_-4px_rgba(0,0,0,0.18)] dark:hover:shadow-[0_12px_28px_-4px_rgba(255,255,255,0.2)]">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-soft">
-            <Sparkles className="h-5 w-5 text-primary" />
+            <Bot className="h-5 w-5 text-primary" />
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold">Pitch de 60 segundos com IA</p>

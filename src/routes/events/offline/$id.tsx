@@ -3,7 +3,7 @@ import { AppShell, PageHeader } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Users, Calendar, CheckCircle2, Clock, Share2, Sparkles } from "lucide-react";
+import { MapPin, Users, Calendar, CheckCircle2, Clock, Share2 } from "lucide-react";
 import { MOCK_EVENTS } from "@/data/mock-data";
 import { useState } from "react";
 

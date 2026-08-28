@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell, PageHeader } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
-import { Sparkles, MessageSquare, Lightbulb, Dumbbell, TrendingUp, History, Wind, Wand2, Component } from "lucide-react";
+import { Bot, HelpCircle, MessageSquare, Lightbulb, Dumbbell, TrendingUp, History, Wind, Wand2, Component } from "lucide-react";
 import CardSpotlightEffect from "@/components/CardSpotlightEffect";
 
 export const Route = createFileRoute("/ai/")({
@@ -12,7 +12,7 @@ export const Route = createFileRoute("/ai/")({
 const actions = [
   { to: "/ai/chat", label: "Treinar apresentação", icon: Wand2 },
   { to: "/ai/chat", label: "Gerar discurso", icon: MessageSquare },
-  { to: "/ai/chat", label: "Responder perguntas", icon: Sparkles },
+  { to: "/ai/chat", label: "Responder perguntas", icon: HelpCircle },
   { to: "/ai/exercises", label: "Controlar ansiedade", icon: Wind },
   { to: "/ai/exercises", label: "Exercícios", icon: Dumbbell },
   { to: "/ai/suggestions", label: "Sugestões", icon: Lightbulb },
@@ -33,7 +33,7 @@ function AIPage() {
           <Card className="flex flex-col items-center rounded-2xl border-0 bg-gradient-brand p-6 text-center text-white relative">
             <div className="relative">
               <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white/20 backdrop-blur">
-                <Sparkles className="h-9 w-9" />
+                <Bot className="h-9 w-9" />
               </div>
               <span className="absolute inset-0 -z-10 animate-pulse rounded-full bg-white/10" />
             </div>

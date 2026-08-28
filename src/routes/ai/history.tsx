@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AppShell, PageHeader } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, ChevronUp, Star, ThumbsUp, AlertCircle, Clock, Sparkles } from "lucide-react";
+import { ChevronDown, ChevronUp, Star, ThumbsUp, AlertCircle, Clock } from "lucide-react";
 import { MOCK_HISTORY, type AIHistoryItem } from "@/data/mock-data";
 import { useState } from "react";
 

@@ -3,7 +3,7 @@ import { AppShell, PageHeader } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, MapPin, Calendar, Plus, Users, Sparkles } from "lucide-react";
+import { Search, MapPin, Calendar, Plus, Users, Flame } from "lucide-react";
 import { MOCK_EVENTS, type EventItem } from "@/data/mock-data";
 import { useState, useMemo } from "react";
 
@@ -81,7 +81,7 @@ function EventsPage() {
         <Card className="overflow-hidden rounded-3xl border-0 p-0 bg-indigo-500 shadow-lg shadow-xl/30 transition-all duration-200 hover:shadow-2xl dark:hover:shadow-[0_12px_32px_rgba(255,255,255,0.25)] hover:-translate-y-1">
           <div className="bg-gradient-brand p-4 text-white">
             <div className="flex items-center gap-1.5 text-xs font-bold opacity-90">
-              <Sparkles className="h-3.5 w-3.5" /> EM DESTAQUE
+              <Flame className="h-3.5 w-3.5 text-amber-300" /> EM DESTAQUE
             </div>
             <h3 className="mt-2 text-xl font-extrabold leading-tight">Semana Nacional da Oratória Fale+</h3>
             <p className="mt-1 text-sm opacity-90">7 dias de workshops práticos, mentorias individuais e desafios ao vivo.</p>

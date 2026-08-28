@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Mic, MicOff, Video, Hand, Phone, MessageSquare, Timer, Settings, Users, Send, Star, Sparkles, ThumbsUp, Heart } from "lucide-react";
+import { Mic, MicOff, Video, Hand, Phone, MessageSquare, Timer, Settings, Users, Send, Star, ThumbsUp, Heart } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";

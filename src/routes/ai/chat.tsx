@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AppShell, PageHeader } from "@/components/app-shell";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Send, Mic, MicOff, Sparkles, Volume2, Bot, Wand2, Lightbulb } from "lucide-react";
+import { Send, Mic, MicOff, Volume2, Bot, Wand2, Lightbulb } from "lucide-react";
 import { useState } from "react";
 
 export const Route = createFileRoute("/ai/chat")({

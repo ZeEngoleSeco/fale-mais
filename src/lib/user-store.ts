@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { MOCK_USERS, type UserProfile } from "@/data/mock-data";
+import { MOCK_USERS, ALL_ACHIEVEMENTS, type UserProfile } from "@/data/mock-data";
 
 const STORAGE_USER_KEY = "fale_mais_user_profile";
 const STORAGE_USERS_LIST_KEY = "fale_mais_all_users_list";
@@ -65,12 +65,49 @@ export function saveUsersList(users: UserProfile[]) {
   }
 }
 
+export function ensureFullBadges(user: UserProfile): UserProfile {
+  if (!user) return user;
+  const userBadgesMap = new Map((user.badges || []).map((b) => [b.id, b]));
+
+  const mergedBadges = ALL_ACHIEVEMENTS.map((masterBadge) => {
+    const existing = userBadgesMap.get(masterBadge.id) || userBadgesMap.get(masterBadge.title);
+    if (existing) {
+      return {
+        ...masterBadge,
+        ...existing,
+        unlocked: existing.unlocked ?? masterBadge.unlocked,
+        unlockedAt: existing.unlockedAt || masterBadge.unlockedAt,
+      };
+    }
+    if (user.id !== "user-1") {
+      return {
+        ...masterBadge,
+        unlocked: masterBadge.id === "badge-welcome",
+        unlockedAt: masterBadge.id === "badge-welcome" ? "Hoje" : undefined,
+      };
+    }
+    return masterBadge;
+  });
+
+  const unlockedCount = mergedBadges.filter((b) => b.unlocked).length;
+
+  return {
+    ...user,
+    badges: mergedBadges,
+    stats: {
+      ...user.stats,
+      achievementsCount: unlockedCount,
+    },
+  };
+}
+
 export function getStoredUser(): UserProfile | null {
   if (typeof window === "undefined") return null;
   try {
     const saved = localStorage.getItem(STORAGE_USER_KEY);
     if (saved) {
-      return JSON.parse(saved);
+      const parsed = JSON.parse(saved);
+      return ensureFullBadges(parsed);
     }
   } catch (e) {
     console.error("Error reading user from localStorage", e);
@@ -146,7 +183,7 @@ export function registerNewUser(
         id: "badge-welcome",
         title: "Primeiro Passo",
         description: "Criou sua conta na plataforma Fale+ e iniciou a jornada.",
-        icon: "Sparkles",
+        icon: "Compass",
         unlocked: true,
         unlockedAt: "Hoje",
       },
@@ -271,7 +308,7 @@ export function logoutUser() {
 }
 
 // Fallback user template if nothing is stored
-const DEFAULT_INITIAL_USER: UserProfile = {
+const DEFAULT_INITIAL_USER: UserProfile = ensureFullBadges({
   id: "user-default",
   name: "Visitante",
   email: "visitante@fale-mais.com",
@@ -290,17 +327,12 @@ const DEFAULT_INITIAL_USER: UserProfile = {
     hoursPracticed: 0,
     averageScore: 0,
   },
-  badges: [
-    {
-      id: "badge-welcome",
-      title: "Primeiro Passo",
-      description: "Criou sua conta na plataforma Fale+ e iniciou a jornada.",
-      icon: "Sparkles",
-      unlocked: true,
-      unlockedAt: "Hoje",
-    },
-  ],
-};
+  badges: ALL_ACHIEVEMENTS.map((b) => ({
+    ...b,
+    unlocked: b.id === "badge-welcome",
+    unlockedAt: b.id === "badge-welcome" ? "Hoje" : undefined,
+  })),
+});
 
 export function useCurrentUser(): {
   user: UserProfile;

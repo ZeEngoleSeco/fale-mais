@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell, PageHeader } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Play, Sparkles, CheckCircle2, Clock, Dumbbell, X } from "lucide-react";
+import { Play, Lightbulb, CheckCircle2, Clock, Dumbbell, X } from "lucide-react";
 import { MOCK_EXERCISES, type ExerciseItem } from "@/data/mock-data";
 import { useState } from "react";
 
@@ -132,7 +132,7 @@ function Exercises() {
             {activeExercise.tips && activeExercise.tips.length > 0 && (
               <div className="mt-3 space-y-1 rounded-2xl bg-primary/5 border border-primary/20 p-3.5 text-xs text-primary">
                 <p className="font-bold flex items-center gap-1">
-                  <Sparkles className="h-3.5 w-3.5" /> Dica do Mentor:
+                  <Lightbulb className="h-3.5 w-3.5" /> Dica do Mentor:
                 </p>
                 {activeExercise.tips.map((t, idx) => (
                   <p key={idx} className=" text-[11px] text-foreground/90">{t}</p>
