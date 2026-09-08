@@ -3,13 +3,15 @@ import { AppShell, PageHeader } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, MapPin, Calendar, Plus, Users, Sparkles } from "lucide-react";
+import { Search, MapPin, Calendar, Plus, Users, Flame } from "lucide-react";
 import { MOCK_EVENTS, type EventItem } from "@/data/mock-data";
 import { useState, useMemo } from "react";
+
 
 export const Route = createFileRoute("/events/")({
   head: () => ({ meta: [{ title: "Eventos & Workshops — Fale+" }] }),
   component: EventsPage,
+  
 });
 
 const cats = ["Todos", "Online", "Presencial", "Pitch", "Workshop", "Masterclass", "Meetup"];
@@ -48,14 +50,14 @@ function EventsPage() {
           </Link>
         }
       />
-      <div className="px-5 space-y-4">
+      <div className="px-5 space-y-4"> 
         <div className="relative">
           <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar por título, cidade ou categoria..."
-            className="h-12 rounded-2xl pl-10"
+            className="h-12 rounded-2xl pl-10 transition-shadow hover:shadow-md dark:hover:shadow-[0_4px_12px_rgba(255,255,255,0.15)]"
           />
         </div>
 
@@ -64,10 +66,10 @@ function EventsPage() {
             <button
               key={c}
               onClick={() => setSelectedCat(c)}
-              className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+              className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_6px_16px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_6px_18px_rgba(255,255,255,0.25)] ${
                 selectedCat === c
                   ? "bg-gradient-brand text-white shadow-soft"
-                  : "bg-secondary text-foreground hover:bg-secondary/80"
+                  : "bg-secondary text-foreground hover:bg-secondary/90"
               }`}
             >
               {c}
@@ -76,10 +78,10 @@ function EventsPage() {
         </div>
 
         {/* Banner Destaque */}
-        <Card className="overflow-hidden rounded-3xl border-0 p-0 shadow-lift">
+        <Card className="overflow-hidden rounded-3xl border-0 p-0 bg-indigo-500 shadow-lg shadow-xl/30 transition-all duration-200 hover:shadow-2xl dark:hover:shadow-[0_12px_32px_rgba(255,255,255,0.25)] hover:-translate-y-1">
           <div className="bg-gradient-brand p-4 text-white">
             <div className="flex items-center gap-1.5 text-xs font-bold opacity-90">
-              <Sparkles className="h-3.5 w-3.5" /> EM DESTAQUE
+              <Flame className="h-3.5 w-3.5 text-amber-300" /> EM DESTAQUE
             </div>
             <h3 className="mt-2 text-xl font-extrabold leading-tight">Semana Nacional da Oratória Fale+</h3>
             <p className="mt-1 text-sm opacity-90">7 dias de workshops práticos, mentorias individuais e desafios ao vivo.</p>
@@ -105,7 +107,7 @@ function EventsPage() {
                   params={{ id: e.id }}
                   className="block"
                 >
-                  <Card className="rounded-3xl border-border p-4.5 transition hover:shadow-soft hover:-translate-y-0.5">
+                  <Card className="rounded-3xl border-border p-4.5 transition-all duration-200 hover:shadow-[0_12px_28px_-4px_rgba(0,0,0,0.18)] dark:hover:shadow-[0_12px_28px_-4px_rgba(255,255,255,0.2)] hover:-translate-y-1">
                     <div className="flex items-start gap-3.5">
                       <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-2xl bg-gradient-soft text-primary font-bold">
                         <span className="text-[10px] font-semibold uppercase">{e.date.split(",")[0]}</span>

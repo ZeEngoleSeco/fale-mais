@@ -3,11 +3,11 @@ import { AppShell, PageHeader } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, Award, CheckCircle2, AlertTriangle, ArrowRight, Sparkles } from "lucide-react";
+import { TrendingUp, Award, CheckCircle2, AlertTriangle, ArrowRight, Target } from "lucide-react";
 import { MOCK_INSIGHTS_METRICS } from "@/data/mock-data";
 
 export const Route = createFileRoute("/ai/insights")({
-  head: () => ({ meta: [{ title: "Insights & Métricas de Oratória — Fale+" }] }),
+  head: () => ({ meta: [{ title: "Insights de Oratória — Fale+" }] }),
   component: Insights,
 });
 
@@ -124,7 +124,7 @@ function Insights() {
         >
           <div>
             <p className="text-sm font-bold flex items-center gap-1.5">
-              <Sparkles className="h-4 w-4" /> Praticar pontos a melhorar
+              <Target className="h-4 w-4" /> Praticar pontos a melhorar
             </p>
             <p className="text-xs opacity-90 mt-0.5">Sessão guiada de 5 minutos com o mentor Thorel</p>
           </div>

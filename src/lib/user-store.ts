@@ -1,9 +1,17 @@
 import { useState, useEffect } from "react";
-import { type UserProfile } from "@/data/mock-data";
+import { MOCK_USERS, ALL_ACHIEVEMENTS, type UserProfile } from "@/data/mock-data";
 
 const STORAGE_USER_KEY = "fale_mais_user_profile";
 const STORAGE_USERS_LIST_KEY = "fale_mais_all_users_list";
+const STORAGE_REMEMBER_KEY = "fale_mais_remember_me";
+const STORAGE_SAVED_CREDS_KEY = "fale_mais_remembered_creds";
 const EVENT_KEY = "fale_mais_user_update";
+
+export interface AuthResult {
+  success: boolean;
+  user?: UserProfile;
+  error?: string;
+}
 
 const GRADIENT_COLORS = [
   "from-blue-600 to-indigo-600",
@@ -37,6 +45,10 @@ export function getAllUsers(): UserProfile[] {
     if (saved) {
       return JSON.parse(saved);
     }
+    // Seed default mock users with default password if nothing saved
+    const seeded = MOCK_USERS.map((u) => ({ ...u, password: "123456" }));
+    localStorage.setItem(STORAGE_USERS_LIST_KEY, JSON.stringify(seeded));
+    return seeded;
   } catch (e) {
     console.error("Error reading users list from localStorage", e);
   }
@@ -53,12 +65,49 @@ export function saveUsersList(users: UserProfile[]) {
   }
 }
 
+export function ensureFullBadges(user: UserProfile): UserProfile {
+  if (!user) return user;
+  const userBadgesMap = new Map((user.badges || []).map((b) => [b.id, b]));
+
+  const mergedBadges = ALL_ACHIEVEMENTS.map((masterBadge) => {
+    const existing = userBadgesMap.get(masterBadge.id) || userBadgesMap.get(masterBadge.title);
+    if (existing) {
+      return {
+        ...masterBadge,
+        ...existing,
+        unlocked: existing.unlocked ?? masterBadge.unlocked,
+        unlockedAt: existing.unlockedAt || masterBadge.unlockedAt,
+      };
+    }
+    if (user.id !== "user-1") {
+      return {
+        ...masterBadge,
+        unlocked: masterBadge.id === "badge-welcome",
+        unlockedAt: masterBadge.id === "badge-welcome" ? "Hoje" : undefined,
+      };
+    }
+    return masterBadge;
+  });
+
+  const unlockedCount = mergedBadges.filter((b) => b.unlocked).length;
+
+  return {
+    ...user,
+    badges: mergedBadges,
+    stats: {
+      ...user.stats,
+      achievementsCount: unlockedCount,
+    },
+  };
+}
+
 export function getStoredUser(): UserProfile | null {
   if (typeof window === "undefined") return null;
   try {
     const saved = localStorage.getItem(STORAGE_USER_KEY);
     if (saved) {
-      return JSON.parse(saved);
+      const parsed = JSON.parse(saved);
+      return ensureFullBadges(parsed);
     }
   } catch (e) {
     console.error("Error reading user from localStorage", e);
@@ -88,17 +137,32 @@ export function saveUser(user: UserProfile) {
 export function registerNewUser(
   name: string,
   email: string,
+  password?: string,
   role = "Orador Iniciante",
   bio = "Membro da comunidade Fale+ pronto para desenvolver a comunicação e vencer o palco."
-): UserProfile {
-  const cleanName = name.trim() || nameFromEmail(email) || "Novo Usuário";
-  const cleanEmail = email.trim().toLowerCase() || "usuario@exemplo.com";
+): AuthResult {
+  const cleanEmail = email.trim().toLowerCase();
+  if (!cleanEmail) {
+    return { success: false, error: "Por favor, informe um e-mail válido." };
+  }
+  if (!password || password.trim().length < 4) {
+    return { success: false, error: "A senha deve ter pelo menos 4 caracteres." };
+  }
+
+  const all = getAllUsers();
+  const existing = all.find((u) => u.email.toLowerCase() === cleanEmail);
+  if (existing) {
+    return { success: false, error: "Este e-mail já está cadastrado. Por favor, faça login." };
+  }
+
+  const cleanName = name.trim() || nameFromEmail(cleanEmail) || "Novo Usuário";
   const colorIndex = Math.floor(Math.random() * GRADIENT_COLORS.length);
 
   const newUser: UserProfile = {
     id: `user-${Date.now()}`,
     name: cleanName,
     email: cleanEmail,
+    password: password.trim(),
     role: role.trim(),
     level: 1,
     xp: 0,
@@ -119,55 +183,72 @@ export function registerNewUser(
         id: "badge-welcome",
         title: "Primeiro Passo",
         description: "Criou sua conta na plataforma Fale+ e iniciou a jornada.",
-        icon: "Sparkles",
+        icon: "Compass",
         unlocked: true,
         unlockedAt: "Hoje",
-      },
-      {
-        id: "badge-1",
-        title: "Primeiro Palco",
-        description: "Complete sua 1ª apresentação ao vivo em uma sala pública.",
-        icon: "Mic",
-        unlocked: false,
-      },
-      {
-        id: "badge-2",
-        title: "Sequência de Ouro",
-        description: "Pratique por 7 dias consecutivos com o mentor de IA.",
-        icon: "Flame",
-        unlocked: false,
-      },
-      {
-        id: "badge-3",
-        title: "Mestre do Pitch",
-        description: "Obtenha nota superior a 9.0 em 5 treinos de pitch de 60 segundos.",
-        icon: "Trophy",
-        unlocked: false,
       },
     ],
   };
 
   saveUser(newUser);
-  return newUser;
+  return { success: true, user: newUser };
 }
 
-export function loginWithEmail(email: string, password?: string): UserProfile {
+export function loginWithEmail(email: string, password?: string): AuthResult {
   const cleanEmail = email.trim().toLowerCase();
+  if (!cleanEmail) {
+    return { success: false, error: "Por favor, informe o seu e-mail." };
+  }
+  if (!password) {
+    return { success: false, error: "Por favor, informe a sua senha." };
+  }
+
   const all = getAllUsers();
   const existing = all.find((u) => u.email.toLowerCase() === cleanEmail);
 
-  if (existing) {
-    saveUser(existing);
-    return existing;
+  if (!existing) {
+    return { success: false, error: "E-mail não encontrado. Por favor, crie uma conta primeiro." };
   }
 
-  // Create new active profile from the email
-  const derivedName = nameFromEmail(cleanEmail);
-  return registerNewUser(derivedName, cleanEmail);
+  const storedPassword = existing.password || "123456";
+  if (existing.password && existing.password !== password.trim()) {
+    return { success: false, error: "Senha incorreta. Verifique seus dados e tente novamente." };
+  }
+  if (!existing.password && password.trim() !== storedPassword) {
+    return { success: false, error: "Senha incorreta. Verifique seus dados e tente novamente." };
+  }
+
+  if (!existing.password) {
+    existing.password = password.trim();
+  }
+
+  saveUser(existing);
+  return { success: true, user: existing };
+}
+
+export function resetUserPassword(email: string, newPassword?: string): AuthResult {
+  const cleanEmail = email.trim().toLowerCase();
+  if (!cleanEmail) {
+    return { success: false, error: "Por favor, informe o seu e-mail cadastrado." };
+  }
+  if (!newPassword || newPassword.trim().length < 4) {
+    return { success: false, error: "A nova senha deve ter pelo menos 4 caracteres." };
+  }
+
+  const all = getAllUsers();
+  const existing = all.find((u) => u.email.toLowerCase() === cleanEmail);
+
+  if (!existing) {
+    return { success: false, error: "Nenhum usuário encontrado com este e-mail. Verifique o endereço e tente novamente." };
+  }
+
+  existing.password = newPassword.trim();
+  saveUser(existing);
+  return { success: true, user: existing };
 }
 
 export function updateUserName(newName: string, role?: string, bio?: string): UserProfile {
-  const current = getStoredUser() || registerNewUser(newName, "usuario@exemplo.com");
+  const current = getStoredUser() || registerNewUser(newName, "usuario@exemplo.com", "123456").user || DEFAULT_INITIAL_USER;
   const initials = calculateInitials(newName);
   const updated: UserProfile = {
     ...current,
@@ -180,10 +261,45 @@ export function updateUserName(newName: string, role?: string, bio?: string): Us
   return updated;
 }
 
+export function saveRememberMePreference(remember: boolean, email?: string, password?: string) {
+  if (typeof window === "undefined") return;
+  try {
+    if (remember) {
+      localStorage.setItem(STORAGE_REMEMBER_KEY, "true");
+      if (email && password) {
+        localStorage.setItem(STORAGE_SAVED_CREDS_KEY, JSON.stringify({ email, password }));
+      }
+    } else {
+      localStorage.removeItem(STORAGE_REMEMBER_KEY);
+      localStorage.removeItem(STORAGE_SAVED_CREDS_KEY);
+    }
+  } catch (e) {
+    console.error("Error saving remember me preference", e);
+  }
+}
+
+export function getRememberMePreference(): { remember: boolean; email?: string; password?: string } {
+  if (typeof window === "undefined") return { remember: false };
+  try {
+    const remember = localStorage.getItem(STORAGE_REMEMBER_KEY) === "true";
+    const savedCreds = localStorage.getItem(STORAGE_SAVED_CREDS_KEY);
+    if (remember && savedCreds) {
+      const parsed = JSON.parse(savedCreds);
+      return { remember: true, email: parsed.email, password: parsed.password };
+    }
+    return { remember };
+  } catch (e) {
+    console.error("Error reading remember me preference", e);
+  }
+  return { remember: false };
+}
+
 export function logoutUser() {
   if (typeof window !== "undefined") {
     try {
       localStorage.removeItem(STORAGE_USER_KEY);
+      localStorage.removeItem(STORAGE_REMEMBER_KEY);
+      localStorage.removeItem(STORAGE_SAVED_CREDS_KEY);
       window.dispatchEvent(new Event(EVENT_KEY));
     } catch (e) {
       console.error("Error logging out", e);
@@ -192,7 +308,7 @@ export function logoutUser() {
 }
 
 // Fallback user template if nothing is stored
-const DEFAULT_INITIAL_USER: UserProfile = {
+const DEFAULT_INITIAL_USER: UserProfile = ensureFullBadges({
   id: "user-default",
   name: "Visitante",
   email: "visitante@fale-mais.com",
@@ -211,25 +327,21 @@ const DEFAULT_INITIAL_USER: UserProfile = {
     hoursPracticed: 0,
     averageScore: 0,
   },
-  badges: [
-    {
-      id: "badge-welcome",
-      title: "Primeiro Passo",
-      description: "Criou sua conta na plataforma Fale+ e iniciou a jornada.",
-      icon: "Sparkles",
-      unlocked: true,
-      unlockedAt: "Hoje",
-    },
-  ],
-};
+  badges: ALL_ACHIEVEMENTS.map((b) => ({
+    ...b,
+    unlocked: b.id === "badge-welcome",
+    unlockedAt: b.id === "badge-welcome" ? "Hoje" : undefined,
+  })),
+});
 
 export function useCurrentUser(): {
   user: UserProfile;
   allUsers: UserProfile[];
   updateName: (newName: string, role?: string, bio?: string) => void;
   setUser: (user: UserProfile) => void;
-  registerUser: (name: string, email: string, role?: string, bio?: string) => UserProfile;
-  loginUser: (email: string, password?: string) => UserProfile;
+  registerUser: (name: string, email: string, password?: string, role?: string, bio?: string) => AuthResult;
+  loginUser: (email: string, password?: string) => AuthResult;
+  resetPassword: (email: string, newPassword?: string) => AuthResult;
   logout: () => void;
 } {
   const [user, setUserState] = useState<UserProfile>(() => getStoredUser() || DEFAULT_INITIAL_USER);
@@ -259,16 +371,28 @@ export function useCurrentUser(): {
     setUserState(newUser);
   };
 
-  const registerUser = (name: string, email: string, role?: string, bio?: string) => {
-    const newUser = registerNewUser(name, email, role, bio);
-    setUserState(newUser);
-    return newUser;
+  const registerUser = (name: string, email: string, password?: string, role?: string, bio?: string) => {
+    const result = registerNewUser(name, email, password, role, bio);
+    if (result.success && result.user) {
+      setUserState(result.user);
+    }
+    return result;
   };
 
   const loginUser = (email: string, password?: string) => {
-    const logged = loginWithEmail(email, password);
-    setUserState(logged);
-    return logged;
+    const result = loginWithEmail(email, password);
+    if (result.success && result.user) {
+      setUserState(result.user);
+    }
+    return result;
+  };
+
+  const resetPassword = (email: string, newPassword?: string) => {
+    const result = resetUserPassword(email, newPassword);
+    if (result.success && result.user) {
+      setUserState(result.user);
+    }
+    return result;
   };
 
   const logout = () => {
@@ -276,5 +400,5 @@ export function useCurrentUser(): {
     setUserState(DEFAULT_INITIAL_USER);
   };
 
-  return { user, allUsers, updateName, setUser, registerUser, loginUser, logout };
+  return { user, allUsers, updateName, setUser, registerUser, loginUser, resetPassword, logout };
 }

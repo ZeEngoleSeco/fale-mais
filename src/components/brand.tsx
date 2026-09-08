@@ -5,7 +5,7 @@ export function BrandLogo({ className, size = 40 }: { className?: string; size?:
   return (
     <div
       className={cn(
-        "relative flex items-center justify-center overflow-hidden rounded-2xl bg-purple-500/10 p-0.5 shadow-soft ring-1 ring-purple-500/20 transition-transform hover:scale-105",
+        "relative flex items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-cyan-900/40 via-purple-900/40 to-background p-0.5 shadow-soft ring-1 ring-cyan-500/30 transition-transform hover:scale-105",
         className,
       )}
       style={{ width: size, height: size }}
@@ -13,8 +13,8 @@ export function BrandLogo({ className, size = 40 }: { className?: string; size?:
     >
       <img
         src="/app-icon.png"
-        alt="Fale+ Mascote"
-        className="h-full w-full object-contain filter drop-shadow-sm"
+        alt="Fale+ Ícone Oficial"
+        className="h-full w-full object-cover rounded-xl filter drop-shadow-md transition-all"
       />
     </div>
   );

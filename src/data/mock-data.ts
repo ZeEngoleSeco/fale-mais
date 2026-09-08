@@ -2,6 +2,7 @@ export interface UserProfile {
   id: string;
   name: string;
   email: string;
+  password?: string;
   role: string;
   level: number;
   xp: number;
@@ -24,6 +25,8 @@ export interface UserProfile {
     icon: string;
     unlocked: boolean;
     unlockedAt?: string;
+    category?: string;
+    xpReward?: number;
   }>;
 }
 
@@ -125,6 +128,162 @@ export interface InsightMetric {
   description: string;
 }
 
+export const ALL_ACHIEVEMENTS = [
+  {
+    id: "badge-welcome",
+    title: "Primeiro Passo",
+    description: "Criou sua conta na Fale+ e iniciou a jornada para dominar a oratória.",
+    icon: "Compass",
+    category: "Início",
+    xpReward: 50,
+    unlocked: true,
+    unlockedAt: "05 Jan 2026",
+  },
+  {
+    id: "badge-stage-1",
+    title: "Primeiro Palco",
+    description: "Completou sua 1ª apresentação ao vivo em uma sala pública de prática.",
+    icon: "Mic",
+    category: "Comunidade",
+    xpReward: 100,
+    unlocked: true,
+    unlockedAt: "10 Jan 2026",
+  },
+  {
+    id: "badge-streak-7",
+    title: "Sequência de Ouro",
+    description: "Praticou por 7 dias consecutivos no app, mantendo a chama acesa.",
+    icon: "Flame",
+    category: "Constância",
+    xpReward: 150,
+    unlocked: true,
+    unlockedAt: "28 Jan 2026",
+  },
+  {
+    id: "badge-pitch-master",
+    title: "Mestre do Pitch",
+    description: "Obteve nota superior a 9.0 em 5 treinos de pitch de 60 segundos.",
+    icon: "Trophy",
+    category: "Desempenho",
+    xpReward: 200,
+    unlocked: true,
+    unlockedAt: "05 Fev 2026",
+  },
+  {
+    id: "badge-calm-voice",
+    title: "Voz Serena",
+    description: "Completou 10 exercícios de respiração 4-7-8 e controle de ansiedade.",
+    icon: "Wind",
+    category: "Bem-estar",
+    xpReward: 100,
+    unlocked: true,
+    unlockedAt: "11 Fev 2026",
+  },
+  {
+    id: "badge-perfect-diction",
+    title: "Dicção Impecável",
+    description: "Realizou um treino com 100% de clareza vocal e zero vícios de fala ('éee', 'né').",
+    icon: "Target",
+    category: "Técnica",
+    xpReward: 150,
+    unlocked: true,
+    unlockedAt: "18 Fev 2026",
+  },
+  {
+    id: "badge-improv-pro",
+    title: "Mestre do Improviso",
+    description: "Discursou por 2 minutos sobre 5 temas surpresa sem pausas constrangedoras.",
+    icon: "Brain",
+    category: "Desafio",
+    xpReward: 200,
+    unlocked: true,
+    unlockedAt: "22 Fev 2026",
+  },
+  {
+    id: "badge-fearless",
+    title: "Superação do Medo",
+    description: "Concluiu seu primeiro discurso completo em sala ao vivo superando a ansiedade.",
+    icon: "ShieldCheck",
+    category: "Bem-estar",
+    xpReward: 150,
+    unlocked: true,
+    unlockedAt: "25 Jan 2026",
+  },
+  {
+    id: "badge-marathon",
+    title: "Maratonista da Oratória",
+    description: "Acumulou mais de 15 horas totais de treinos práticos na plataforma.",
+    icon: "Clock",
+    category: "Evolução",
+    xpReward: 250,
+    unlocked: true,
+    unlockedAt: "02 Fev 2026",
+  },
+  {
+    id: "badge-streak-14",
+    title: "Constância Imparável",
+    description: "Mantenha o hábito de praticar oratória por 14 dias seguidos no aplicativo.",
+    icon: "Zap",
+    category: "Constância",
+    xpReward: 300,
+    unlocked: false,
+  },
+  {
+    id: "badge-community-leader",
+    title: "Líder Comunitário",
+    description: "Criou e mediou 5 salas ao vivo com mais de 10 participantes ativos.",
+    icon: "Users",
+    category: "Comunidade",
+    xpReward: 250,
+    unlocked: false,
+  },
+  {
+    id: "badge-feedback-gold",
+    title: "Feedback de Ouro",
+    description: "Ofereceu 15 incentivos e feedbacks construtivos para outros oradores nas salas.",
+    icon: "HeartHandshake",
+    category: "Comunidade",
+    xpReward: 120,
+    unlocked: false,
+  },
+  {
+    id: "badge-morning-speaker",
+    title: "Orador Matutino",
+    description: "Complete 3 treinos de dicção e aquecimento vocal antes das 9h da manhã.",
+    icon: "Lightbulb",
+    category: "Hábito",
+    xpReward: 100,
+    unlocked: false,
+  },
+  {
+    id: "badge-storyteller",
+    title: "Storyteller Marcante",
+    description: "Apresente uma história inspiradora estruturada em 3 atos para a IA.",
+    icon: "GraduationCap",
+    category: "Técnica",
+    xpReward: 180,
+    unlocked: false,
+  },
+  {
+    id: "badge-pauses-master",
+    title: "Domínio das Pausas",
+    description: "Utilize pausas intencionais de 2 segundos para dar ênfase a 10 pontos-chave.",
+    icon: "Volume2",
+    category: "Técnica",
+    xpReward: 150,
+    unlocked: false,
+  },
+  {
+    id: "badge-legend",
+    title: "Lenda da Oratória",
+    description: "Acumule 50 horas de prática total e alcance o Nível 10 de evolução.",
+    icon: "Crown",
+    category: "Evolução",
+    xpReward: 500,
+    unlocked: false,
+  },
+];
+
 export const MOCK_USERS: UserProfile[] = [
   {
     id: "user-1",
@@ -141,58 +300,11 @@ export const MOCK_USERS: UserProfile[] = [
     stats: {
       presentations: 24,
       roomsCreated: 6,
-      achievementsCount: 12,
+      achievementsCount: 9,
       hoursPracticed: 18.5,
       averageScore: 8.8,
     },
-    badges: [
-      {
-        id: "badge-1",
-        title: "Primeiro Palco",
-        description: "Completou a 1ª apresentação ao vivo em uma sala pública.",
-        icon: "Mic",
-        unlocked: true,
-        unlockedAt: "10 Jan 2026",
-      },
-      {
-        id: "badge-2",
-        title: "Sequência de Ouro",
-        description: "Praticou por 7 dias consecutivos com o mentor de IA.",
-        icon: "Flame",
-        unlocked: true,
-        unlockedAt: "28 Jan 2026",
-      },
-      {
-        id: "badge-3",
-        title: "Mestre do Pitch",
-        description: "Obteve nota superior a 9.0 em 5 treinos de pitch de 60 segundos.",
-        icon: "Trophy",
-        unlocked: true,
-        unlockedAt: "05 Fev 2026",
-      },
-      {
-        id: "badge-4",
-        title: "Voz Serena",
-        description: "Completou 10 exercícios de respiração e controle da ansiedade.",
-        icon: "Wind",
-        unlocked: true,
-        unlockedAt: "11 Fev 2026",
-      },
-      {
-        id: "badge-5",
-        title: "Líder Comunitário",
-        description: "Criou e mediou 5 salas com mais de 10 participantes.",
-        icon: "Users",
-        unlocked: false,
-      },
-      {
-        id: "badge-6",
-        title: "Improviso Ágil",
-        description: "Fale por 2 minutos sobre 5 temas surpresa sem pausas longas.",
-        icon: "Sparkles",
-        unlocked: false,
-      },
-    ],
+    badges: ALL_ACHIEVEMENTS,
   },
   {
     id: "user-2",
@@ -716,7 +828,7 @@ export const MOCK_SUGGESTIONS = [
     title: "Comece sua fala com uma pergunta instigante",
     category: "Estrutura do Discurso",
     detail: "Evite começar com 'Bom dia, meu nome é...'. Comece com uma provocação: 'Você já parou para pensar quanto tempo perde por semana?'",
-    icon: "Sparkles",
+    icon: "Lightbulb",
   },
   {
     id: "sug-5",

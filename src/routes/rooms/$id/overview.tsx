@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell, PageHeader } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
-import { Users, Clock, Mic, Star, Sparkles, Activity } from "lucide-react";
+import { Users, Clock, Mic, Star, Activity } from "lucide-react";
 import { MOCK_ROOMS } from "@/data/mock-data";
 
 export const Route = createFileRoute("/rooms/$id/overview")({
