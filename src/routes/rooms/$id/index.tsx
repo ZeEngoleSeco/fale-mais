@@ -159,7 +159,7 @@ function RoomPage() {
             <span className="text-[10px] text-muted-foreground">Mensagens em tempo real</span>
           </div>
 
-          <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1">
+          <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1.5 minimal-scrollbar">
             {chatMessages.map((msg) => (
               <ChatLine key={msg.id} name={msg.sender} text={msg.text} time={msg.time} mine={msg.isMe} />
             ))}
