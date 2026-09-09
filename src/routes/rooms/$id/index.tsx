@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { MOCK_ROOMS, CURRENT_USER } from "@/data/mock-data";
+import { getRoomById } from "@/lib/room-store";
 import { useState } from "react";
 
 export const Route = createFileRoute("/rooms/$id/")({
@@ -15,7 +16,7 @@ export const Route = createFileRoute("/rooms/$id/")({
 function RoomPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
-  const room = MOCK_ROOMS.find((r) => r.id === id) || MOCK_ROOMS[0];
+  const room = getRoomById(id) || MOCK_ROOMS[0];
 
   const [muted, setMuted] = useState(false);
   const [videoOn, setVideoOn] = useState(true);

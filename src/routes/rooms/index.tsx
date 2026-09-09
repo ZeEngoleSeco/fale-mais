@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Search, Plus, Users, Lock, Globe, Radio } from "lucide-react";
+import { Search, Plus, Users, Lock, Globe, Radio, Sparkles } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { MOCK_ROOMS, type RoomItem } from "@/data/mock-data";
-import { useState, useMemo } from "react";
+import { type RoomItem } from "@/data/mock-data";
+import { getAllRooms } from "@/lib/room-store";
+import { useState, useMemo, useEffect } from "react";
 
 export const Route = createFileRoute("/rooms/")({
   head: () => ({ meta: [{ title: "Salas de Prática — Fale+" }] }),
@@ -17,9 +18,14 @@ const categories = ["Todas", "Pitch", "Improviso", "Corporativo", "Bem-estar", "
 function RoomsPage() {
   const [search, setSearch] = useState("");
   const [selectedCat, setSelectedCat] = useState("Todas");
+  const [roomsList, setRoomsList] = useState<RoomItem[]>([]);
+
+  useEffect(() => {
+    setRoomsList(getAllRooms());
+  }, []);
 
   const filteredRooms = useMemo(() => {
-    return MOCK_ROOMS.filter((room) => {
+    return roomsList.filter((room) => {
       const matchSearch =
         room.name.toLowerCase().includes(search.toLowerCase()) ||
         room.desc.toLowerCase().includes(search.toLowerCase()) ||
@@ -27,7 +33,7 @@ function RoomsPage() {
       const matchCat = selectedCat === "Todas" || room.category === selectedCat;
       return matchSearch && matchCat;
     });
-  }, [search, selectedCat]);
+  }, [search, selectedCat, roomsList]);
 
   return (
     <AppShell>
