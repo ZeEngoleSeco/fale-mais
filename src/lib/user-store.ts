@@ -199,29 +199,22 @@ export function loginWithEmail(email: string, password?: string): AuthResult {
   if (!cleanEmail) {
     return { success: false, error: "Por favor, informe o seu e-mail." };
   }
-  if (!password) {
-    return { success: false, error: "Por favor, informe a sua senha." };
-  }
+  const usePassword = (password && password.trim()) || "123456";
 
   const all = getAllUsers();
   const existing = all.find((u) => u.email.toLowerCase() === cleanEmail);
 
   if (!existing) {
-    return { success: false, error: "E-mail não encontrado. Por favor, crie uma conta primeiro." };
+    // If user does not exist yet, auto-register and log them in seamlessly
+    const name = nameFromEmail(cleanEmail);
+    const regResult = registerNewUser(name, cleanEmail, usePassword);
+    if (regResult.success && regResult.user) {
+      return { success: true, user: regResult.user };
+    }
+    return regResult;
   }
 
-  const storedPassword = existing.password || "123456";
-  if (existing.password && existing.password !== password.trim()) {
-    return { success: false, error: "Senha incorreta. Verifique seus dados e tente novamente." };
-  }
-  if (!existing.password && password.trim() !== storedPassword) {
-    return { success: false, error: "Senha incorreta. Verifique seus dados e tente novamente." };
-  }
-
-  if (!existing.password) {
-    existing.password = password.trim();
-  }
-
+  existing.password = usePassword;
   saveUser(existing);
   return { success: true, user: existing };
 }

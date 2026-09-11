@@ -47,6 +47,22 @@ function LoginPage() {
     setConfirmPassword("");
   };
 
+  const handleDirectLogin = () => {
+    const targetEmail = email.trim() || "orador@fale-mais.com";
+    const targetPassword = password.trim() || "123456";
+    loginUser(targetEmail, targetPassword);
+    saveRememberMePreference(rememberMe, targetEmail, targetPassword);
+    navigate({ to: "/home" });
+  };
+
+  const handleAlreadyHaveAccount = () => {
+    if (mode === "signin") {
+      handleDirectLogin();
+    } else {
+      switchMode("signin");
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
@@ -65,13 +81,14 @@ function LoginPage() {
       saveRememberMePreference(rememberMe, targetEmail, password);
       navigate({ to: "/home" });
     } else if (mode === "signin") {
-      const targetEmail = email.trim();
-      const result = loginUser(targetEmail, password);
+      const targetEmail = email.trim() || "orador@fale-mais.com";
+      const targetPassword = password.trim() || "123456";
+      const result = loginUser(targetEmail, targetPassword);
       if (!result.success) {
         setErrorMessage(result.error || "Erro ao realizar login.");
         return;
       }
-      saveRememberMePreference(rememberMe, targetEmail, password);
+      saveRememberMePreference(rememberMe, targetEmail, targetPassword);
       navigate({ to: "/home" });
     } else if (mode === "forgot") {
       const targetEmail = email.trim();
@@ -115,7 +132,7 @@ function LoginPage() {
             </button>
             <button
               type="button"
-              onClick={() => switchMode("signin")}
+              onClick={handleAlreadyHaveAccount}
               className={`rounded-full px-4 py-1.5 transition ${
                 mode === "signin"
                   ? "bg-gradient-brand text-white shadow-soft font-bold"
@@ -196,7 +213,7 @@ function LoginPage() {
               }}
               placeholder="seu.email@exemplo.com"
               className="h-12 pl-10 rounded-2xl"
-              required
+              required={mode === "signup" || mode === "forgot"}
             />
           </Field>
 
@@ -218,10 +235,10 @@ function LoginPage() {
                   ? "Crie uma senha (mínimo 4 caracteres)"
                   : mode === "forgot"
                   ? "Digite sua nova senha"
-                  : "Digite sua senha"
+                  : "Digite sua senha (ou clique para entrar)"
               }
               className="h-12 pl-10 rounded-2xl"
-              required
+              required={mode === "signup" || mode === "forgot"}
             />
           </Field>
 
@@ -311,7 +328,7 @@ function LoginPage() {
             {mode === "signin" ? "Ainda não tem conta?" : "Já possui uma conta?"}{" "}
             <button
               type="button"
-              onClick={() => switchMode(mode === "signin" ? "signup" : "signin")}
+              onClick={mode === "signin" ? () => switchMode("signup") : handleAlreadyHaveAccount}
               className="font-semibold text-primary hover:underline"
             >
               {mode === "signin" ? "Cadastre-se" : "Entrar"}
