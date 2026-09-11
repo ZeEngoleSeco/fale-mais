@@ -22,6 +22,7 @@ import {
   Check,
 } from "lucide-react";
 import { MOCK_USERS, CURRENT_USER } from "@/data/mock-data";
+import { useCurrentUser } from "@/lib/user-store";
 import { createNewRoom } from "@/lib/room-store";
 import { useState } from "react";
 
@@ -34,6 +35,8 @@ const categories = ["Pitch", "Improviso", "Corporativo", "Bem-estar", "Storytell
 
 export function CreateRoomPage() {
   const navigate = useNavigate();
+  const { user } = useCurrentUser();
+  const activeUser = user || CURRENT_USER;
 
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
@@ -190,10 +193,10 @@ export function CreateRoomPage() {
               <div className="flex items-center justify-between p-2.5 rounded-2xl bg-primary/10 border border-primary/20">
                 <div className="flex items-center gap-2.5">
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-brand text-xs font-bold text-white shadow-xs">
-                    {CURRENT_USER.initials}
+                    {activeUser.initials}
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-foreground">{CURRENT_USER.name} (Você)</p>
+                    <p className="text-xs font-bold text-foreground">{activeUser.name} (Você)</p>
                     <p className="text-[10px] text-primary font-semibold">Host Criador</p>
                   </div>
                 </div>
@@ -201,7 +204,7 @@ export function CreateRoomPage() {
               </div>
 
               {/* Outros usuários */}
-              {MOCK_USERS.filter((u) => u.id !== CURRENT_USER.id).map((u) => {
+              {MOCK_USERS.filter((u) => u.id !== activeUser.id).map((u) => {
                 const isSelected = selectedUserIds.includes(u.id);
 
                 return (
