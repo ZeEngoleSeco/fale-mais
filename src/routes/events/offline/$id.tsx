@@ -22,6 +22,8 @@ import {
   Navigation,
   MessageSquare,
   Building2,
+  Crown,
+  ArrowRight,
 } from "lucide-react";
 import { MOCK_EVENTS } from "@/data/mock-data";
 import { useState, useEffect } from "react";
@@ -129,7 +131,21 @@ function OfflineEvent() {
   return (
     <AppShell>
       <Toaster position="top-center" />
-      <PageHeader title="Detalhes do Evento" subtitle={event.category} back="/events" />
+      <PageHeader
+        title="Detalhes do Evento"
+        subtitle={event.category}
+        back="/events"
+        action={
+          <Link
+            to="/events/chat/$id"
+            params={{ id }}
+            className="flex h-10 w-10 items-center justify-center rounded-2xl border border-primary/40 bg-primary/10 text-primary transition hover:bg-primary/20 active:scale-95 shadow-soft"
+            title="Bate-papo com o Organizador"
+          >
+            <MessageSquare className="h-4 w-4" />
+          </Link>
+        }
+      />
 
       <div className="px-5 space-y-4 pb-28">
         {/* Banner Ilustrativo Interativo Compacto */}
@@ -387,6 +403,52 @@ function OfflineEvent() {
             </div>
           </Card>
         )}
+
+        {/* Card de Destaque: Sala de Bate-Papo com o Organizador */}
+        <Card className="overflow-hidden rounded-3xl border-2 border-primary/40 bg-gradient-to-br from-primary/10 via-brand-2/5 to-card p-4.5 space-y-3.5 shadow-soft">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-brand text-white shadow-soft">
+                <MessageSquare className="h-4 w-4" />
+              </span>
+              <div>
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-primary flex items-center gap-1">
+                  <Crown className="h-3 w-3 fill-amber-500 text-amber-500" /> Canal Direto do Projeto
+                </span>
+                <h3 className="text-sm font-bold text-foreground">
+                  Bate-Papo do Organizador & Participantes
+                </h3>
+              </div>
+            </div>
+
+            <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 text-[10px] px-2 py-0.5 font-bold flex items-center gap-1 shrink-0">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> Ativo
+            </Badge>
+          </div>
+
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Tire dúvidas em tempo real com {event.organizer?.name || "o Organizador"}, receba avisos oficiais, vote nas dinâmicas de palco e conecte-se com os outros {effectiveCount} participantes inscritos.
+          </p>
+
+          <div className="flex items-center justify-between pt-1">
+            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-semibold">
+              <span className="rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 px-2 py-0.5 text-[10px] font-bold">
+                Q&A Oficial
+              </span>
+              <span className="rounded-full bg-violet-500/15 text-violet-600 dark:text-violet-400 px-2 py-0.5 text-[10px] font-bold">
+                Enquetes
+              </span>
+            </div>
+
+            <Link
+              to="/events/chat/$id"
+              params={{ id }}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-brand px-3.5 py-2 text-xs font-bold text-white shadow-soft hover:opacity-95 transition-all active:scale-95"
+            >
+              Entrar no Chat <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+        </Card>
 
         {/* Card do Organizador */}
         <Card className="rounded-3xl border-border p-4.5 bg-card">

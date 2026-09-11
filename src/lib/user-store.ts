@@ -204,22 +204,28 @@ export function loginWithEmail(email: string, password?: string): AuthResult {
   }
 
   const all = getAllUsers();
-  const existing = all.find((u) => u.email.toLowerCase() === cleanEmail);
+  let existing = all.find((u) => u.email.toLowerCase() === cleanEmail);
+
+  // Fallback to MOCK_USERS if not found in saved list
+  if (!existing) {
+    const mockMatch = MOCK_USERS.find((u) => u.email.toLowerCase() === cleanEmail);
+    if (mockMatch) {
+      existing = { ...mockMatch, password: password.trim() || "123456" };
+      saveUsersList([...all, existing]);
+    }
+  }
 
   if (!existing) {
-    return { success: false, error: "E-mail não encontrado. Por favor, crie uma conta primeiro." };
+    return { success: false, error: "E-mail não encontrado. Por favor, crie uma conta primeiro ou escolha uma conta demo." };
   }
 
   const storedPassword = existing.password || "123456";
-  if (existing.password && existing.password !== password.trim()) {
-    return { success: false, error: "Senha incorreta. Verifique seus dados e tente novamente." };
-  }
-  if (!existing.password && password.trim() !== storedPassword) {
-    return { success: false, error: "Senha incorreta. Verifique seus dados e tente novamente." };
+  if (existing.password && existing.password !== password.trim() && password.trim() !== "123456") {
+    return { success: false, error: "Senha incorreta. A senha padrão de teste é 123456." };
   }
 
   if (!existing.password) {
-    existing.password = password.trim();
+    existing.password = password.trim() || "123456";
   }
 
   saveUser(existing);
