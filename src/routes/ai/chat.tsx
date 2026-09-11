@@ -71,22 +71,13 @@ const QUICK_PROMPTS = [
 
 export function ChatPage() {
   const { user } = useCurrentUser();
-<<<<<<< HEAD
   const firstName = user.name ? user.name.split(" ")[0] : "Orador";
-=======
-  const userName = user?.name ? user.name.trim().split(" ")[0] : "Usuário";
-
->>>>>>> 80d478af73d5687cdb25ddbe7afaf52a0755736f
   const [activeMode, setActiveMode] = useState("pitch");
   const [msgs, setMsgs] = useState<Msg[]>(() => [
     {
       id: "1",
       from: "ai",
-<<<<<<< HEAD
       text: `Olá, ${firstName}! Sou o Thorel, seu mentor de oratória e comunicação de alto impacto.\n\nEstou pronto para analisar seu discurso por texto ou áudio. Qual apresentação vamos lapidar hoje?`,
-=======
-      text: `Olá, ${userName}! Sou o Thorel, seu mentor de oratória e comunicação de alto impacto.\n\nEstou pronto para analisar seu discurso por texto ou áudio. Qual apresentação vamos lapidar hoje?`,
->>>>>>> 80d478af73d5687cdb25ddbe7afaf52a0755736f
       time: "09:00",
       tips: ["Pitch para Investidores", "Discurso Executivo", "Combate ao Nervosismo"],
     },
@@ -98,12 +89,12 @@ export function ChatPage() {
         m.id === "1"
           ? {
               ...m,
-              text: `Olá, ${userName}! Sou o Thorel, seu mentor de oratória e comunicação de alto impacto.\n\nEstou pronto para analisar seu discurso por texto ou áudio. Qual apresentação vamos lapidar hoje?`,
+              text: `Olá, ${firstName}! Sou o Thorel, seu mentor de oratória e comunicação de alto impacto.\n\nEstou pronto para analisar seu discurso por texto ou áudio. Qual apresentação vamos lapidar hoje?`,
             }
           : m
       )
     );
-  }, [userName]);
+  }, [firstName]);
 
   const [input, setInput] = useState("");
   const [isRecording, setIsRecording] = useState(false);
