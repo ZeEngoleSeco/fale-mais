@@ -27,6 +27,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { useCurrentUser } from "@/lib/user-store";
 
 export const Route = createFileRoute("/ai/chat")({
   head: () => ({ meta: [{ title: "Mentor de IA Thorel — Fale+" }] }),
@@ -69,16 +70,32 @@ const QUICK_PROMPTS = [
 ];
 
 export function ChatPage() {
+  const { user } = useCurrentUser();
+  const userName = user?.name ? user.name.trim().split(" ")[0] : "Usuário";
+
   const [activeMode, setActiveMode] = useState("pitch");
-  const [msgs, setMsgs] = useState<Msg[]>([
+  const [msgs, setMsgs] = useState<Msg[]>(() => [
     {
       id: "1",
       from: "ai",
-      text: "Olá, Ana! Sou o Thorel, seu mentor de oratória e comunicação de alto impacto.\n\nEstou pronto para analisar seu discurso por texto ou áudio. Qual apresentação vamos lapidar hoje?",
+      text: `Olá, ${userName}! Sou o Thorel, seu mentor de oratória e comunicação de alto impacto.\n\nEstou pronto para analisar seu discurso por texto ou áudio. Qual apresentação vamos lapidar hoje?`,
       time: "09:00",
       tips: ["Pitch para Investidores", "Discurso Executivo", "Combate ao Nervosismo"],
     },
   ]);
+
+  useEffect(() => {
+    setMsgs((prevMsgs) =>
+      prevMsgs.map((m) =>
+        m.id === "1"
+          ? {
+              ...m,
+              text: `Olá, ${userName}! Sou o Thorel, seu mentor de oratória e comunicação de alto impacto.\n\nEstou pronto para analisar seu discurso por texto ou áudio. Qual apresentação vamos lapidar hoje?`,
+            }
+          : m
+      )
+    );
+  }, [userName]);
 
   const [input, setInput] = useState("");
   const [isRecording, setIsRecording] = useState(false);
