@@ -23,9 +23,11 @@ import { Route as EventsIndexRouteImport } from './routes/events/index'
 import { Route as EventsCreateRouteImport } from './routes/events/create'
 import { Route as RoomsIndexRouteImport } from './routes/rooms/index'
 import { Route as RoomsCreateRouteImport } from './routes/rooms/create'
+import { Route as EventsChatIdRouteImport } from './routes/events/chat/$id'
 import { Route as EventsOfflineIdRouteImport } from './routes/events/offline/$id'
 import { Route as EventsOnlineIdRouteImport } from './routes/events/online/$id'
 import { Route as RoomsIdIndexRouteImport } from './routes/rooms/$id/index'
+import { Route as RoomsIdChatRouteImport } from './routes/rooms/$id/chat'
 import { Route as RoomsIdInviteRouteImport } from './routes/rooms/$id/invite'
 import { Route as RoomsIdOverviewRouteImport } from './routes/rooms/$id/overview'
 import { Route as RoomsIdParticipantsRouteImport } from './routes/rooms/$id/participants'
@@ -101,6 +103,11 @@ const RoomsCreateRoute = RoomsCreateRouteImport.update({
   path: '/rooms/create',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EventsChatIdRoute = EventsChatIdRouteImport.update({
+  id: '/events/chat/$id',
+  path: '/events/chat/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EventsOfflineIdRoute = EventsOfflineIdRouteImport.update({
   id: '/events/offline/$id',
   path: '/events/offline/$id',
@@ -114,6 +121,11 @@ const EventsOnlineIdRoute = EventsOnlineIdRouteImport.update({
 const RoomsIdIndexRoute = RoomsIdIndexRouteImport.update({
   id: '/rooms/$id/',
   path: '/rooms/$id/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RoomsIdChatRoute = RoomsIdChatRouteImport.update({
+  id: '/rooms/$id/chat',
+  path: '/rooms/$id/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RoomsIdInviteRoute = RoomsIdInviteRouteImport.update({
@@ -152,8 +164,10 @@ export interface FileRoutesByFullPath {
   '/ai/': typeof AiIndexRoute
   '/events/': typeof EventsIndexRoute
   '/rooms/': typeof RoomsIndexRoute
+  '/events/chat/$id': typeof EventsChatIdRoute
   '/events/offline/$id': typeof EventsOfflineIdRoute
   '/events/online/$id': typeof EventsOnlineIdRoute
+  '/rooms/$id/chat': typeof RoomsIdChatRoute
   '/rooms/$id/invite': typeof RoomsIdInviteRoute
   '/rooms/$id/overview': typeof RoomsIdOverviewRoute
   '/rooms/$id/participants': typeof RoomsIdParticipantsRoute
@@ -175,8 +189,10 @@ export interface FileRoutesByTo {
   '/ai': typeof AiIndexRoute
   '/events': typeof EventsIndexRoute
   '/rooms': typeof RoomsIndexRoute
+  '/events/chat/$id': typeof EventsChatIdRoute
   '/events/offline/$id': typeof EventsOfflineIdRoute
   '/events/online/$id': typeof EventsOnlineIdRoute
+  '/rooms/$id/chat': typeof RoomsIdChatRoute
   '/rooms/$id/invite': typeof RoomsIdInviteRoute
   '/rooms/$id/overview': typeof RoomsIdOverviewRoute
   '/rooms/$id/participants': typeof RoomsIdParticipantsRoute
@@ -199,8 +215,10 @@ export interface FileRoutesById {
   '/ai/': typeof AiIndexRoute
   '/events/': typeof EventsIndexRoute
   '/rooms/': typeof RoomsIndexRoute
+  '/events/chat/$id': typeof EventsChatIdRoute
   '/events/offline/$id': typeof EventsOfflineIdRoute
   '/events/online/$id': typeof EventsOnlineIdRoute
+  '/rooms/$id/chat': typeof RoomsIdChatRoute
   '/rooms/$id/invite': typeof RoomsIdInviteRoute
   '/rooms/$id/overview': typeof RoomsIdOverviewRoute
   '/rooms/$id/participants': typeof RoomsIdParticipantsRoute
@@ -224,8 +242,10 @@ export interface FileRouteTypes {
     | '/ai/'
     | '/events/'
     | '/rooms/'
+    | '/events/chat/$id'
     | '/events/offline/$id'
     | '/events/online/$id'
+    | '/rooms/$id/chat'
     | '/rooms/$id/invite'
     | '/rooms/$id/overview'
     | '/rooms/$id/participants'
@@ -247,8 +267,10 @@ export interface FileRouteTypes {
     | '/ai'
     | '/events'
     | '/rooms'
+    | '/events/chat/$id'
     | '/events/offline/$id'
     | '/events/online/$id'
+    | '/rooms/$id/chat'
     | '/rooms/$id/invite'
     | '/rooms/$id/overview'
     | '/rooms/$id/participants'
@@ -270,8 +292,10 @@ export interface FileRouteTypes {
     | '/ai/'
     | '/events/'
     | '/rooms/'
+    | '/events/chat/$id'
     | '/events/offline/$id'
     | '/events/online/$id'
+    | '/rooms/$id/chat'
     | '/rooms/$id/invite'
     | '/rooms/$id/overview'
     | '/rooms/$id/participants'
@@ -294,8 +318,10 @@ export interface RootRouteChildren {
   AiIndexRoute: typeof AiIndexRoute
   EventsIndexRoute: typeof EventsIndexRoute
   RoomsIndexRoute: typeof RoomsIndexRoute
+  EventsChatIdRoute: typeof EventsChatIdRoute
   EventsOfflineIdRoute: typeof EventsOfflineIdRoute
   EventsOnlineIdRoute: typeof EventsOnlineIdRoute
+  RoomsIdChatRoute: typeof RoomsIdChatRoute
   RoomsIdInviteRoute: typeof RoomsIdInviteRoute
   RoomsIdOverviewRoute: typeof RoomsIdOverviewRoute
   RoomsIdParticipantsRoute: typeof RoomsIdParticipantsRoute
@@ -403,6 +429,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RoomsCreateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/events/chat/$id': {
+      id: '/events/chat/$id'
+      path: '/events/chat/$id'
+      fullPath: '/events/chat/$id'
+      preLoaderRoute: typeof EventsChatIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/events/offline/$id': {
       id: '/events/offline/$id'
       path: '/events/offline/$id'
@@ -422,6 +455,13 @@ declare module '@tanstack/react-router' {
       path: '/rooms/$id'
       fullPath: '/rooms/$id/'
       preLoaderRoute: typeof RoomsIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rooms/$id/chat': {
+      id: '/rooms/$id/chat'
+      path: '/rooms/$id/chat'
+      fullPath: '/rooms/$id/chat'
+      preLoaderRoute: typeof RoomsIdChatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/rooms/$id/invite': {
@@ -470,8 +510,10 @@ const rootRouteChildren: RootRouteChildren = {
   AiIndexRoute: AiIndexRoute,
   EventsIndexRoute: EventsIndexRoute,
   RoomsIndexRoute: RoomsIndexRoute,
+  EventsChatIdRoute: EventsChatIdRoute,
   EventsOfflineIdRoute: EventsOfflineIdRoute,
   EventsOnlineIdRoute: EventsOnlineIdRoute,
+  RoomsIdChatRoute: RoomsIdChatRoute,
   RoomsIdInviteRoute: RoomsIdInviteRoute,
   RoomsIdOverviewRoute: RoomsIdOverviewRoute,
   RoomsIdParticipantsRoute: RoomsIdParticipantsRoute,

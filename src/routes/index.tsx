@@ -1,12 +1,16 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Mail, Lock, User as UserIcon, ArrowRight, CheckCircle2, Briefcase, AlertCircle } from "lucide-react";
+import { Mail, Lock, User as UserIcon, ArrowRight, CheckCircle2, Briefcase, AlertCircle, Sparkles, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import { BrandLogo, BrandWordmark } from "@/components/brand";
+import { Toaster } from "@/components/ui/sonner";
+import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { useCurrentUser, saveRememberMePreference, getRememberMePreference } from "@/lib/user-store";
+import { MOCK_USERS } from "@/data/mock-data";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -30,6 +34,7 @@ function LoginPage() {
   const [rememberMe, setRememberMe] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const pref = getRememberMePreference();
@@ -45,6 +50,27 @@ function LoginPage() {
     setErrorMessage(null);
     setSuccessMessage(null);
     setConfirmPassword("");
+
+    if (newMode === "signin") {
+      // If email is empty, prefill default demo user for convenience
+      if (!email.trim()) {
+        setEmail("ana.lima@exemplo.com");
+        setPassword("123456");
+      }
+      toast.info("Modo de Login ativado! Informe seu e-mail e senha ou use as contas de demonstração.");
+    } else if (newMode === "signup") {
+      toast.info("Modo de Cadastro ativado! Crie seu perfil no Fale+.");
+    }
+  };
+
+  const handleSelectDemoAccount = (demoUser: typeof MOCK_USERS[0]) => {
+    setEmail(demoUser.email);
+    setPassword("123456");
+    setMode("signin");
+    setErrorMessage(null);
+    toast.success(`Conta demo "${demoUser.name}" selecionada!`, {
+      description: "Clique em 'Entrar na plataforma' para acessar.",
+    });
   };
 
   const handleDirectLogin = () => {
@@ -67,6 +93,7 @@ function LoginPage() {
     e.preventDefault();
     setErrorMessage(null);
     setSuccessMessage(null);
+    setLoading(true);
 
     if (mode === "signup") {
       const targetName = name.trim();
@@ -76,16 +103,21 @@ function LoginPage() {
       const result = registerUser(targetName, targetEmail, password, targetRole);
       if (!result.success) {
         setErrorMessage(result.error || "Erro ao criar conta.");
+        setLoading(false);
         return;
       }
       saveRememberMePreference(rememberMe, targetEmail, password);
-      navigate({ to: "/home" });
+      toast.success("Conta criada com sucesso! Bem-vindo ao Fale+ 🎉");
+      setTimeout(() => {
+        navigate({ to: "/home" });
+      }, 500);
     } else if (mode === "signin") {
       const targetEmail = email.trim() || "orador@fale-mais.com";
       const targetPassword = password.trim() || "123456";
       const result = loginUser(targetEmail, targetPassword);
       if (!result.success) {
         setErrorMessage(result.error || "Erro ao realizar login.");
+        setLoading(false);
         return;
       }
       saveRememberMePreference(rememberMe, targetEmail, targetPassword);
@@ -94,15 +126,18 @@ function LoginPage() {
       const targetEmail = email.trim();
       if (password !== confirmPassword) {
         setErrorMessage("As senhas não coincidem. Verifique a digitação.");
+        setLoading(false);
         return;
       }
       const result = resetPassword(targetEmail, password);
       if (!result.success) {
         setErrorMessage(result.error || "Erro ao redefinir senha.");
+        setLoading(false);
         return;
       }
       saveRememberMePreference(rememberMe, targetEmail, password);
       setSuccessMessage("Senha redefinida com sucesso! Redirecionando para a plataforma...");
+      toast.success("Senha atualizada com sucesso!");
       setTimeout(() => {
         navigate({ to: "/home" });
       }, 1200);
@@ -111,6 +146,7 @@ function LoginPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Toaster position="top-center" />
       <div className="mx-auto flex min-h-screen w-full max-w-md flex-col px-6 pt-10 pb-8">
         <div className="flex items-center gap-3">
           <BrandLogo size={44} />
@@ -118,25 +154,28 @@ function LoginPage() {
         </div>
 
         <div className="mt-8">
-          <div className="inline-flex rounded-full bg-secondary p-1 text-xs font-semibold">
+          {/* Alternador de Abas: Criar Conta vs Já tenho conta */}
+          <div className="inline-flex rounded-full bg-secondary p-1 text-xs font-semibold shadow-xs">
             <button
+              id="tab-signup"
               type="button"
               onClick={() => switchMode("signup")}
-              className={`rounded-full px-4 py-1.5 transition ${
+              className={`rounded-full px-4 py-2 transition-all cursor-pointer ${
                 mode === "signup"
-                  ? "bg-gradient-brand text-white shadow-soft font-bold"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-gradient-brand text-white shadow-soft font-bold scale-[1.02]"
+                  : "text-muted-foreground hover:text-foreground hover:bg-background/50"
               }`}
             >
               Criar Conta
             </button>
             <button
+              id="tab-signin"
               type="button"
               onClick={handleAlreadyHaveAccount}
-              className={`rounded-full px-4 py-1.5 transition ${
+              className={`rounded-full px-4 py-2 transition-all cursor-pointer ${
                 mode === "signin"
-                  ? "bg-gradient-brand text-white shadow-soft font-bold"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-gradient-brand text-white shadow-soft font-bold scale-[1.02]"
+                  : "text-muted-foreground hover:text-foreground hover:bg-background/50"
               }`}
             >
               Já tenho conta
@@ -158,6 +197,35 @@ function LoginPage() {
               : "Informe o e-mail da sua conta cadastrada e defina a nova senha desejada."}
           </p>
         </div>
+
+        {/* Contas de Demonstração Rápidas no Modo Login */}
+        {mode === "signin" && (
+          <div className="mt-4 rounded-2xl border border-primary/20 bg-primary/5 p-3.5 space-y-2 animate-in fade-in-50 duration-200">
+            <div className="flex items-center justify-between text-xs font-bold text-foreground">
+              <span className="flex items-center gap-1.5 text-primary">
+                <Sparkles className="h-3.5 w-3.5" /> Acesso Rápido com Contas Demo:
+              </span>
+              <span className="text-[10px] text-muted-foreground font-normal">Senha: 123456</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
+              {MOCK_USERS.map((u) => (
+                <button
+                  key={u.id}
+                  type="button"
+                  onClick={() => handleSelectDemoAccount(u)}
+                  className={`flex flex-col items-start rounded-xl p-2 text-left text-xs transition-all border ${
+                    email.toLowerCase() === u.email.toLowerCase()
+                      ? "border-primary bg-primary/15 font-bold shadow-xs"
+                      : "border-border/60 bg-card hover:border-primary/40 hover:bg-secondary"
+                  }`}
+                >
+                  <span className="font-bold text-foreground truncate w-full">{u.name}</span>
+                  <span className="text-[10px] text-muted-foreground truncate w-full">{u.role}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {errorMessage && (
           <div className="mt-4 flex items-center gap-2.5 rounded-2xl bg-destructive/10 border border-destructive/20 p-3.5 text-xs font-medium text-destructive animate-in fade-in slide-in-from-top-1 duration-200">
@@ -235,7 +303,7 @@ function LoginPage() {
                   ? "Crie uma senha (mínimo 4 caracteres)"
                   : mode === "forgot"
                   ? "Digite sua nova senha"
-                  : "Digite sua senha (ou clique para entrar)"
+                  : "Digite sua senha"
               }
               className="h-12 pl-10 rounded-2xl"
               required={mode === "signup" || mode === "forgot"}
@@ -293,7 +361,7 @@ function LoginPage() {
               <button
                 type="button"
                 onClick={() => switchMode("forgot")}
-                className="text-xs font-semibold text-primary hover:underline"
+                className="text-xs font-semibold text-primary hover:underline cursor-pointer"
               >
                 Esqueci minha senha
               </button>
@@ -302,14 +370,21 @@ function LoginPage() {
 
           <Button
             type="submit"
-            className="h-12 w-full rounded-2xl bg-gradient-brand text-base font-semibold shadow-soft hover:opacity-95"
+            disabled={loading}
+            className="h-12 w-full rounded-2xl bg-gradient-brand text-base font-semibold shadow-soft hover:opacity-95 active:scale-98 transition-all cursor-pointer"
           >
-            {mode === "signin"
-              ? "Entrar na plataforma"
-              : mode === "signup"
-              ? "Criar conta e começar"
-              : "Redefinir Senha e Entrar"}
-            <ArrowRight className="ml-1 h-4 w-4" />
+            {loading ? (
+              <span className="flex items-center gap-2">Entrando...</span>
+            ) : (
+              <>
+                {mode === "signin"
+                  ? "Entrar na plataforma"
+                  : mode === "signup"
+                  ? "Criar conta e começar"
+                  : "Redefinir Senha e Entrar"}
+                <ArrowRight className="ml-1 h-4 w-4" />
+              </>
+            )}
           </Button>
         </form>
 
@@ -318,7 +393,7 @@ function LoginPage() {
             <button
               type="button"
               onClick={() => switchMode("signin")}
-              className="text-xs font-semibold text-primary hover:underline"
+              className="text-xs font-semibold text-primary hover:underline cursor-pointer"
             >
               ← Voltar para o Login
             </button>
@@ -329,7 +404,7 @@ function LoginPage() {
             <button
               type="button"
               onClick={mode === "signin" ? () => switchMode("signup") : handleAlreadyHaveAccount}
-              className="font-semibold text-primary hover:underline"
+              className="font-semibold text-primary hover:underline cursor-pointer"
             >
               {mode === "signin" ? "Cadastre-se" : "Entrar"}
             </button>
@@ -337,7 +412,7 @@ function LoginPage() {
         )}
 
         <Link to="/home" className="mt-3 text-center text-xs text-muted-foreground/70 hover:text-foreground">
-          Acessar diretamente →
+          Acessar diretamente sem login →
         </Link>
       </div>
     </div>

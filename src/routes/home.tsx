@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Users, Bot, Calendar, Dumbbell, User, Bell, Flame, TrendingUp, Radio, MapPin, ChevronRight, Trophy } from "lucide-react";
+import { Users, Bot, Calendar, Dumbbell, User, Bell, Flame, TrendingUp, Radio, MapPin, ChevronRight, Trophy, MessageSquare, Crown } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { BrandLogo } from "@/components/brand";
 import { Card } from "@/components/ui/card";
@@ -215,6 +215,48 @@ function HomePage() {
           </Link>
         </section>
       )}
+
+      {/* Bate-Papo com o Organizador do Projeto */}
+      <section className="mt-8 px-5">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-1.5">
+            <Crown className="h-3.5 w-3.5 text-amber-500 fill-amber-500" /> Bate-papo do Organizador
+          </h3>
+          <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> Ao Vivo
+          </span>
+        </div>
+        <Link
+          to="/events/chat/$id"
+          params={{ id: featuredEvent?.id || "1" }}
+          className="mt-3 block"
+        >
+          <Card className="rounded-3xl border-2 border-primary/40 bg-gradient-to-br from-primary/10 via-brand-2/5 to-card p-4 transition-all duration-200 hover:-translate-y-1 hover:shadow-lift">
+            <div className="flex items-start gap-3.5">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-brand text-white shadow-soft">
+                <MessageSquare className="h-5 w-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-foreground truncate">
+                    Canal com {featuredEvent?.organizer?.name || "Organizador Fale+"}
+                  </span>
+                  <Badge className="bg-amber-500 text-white border-0 text-[9px] px-1.5 py-0 font-extrabold">
+                    HOST
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                  Avisos oficiais, Q&A de dúvidas e enquetes com os participantes.
+                </p>
+                <div className="mt-2 flex items-center gap-2 text-[11px] text-primary font-bold">
+                  <span>Abrir sala de conversa</span>
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </div>
+              </div>
+            </div>
+          </Card>
+        </Link>
+      </section>
 
       {/* Retomar treino */}
       <section className="mt-8 px-5">

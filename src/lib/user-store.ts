@@ -202,10 +202,20 @@ export function loginWithEmail(email: string, password?: string): AuthResult {
   const usePassword = (password && password.trim()) || "123456";
 
   const all = getAllUsers();
-  const existing = all.find((u) => u.email.toLowerCase() === cleanEmail);
+  let existing = all.find((u) => u.email.toLowerCase() === cleanEmail);
+
+  // Fallback to MOCK_USERS if not found in saved list
+  if (!existing) {
+    const mockMatch = MOCK_USERS.find((u) => u.email.toLowerCase() === cleanEmail);
+    if (mockMatch) {
+      existing = { ...mockMatch, password: password.trim() || "123456" };
+      saveUsersList([...all, existing]);
+    }
+  }
 
   if (!existing) {
     // If user does not exist yet, auto-register and log them in seamlessly
+    const usePassword = (password && password.trim()) || "123456";
     const name = nameFromEmail(cleanEmail);
     const regResult = registerNewUser(name, cleanEmail, usePassword);
     if (regResult.success && regResult.user) {

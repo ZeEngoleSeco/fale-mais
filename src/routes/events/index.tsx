@@ -24,6 +24,7 @@ import {
   Video,
   Building2,
   Bookmark,
+  MessageSquare,
 } from "lucide-react";
 import { MOCK_EVENTS, type EventItem } from "@/data/mock-data";
 import { useState, useMemo, useEffect } from "react";
@@ -513,6 +514,18 @@ export function EventsPage() {
                         >
                           <Share2 className="h-3.5 w-3.5" />
                         </button>
+
+                        {/* Botão de Bate-Papo com o Organizador */}
+                        <Link
+                          to="/events/chat/$id"
+                          params={{ id: e.id }}
+                          onClick={(evt) => evt.stopPropagation()}
+                          title="Bate-papo com o Organizador"
+                          className="flex h-8 items-center gap-1 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 px-2.5 text-xs font-bold transition-colors"
+                        >
+                          <MessageSquare className="h-3.5 w-3.5" />
+                          <span className="hidden sm:inline">Chat</span>
+                        </Link>
                       </div>
 
                       {/* Alternar Expansão de Detalhes da Agenda */}

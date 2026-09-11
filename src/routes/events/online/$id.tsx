@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { AppShell, PageHeader } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import {
+  Crown,
   Mic,
   MicOff,
   Video,
@@ -112,6 +113,17 @@ export function OnlineEvent() {
         title={event.title}
         subtitle={`Transmissão ao vivo · ${event.confirmedCount} na sala`}
         back="/events"
+        action={
+          <Link
+            to="/events/chat/$id"
+            params={{ id }}
+            className="flex h-10 items-center gap-1.5 rounded-2xl border border-primary/40 bg-primary/10 text-primary px-3 text-xs font-bold transition hover:bg-primary/20 active:scale-95 shadow-soft"
+            title="Abrir Bate-Papo Completo do Organizador"
+          >
+            <Crown className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
+            <span className="hidden sm:inline">Chat Organizador</span>
+          </Link>
+        }
       />
 
       <div className="px-5 space-y-4 pb-36">

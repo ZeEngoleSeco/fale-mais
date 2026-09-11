@@ -81,13 +81,23 @@ function RoomPage() {
         subtitle={`Ao vivo · ${room.peopleCount} participantes`}
         back="/rooms"
         action={
-          <Link
-            to="/rooms/$id/settings"
-            params={{ id }}
-            className="flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-card hover:bg-secondary"
-          >
-            <Settings className="h-4 w-4" />
-          </Link>
+          <div className="flex items-center gap-1.5">
+            <Link
+              to="/rooms/$id/chat"
+              params={{ id }}
+              className="flex h-10 w-10 items-center justify-center rounded-2xl border border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 transition shadow-soft"
+              title="Bate-papo com o Host & Participantes"
+            >
+              <MessageSquare className="h-4 w-4" />
+            </Link>
+            <Link
+              to="/rooms/$id/settings"
+              params={{ id }}
+              className="flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-card hover:bg-secondary"
+            >
+              <Settings className="h-4 w-4" />
+            </Link>
+          </div>
         }
       />
       <div className="px-5 space-y-4 pb-36">
