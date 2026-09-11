@@ -1,8 +1,7 @@
-import { defineConfig } from "vite";
+import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import react from "@vitejs/plugin-react";
 import path from "path";
 
-// https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
@@ -10,15 +9,6 @@ export default defineConfig(({ mode }) => ({
     hmr: {
       overlay: false,
     },
-  },
-  optimizeDeps: {
-    include: [
-      "react",
-      "react-dom",
-      "react/jsx-runtime",
-      "react/jsx-dev-runtime",
-      "react-dom/client",
-    ],
   },
   plugins: [react()].filter(Boolean),
   resolve: {
