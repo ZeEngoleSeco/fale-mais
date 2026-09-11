@@ -27,6 +27,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { useCurrentUser } from "@/lib/user-store";
 
 export const Route = createFileRoute("/ai/chat")({
   head: () => ({ meta: [{ title: "Mentor de IA Thorel — Fale+" }] }),
@@ -69,12 +70,14 @@ const QUICK_PROMPTS = [
 ];
 
 export function ChatPage() {
+  const { user } = useCurrentUser();
+  const firstName = user.name ? user.name.split(" ")[0] : "Orador";
   const [activeMode, setActiveMode] = useState("pitch");
-  const [msgs, setMsgs] = useState<Msg[]>([
+  const [msgs, setMsgs] = useState<Msg[]>(() => [
     {
       id: "1",
       from: "ai",
-      text: "Olá, Ana! Sou o Thorel, seu mentor de oratória e comunicação de alto impacto.\n\nEstou pronto para analisar seu discurso por texto ou áudio. Qual apresentação vamos lapidar hoje?",
+      text: `Olá, ${firstName}! Sou o Thorel, seu mentor de oratória e comunicação de alto impacto.\n\nEstou pronto para analisar seu discurso por texto ou áudio. Qual apresentação vamos lapidar hoje?`,
       time: "09:00",
       tips: ["Pitch para Investidores", "Discurso Executivo", "Combate ao Nervosismo"],
     },
