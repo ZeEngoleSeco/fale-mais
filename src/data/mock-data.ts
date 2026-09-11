@@ -9,6 +9,7 @@ export interface UserProfile {
   xpNextLevel: number;
   initials: string;
   avatarColor: string;
+  avatarUrl?: string;
   bio: string;
   streakDays: number;
   stats: {

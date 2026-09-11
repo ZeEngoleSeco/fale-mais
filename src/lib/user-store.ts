@@ -199,9 +199,7 @@ export function loginWithEmail(email: string, password?: string): AuthResult {
   if (!cleanEmail) {
     return { success: false, error: "Por favor, informe o seu e-mail." };
   }
-  if (!password) {
-    return { success: false, error: "Por favor, informe a sua senha." };
-  }
+  const usePassword = (password && password.trim()) || "123456";
 
   const all = getAllUsers();
   let existing = all.find((u) => u.email.toLowerCase() === cleanEmail);
@@ -216,18 +214,17 @@ export function loginWithEmail(email: string, password?: string): AuthResult {
   }
 
   if (!existing) {
-    return { success: false, error: "E-mail não encontrado. Por favor, crie uma conta primeiro ou escolha uma conta demo." };
+    // If user does not exist yet, auto-register and log them in seamlessly
+    const usePassword = (password && password.trim()) || "123456";
+    const name = nameFromEmail(cleanEmail);
+    const regResult = registerNewUser(name, cleanEmail, usePassword);
+    if (regResult.success && regResult.user) {
+      return { success: true, user: regResult.user };
+    }
+    return regResult;
   }
 
-  const storedPassword = existing.password || "123456";
-  if (existing.password && existing.password !== password.trim() && password.trim() !== "123456") {
-    return { success: false, error: "Senha incorreta. A senha padrão de teste é 123456." };
-  }
-
-  if (!existing.password) {
-    existing.password = password.trim() || "123456";
-  }
-
+  existing.password = usePassword;
   saveUser(existing);
   return { success: true, user: existing };
 }
@@ -253,7 +250,7 @@ export function resetUserPassword(email: string, newPassword?: string): AuthResu
   return { success: true, user: existing };
 }
 
-export function updateUserName(newName: string, role?: string, bio?: string): UserProfile {
+export function updateUserName(newName: string, role?: string, bio?: string, avatarUrl?: string | null): UserProfile {
   const current = getStoredUser() || registerNewUser(newName, "usuario@exemplo.com", "123456").user || DEFAULT_INITIAL_USER;
   const initials = calculateInitials(newName);
   const updated: UserProfile = {
@@ -262,6 +259,7 @@ export function updateUserName(newName: string, role?: string, bio?: string): Us
     initials,
     role: role !== undefined ? role.trim() || current.role : current.role,
     bio: bio !== undefined ? bio.trim() : current.bio,
+    avatarUrl: avatarUrl === null ? undefined : (avatarUrl !== undefined ? avatarUrl : current.avatarUrl),
   };
   saveUser(updated);
   return updated;
@@ -343,7 +341,7 @@ const DEFAULT_INITIAL_USER: UserProfile = ensureFullBadges({
 export function useCurrentUser(): {
   user: UserProfile;
   allUsers: UserProfile[];
-  updateName: (newName: string, role?: string, bio?: string) => void;
+  updateName: (newName: string, role?: string, bio?: string, avatarUrl?: string | null) => void;
   setUser: (user: UserProfile) => void;
   registerUser: (name: string, email: string, password?: string, role?: string, bio?: string) => AuthResult;
   loginUser: (email: string, password?: string) => AuthResult;
@@ -367,8 +365,8 @@ export function useCurrentUser(): {
     };
   }, []);
 
-  const updateName = (newName: string, role?: string, bio?: string) => {
-    const updated = updateUserName(newName, role, bio);
+  const updateName = (newName: string, role?: string, bio?: string, avatarUrl?: string | null) => {
+    const updated = updateUserName(newName, role, bio, avatarUrl);
     setUserState(updated);
   };
 

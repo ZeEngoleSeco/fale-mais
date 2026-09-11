@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
-  Settings, Edit3, Mic, Users, Trophy, ChevronRight, Palette, Flame, Clock, Star, Award, LogOut, CheckCircle2, Lock, X, User, ArrowRight, Compass, Wind, Target, Brain, ShieldCheck, Zap, HeartHandshake, Lightbulb, GraduationCap, Volume2, Crown, Medal
+  Settings, Edit3, Mic, Users, Trophy, ChevronRight, Palette, Flame, Clock, Star, Award, LogOut, CheckCircle2, Lock, X, User, ArrowRight, Compass, Wind, Target, Brain, ShieldCheck, Zap, HeartHandshake, Lightbulb, GraduationCap, Volume2, Crown, Medal, Camera, Upload, Trash2, Image as ImageIcon
 } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { ThemeSelector } from "@/components/theme-toggle";
 import { useCurrentUser } from "@/lib/user-store";
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 const ICON_MAP: Record<string, React.ElementType> = {
   Mic,
@@ -55,8 +55,10 @@ function ProfilePage() {
   const [editName, setEditName] = useState(user.name);
   const [editRole, setEditRole] = useState(user.role);
   const [editBio, setEditBio] = useState(user.bio);
+  const [editAvatarUrl, setEditAvatarUrl] = useState<string | null | undefined>(user.avatarUrl);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [badgeFilter, setBadgeFilter] = useState<"all" | "unlocked" | "locked">("all");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const unlockedCount = user.badges.filter((b) => b.unlocked).length;
   const totalBadgesCount = user.badges.length;
@@ -72,13 +74,39 @@ function ProfilePage() {
     setEditName(user.name);
     setEditRole(user.role);
     setEditBio(user.bio);
+    setEditAvatarUrl(user.avatarUrl);
     setIsEditing(true);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("A imagem selecionada deve ter no máximo 5MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        setEditAvatarUrl(event.target.result as string);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemovePhoto = () => {
+    setEditAvatarUrl(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editName.trim()) return;
-    updateName(editName, editRole, editBio);
+    updateName(editName, editRole, editBio, editAvatarUrl);
     setSaveSuccess(true);
     setTimeout(() => {
       setSaveSuccess(false);
@@ -116,13 +144,30 @@ function ProfilePage() {
             {/* Circular Gradient Border Frame (Purple & Blue) */}
             <div className="relative rounded-full p-[3px] bg-gradient-to-tr from-purple-600 via-indigo-500 to-blue-500 shadow-[0_0_18px_rgba(147,51,234,0.45),0_0_10px_rgba(37,99,235,0.35)]">
               <div className="rounded-full bg-card p-1">
-                <div className={`flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br ${user.avatarColor} text-3xl font-bold text-white shadow-inner`}>
-                  {user.initials}
-                </div>
+                {user.avatarUrl ? (
+                  <img
+                    src={user.avatarUrl}
+                    alt={user.name}
+                    className="h-24 w-24 rounded-full object-cover shadow-inner"
+                  />
+                ) : (
+                  <div className={`flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br ${user.avatarColor} text-3xl font-bold text-white shadow-inner`}>
+                    {user.initials}
+                  </div>
+                )}
               </div>
             </div>
 
-            <span className="absolute -bottom-1 -right-1 z-10 rounded-full bg-background px-2.5 py-0.5 text-xs font-bold text-primary shadow border border-purple-500/30">
+            {/* Quick Camera Action Button Overlay */}
+            <button
+              onClick={handleOpenEdit}
+              className="absolute bottom-0 right-0 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md transition hover:scale-110 border-2 border-background"
+              title="Trocar foto de perfil"
+            >
+              <Camera className="h-4 w-4" />
+            </button>
+
+            <span className="absolute -bottom-1 -left-1 z-10 rounded-full bg-background px-2.5 py-0.5 text-xs font-bold text-primary shadow border border-purple-500/30">
               Nv. {user.level}
             </span>
           </div>
@@ -352,6 +397,77 @@ function ProfilePage() {
             </div>
 
             <form onSubmit={handleSaveProfile} className="mt-5 space-y-4">
+              {/* Profile Photo Upload Section */}
+              <div className="flex flex-col items-center justify-center gap-3 p-4 rounded-2xl bg-secondary/40 border border-border/50">
+                <div className="relative rounded-full p-[2px] bg-gradient-to-tr from-purple-600 via-indigo-500 to-blue-500 shadow-sm">
+                  <div className="rounded-full bg-card p-0.5">
+                    {editAvatarUrl ? (
+                      <img
+                        src={editAvatarUrl}
+                        alt="Preview da foto"
+                        className="h-20 w-20 rounded-full object-cover"
+                      />
+                    ) : user.avatarUrl && editAvatarUrl !== null ? (
+                      <img
+                        src={user.avatarUrl}
+                        alt="Preview da foto"
+                        className="h-20 w-20 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className={`flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br ${user.avatarColor} text-2xl font-bold text-white`}>
+                        {user.initials}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="h-8 rounded-xl text-xs font-semibold gap-1.5 border-primary/40 hover:border-primary text-primary"
+                  >
+                    <Upload className="h-3.5 w-3.5" /> Escolher Foto
+                  </Button>
+
+                  {((editAvatarUrl && editAvatarUrl !== null) || (user.avatarUrl && editAvatarUrl !== null)) && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleRemovePhoto}
+                      className="h-8 rounded-xl text-xs font-medium gap-1 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" /> Remover
+                    </Button>
+                  )}
+                </div>
+
+                <div className="w-full pt-1">
+                  <Label htmlFor="avatar-url-input" className="text-[11px] text-muted-foreground font-medium">
+                    Ou cole o link (URL) da foto:
+                  </Label>
+                  <Input
+                    id="avatar-url-input"
+                    type="url"
+                    value={editAvatarUrl || ""}
+                    onChange={(e) => setEditAvatarUrl(e.target.value || null)}
+                    placeholder="https://exemplo.com/minha-foto.jpg"
+                    className="mt-1 h-9 rounded-xl text-xs"
+                  />
+                </div>
+              </div>
+
               <div className="space-y-1.5">
                 <Label htmlFor="profile-name" className="text-xs font-bold text-foreground">
                   Nome Completo

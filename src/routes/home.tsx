@@ -48,11 +48,15 @@ function HomePage() {
           </div>
           <Link
             to="/profile"
-            className="flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-card shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.12)] dark:hover:shadow-[0_4px_12px_rgba(255,255,255,0.2)] hover:bg-secondary"
+            className="flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-card shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.12)] dark:hover:shadow-[0_4px_12px_rgba(255,255,255,0.2)] hover:bg-secondary overflow-hidden"
           >
-            <div className={`flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br ${user.avatarColor} text-xs font-bold text-white`}>
-              {user.initials}
-            </div>
+            {user.avatarUrl ? (
+              <img src={user.avatarUrl} alt={user.name} className="h-7 w-7 rounded-full object-cover" />
+            ) : (
+              <div className={`flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br ${user.avatarColor} text-xs font-bold text-white`}>
+                {user.initials}
+              </div>
+            )}
           </Link>
         </div>
 
