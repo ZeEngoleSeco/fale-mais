@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { MOCK_USERS, ALL_ACHIEVEMENTS, type UserProfile } from "@/data/mock-data";
+import { supabase } from "@/integrations/supabase/client";
 
 const STORAGE_USER_KEY = "fale_mais_user_profile";
 const STORAGE_USERS_LIST_KEY = "fale_mais_all_users_list";
@@ -22,14 +23,14 @@ const GRADIENT_COLORS = [
   "from-sky-500 to-cyan-600",
 ];
 
-function calculateInitials(name: string): string {
+export function calculateInitials(name: string): string {
   const parts = name.trim().split(/\s+/);
   if (parts.length === 0 || !parts[0]) return "FM";
   if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-function nameFromEmail(email: string): string {
+export function nameFromEmail(email: string): string {
   const localPart = email.split("@")[0] || "Usuário";
   return localPart
     .split(/[._-]/)
@@ -45,7 +46,6 @@ export function getAllUsers(): UserProfile[] {
     if (saved) {
       return JSON.parse(saved);
     }
-    // Seed default mock users with default password if nothing saved
     const seeded = MOCK_USERS.map((u) => ({ ...u, password: "123456" }));
     localStorage.setItem(STORAGE_USERS_LIST_KEY, JSON.stringify(seeded));
     return seeded;
@@ -134,43 +134,27 @@ export function saveUser(user: UserProfile) {
   }
 }
 
-export function registerNewUser(
-  name: string,
-  email: string,
-  password?: string,
-  role = "Orador Iniciante",
-  bio = "Membro da comunidade Fale+ pronto para desenvolver a comunicação e vencer o palco."
-): AuthResult {
-  const cleanEmail = email.trim().toLowerCase();
-  if (!cleanEmail) {
-    return { success: false, error: "Por favor, informe um e-mail válido." };
-  }
-  if (!password || password.trim().length < 4) {
-    return { success: false, error: "A senha deve ter pelo menos 4 caracteres." };
-  }
+// Convert Supabase User object into UserProfile
+export function mapSupabaseUserToProfile(sbUser: any, profileData?: any): UserProfile {
+  const meta = sbUser.user_metadata || {};
+  const cleanName = meta.name || profileData?.name || nameFromEmail(sbUser.email || "") || "Usuário";
+  const role = meta.role || profileData?.role || "Orador Iniciante";
+  const bio = meta.bio || profileData?.bio || "Membro da comunidade Fale+ pronto para desenvolver a comunicação e vencer o palco.";
+  const avatarColor = profileData?.avatar_color || meta.avatarColor || GRADIENT_COLORS[0];
 
-  const all = getAllUsers();
-  const existing = all.find((u) => u.email.toLowerCase() === cleanEmail);
-  if (existing) {
-    return { success: false, error: "Este e-mail já está cadastrado. Por favor, faça login." };
-  }
-
-  const cleanName = name.trim() || nameFromEmail(cleanEmail) || "Novo Usuário";
-  const colorIndex = Math.floor(Math.random() * GRADIENT_COLORS.length);
-
-  const newUser: UserProfile = {
-    id: `user-${Date.now()}`,
+  const profile: UserProfile = {
+    id: sbUser.id,
     name: cleanName,
-    email: cleanEmail,
-    password: password.trim(),
-    role: role.trim(),
-    level: 1,
-    xp: 0,
-    xpNextLevel: 100,
+    email: sbUser.email || "",
+    role: role,
+    level: profileData?.level || 1,
+    xp: profileData?.xp || 0,
+    xpNextLevel: profileData?.xp_next_level || 100,
     initials: calculateInitials(cleanName),
-    avatarColor: GRADIENT_COLORS[colorIndex],
-    bio: bio.trim(),
-    streakDays: 1,
+    avatarColor: avatarColor,
+    avatarUrl: meta.avatarUrl || profileData?.avatar_url,
+    bio: bio,
+    streakDays: profileData?.streak_days || 1,
     stats: {
       presentations: 0,
       roomsCreated: 0,
@@ -190,79 +174,184 @@ export function registerNewUser(
     ],
   };
 
-  saveUser(newUser);
-  return { success: true, user: newUser };
+  return ensureFullBadges(profile);
 }
 
-export function loginWithEmail(email: string, password?: string): AuthResult {
+// Async Supabase Registration
+export async function registerNewUserAsync(
+  name: string,
+  email: string,
+  password?: string,
+  role = "Orador Iniciante",
+  bio = "Membro da comunidade Fale+ pronto para desenvolver a comunicação e vencer o palco."
+): Promise<AuthResult> {
+  const cleanEmail = email.trim().toLowerCase();
+  if (!cleanEmail) {
+    return { success: false, error: "Por favor, informe um e-mail válido." };
+  }
+  if (!password || password.trim().length < 6) {
+    return { success: false, error: "A senha deve ter pelo menos 6 caracteres." };
+  }
+
+  const cleanName = name.trim() || nameFromEmail(cleanEmail) || "Novo Usuário";
+
+  const { data, error } = await supabase.auth.signUp({
+    email: cleanEmail,
+    password: password.trim(),
+    options: {
+      data: {
+        name: cleanName,
+        role: role.trim(),
+        bio: bio.trim(),
+      },
+    },
+  });
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  if (data.user) {
+    const userProfile = mapSupabaseUserToProfile(data.user);
+    saveUser(userProfile);
+    return { success: true, user: userProfile };
+  }
+
+  return { success: false, error: "Não foi possível concluir o cadastro." };
+}
+
+// Sync fallback wrapper
+export function registerNewUser(
+  name: string,
+  email: string,
+  password?: string,
+  role?: string,
+  bio?: string
+): AuthResult {
+  registerNewUserAsync(name, email, password, role, bio);
+  return { success: true };
+}
+
+// Async Supabase Login
+export async function loginWithEmailAsync(email: string, password?: string): Promise<AuthResult> {
   const cleanEmail = email.trim().toLowerCase();
   if (!cleanEmail) {
     return { success: false, error: "Por favor, informe o seu e-mail." };
   }
-  const usePassword = (password && password.trim()) || "123456";
-
-  const all = getAllUsers();
-  let existing = all.find((u) => u.email.toLowerCase() === cleanEmail);
-
-  // Fallback to MOCK_USERS if not found in saved list
-  if (!existing) {
-    const mockMatch = MOCK_USERS.find((u) => u.email.toLowerCase() === cleanEmail);
-    if (mockMatch) {
-      existing = { ...mockMatch, password: password.trim() || "123456" };
-      saveUsersList([...all, existing]);
-    }
+  if (!password) {
+    return { success: false, error: "Por favor, informe a sua senha." };
   }
 
-  if (!existing) {
-    // If user does not exist yet, auto-register and log them in seamlessly
-    const usePassword = (password && password.trim()) || "123456";
-    const name = nameFromEmail(cleanEmail);
-    const regResult = registerNewUser(name, cleanEmail, usePassword);
-    if (regResult.success && regResult.user) {
-      return { success: true, user: regResult.user };
-    }
-    return regResult;
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: cleanEmail,
+    password: password.trim(),
+  });
+
+  if (error) {
+    return { success: false, error: error.message };
   }
 
-  existing.password = usePassword;
-  saveUser(existing);
-  return { success: true, user: existing };
+  if (data.user) {
+    const userProfile = mapSupabaseUserToProfile(data.user);
+    saveUser(userProfile);
+    return { success: true, user: userProfile };
+  }
+
+  return { success: false, error: "Não foi possível realizar o login." };
 }
 
-export function resetUserPassword(email: string, newPassword?: string): AuthResult {
+// Sync fallback wrapper
+export function loginWithEmail(email: string, password?: string): AuthResult {
+  loginWithEmailAsync(email, password);
+  return { success: true };
+}
+
+// Async Supabase Password Reset
+export async function resetUserPasswordAsync(email: string, newPassword?: string): Promise<AuthResult> {
   const cleanEmail = email.trim().toLowerCase();
   if (!cleanEmail) {
     return { success: false, error: "Por favor, informe o seu e-mail cadastrado." };
   }
-  if (!newPassword || newPassword.trim().length < 4) {
-    return { success: false, error: "A nova senha deve ter pelo menos 4 caracteres." };
+
+  if (newPassword) {
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword.trim(),
+    });
+    if (error) return { success: false, error: error.message };
+    return { success: true };
   }
 
-  const all = getAllUsers();
-  const existing = all.find((u) => u.email.toLowerCase() === cleanEmail);
+  const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+    redirectTo: `${window.location.origin}/`,
+  });
 
-  if (!existing) {
-    return { success: false, error: "Nenhum usuário encontrado com este e-mail. Verifique o endereço e tente novamente." };
+  if (error) {
+    return { success: false, error: error.message };
   }
 
-  existing.password = newPassword.trim();
-  saveUser(existing);
-  return { success: true, user: existing };
+  return { success: true };
 }
 
-export function updateUserName(newName: string, role?: string, bio?: string, avatarUrl?: string | null): UserProfile {
-  const current = getStoredUser() || registerNewUser(newName, "usuario@exemplo.com", "123456").user || DEFAULT_INITIAL_USER;
+export function resetUserPassword(email: string, newPassword?: string): AuthResult {
+  resetUserPasswordAsync(email, newPassword);
+  return { success: true };
+}
+
+// Async Supabase User Profile Update
+export async function updateUserNameAsync(
+  newName: string,
+  role?: string,
+  bio?: string,
+  avatarUrl?: string | null
+): Promise<UserProfile> {
+  const current = getStoredUser() || DEFAULT_INITIAL_USER;
   const initials = calculateInitials(newName);
-  const updated: UserProfile = {
+
+  const updatedName = newName.trim() || current.name;
+  const updatedRole = role !== undefined ? role.trim() || current.role : current.role;
+  const updatedBio = bio !== undefined ? bio.trim() : current.bio;
+
+  const { data } = await supabase.auth.updateUser({
+    data: {
+      name: updatedName,
+      role: updatedRole,
+      bio: updatedBio,
+      avatarUrl: avatarUrl === null ? null : (avatarUrl !== undefined ? avatarUrl : current.avatarUrl),
+    },
+  });
+
+  if (data?.user) {
+    const updated = mapSupabaseUserToProfile(data.user);
+    saveUser(updated);
+    return updated;
+  }
+
+  const fallbackUpdated: UserProfile = {
     ...current,
-    name: newName.trim() || current.name,
+    name: updatedName,
     initials,
-    role: role !== undefined ? role.trim() || current.role : current.role,
-    bio: bio !== undefined ? bio.trim() : current.bio,
+    role: updatedRole,
+    bio: updatedBio,
     avatarUrl: avatarUrl === null ? undefined : (avatarUrl !== undefined ? avatarUrl : current.avatarUrl),
   };
-  saveUser(updated);
-  return updated;
+  saveUser(fallbackUpdated);
+  return fallbackUpdated;
+}
+
+export function updateUserName(
+  newName: string,
+  role?: string,
+  bio?: string,
+  avatarUrl?: string | null
+): UserProfile {
+  updateUserNameAsync(newName, role, bio, avatarUrl);
+  const current = getStoredUser() || DEFAULT_INITIAL_USER;
+  return {
+    ...current,
+    name: newName.trim() || current.name,
+    role: role !== undefined ? role.trim() || current.role : current.role,
+    bio: bio !== undefined ? bio.trim() : current.bio,
+  };
 }
 
 export function saveRememberMePreference(remember: boolean, email?: string, password?: string) {
@@ -298,7 +387,8 @@ export function getRememberMePreference(): { remember: boolean; email?: string; 
   return { remember: false };
 }
 
-export function logoutUser() {
+export async function logoutUserAsync() {
+  await supabase.auth.signOut();
   if (typeof window !== "undefined") {
     try {
       localStorage.removeItem(STORAGE_USER_KEY);
@@ -311,7 +401,10 @@ export function logoutUser() {
   }
 }
 
-// Fallback user template if nothing is stored
+export function logoutUser() {
+  logoutUserAsync();
+}
+
 const DEFAULT_INITIAL_USER: UserProfile = ensureFullBadges({
   id: "user-default",
   name: "Visitante",
@@ -341,17 +434,37 @@ const DEFAULT_INITIAL_USER: UserProfile = ensureFullBadges({
 export function useCurrentUser(): {
   user: UserProfile;
   allUsers: UserProfile[];
-  updateName: (newName: string, role?: string, bio?: string, avatarUrl?: string | null) => void;
+  updateName: (newName: string, role?: string, bio?: string, avatarUrl?: string | null) => Promise<UserProfile>;
   setUser: (user: UserProfile) => void;
-  registerUser: (name: string, email: string, password?: string, role?: string, bio?: string) => AuthResult;
-  loginUser: (email: string, password?: string) => AuthResult;
-  resetPassword: (email: string, newPassword?: string) => AuthResult;
-  logout: () => void;
+  registerUser: (name: string, email: string, password?: string, role?: string, bio?: string) => Promise<AuthResult>;
+  loginUser: (email: string, password?: string) => Promise<AuthResult>;
+  resetPassword: (email: string, newPassword?: string) => Promise<AuthResult>;
+  logout: () => Promise<void>;
 } {
   const [user, setUserState] = useState<UserProfile>(() => getStoredUser() || DEFAULT_INITIAL_USER);
   const [allUsers, setAllUsers] = useState<UserProfile[]>(getAllUsers);
 
   useEffect(() => {
+    // 1. Initial Supabase Session check
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        const userProfile = mapSupabaseUserToProfile(session.user);
+        setUserState(userProfile);
+        saveUser(userProfile);
+      }
+    });
+
+    // 2. Real-time auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        const userProfile = mapSupabaseUserToProfile(session.user);
+        setUserState(userProfile);
+        saveUser(userProfile);
+      } else if (_event === "SIGNED_OUT") {
+        setUserState(DEFAULT_INITIAL_USER);
+      }
+    });
+
     const handleUpdate = () => {
       setUserState(getStoredUser() || DEFAULT_INITIAL_USER);
       setAllUsers(getAllUsers());
@@ -360,14 +473,16 @@ export function useCurrentUser(): {
     window.addEventListener(EVENT_KEY, handleUpdate);
     window.addEventListener("storage", handleUpdate);
     return () => {
+      subscription.unsubscribe();
       window.removeEventListener(EVENT_KEY, handleUpdate);
       window.removeEventListener("storage", handleUpdate);
     };
   }, []);
 
-  const updateName = (newName: string, role?: string, bio?: string, avatarUrl?: string | null) => {
-    const updated = updateUserName(newName, role, bio, avatarUrl);
+  const updateName = async (newName: string, role?: string, bio?: string, avatarUrl?: string | null) => {
+    const updated = await updateUserNameAsync(newName, role, bio, avatarUrl);
     setUserState(updated);
+    return updated;
   };
 
   const setUser = (newUser: UserProfile) => {
@@ -375,32 +490,29 @@ export function useCurrentUser(): {
     setUserState(newUser);
   };
 
-  const registerUser = (name: string, email: string, password?: string, role?: string, bio?: string) => {
-    const result = registerNewUser(name, email, password, role, bio);
+  const registerUser = async (name: string, email: string, password?: string, role?: string, bio?: string) => {
+    const result = await registerNewUserAsync(name, email, password, role, bio);
     if (result.success && result.user) {
       setUserState(result.user);
     }
     return result;
   };
 
-  const loginUser = (email: string, password?: string) => {
-    const result = loginWithEmail(email, password);
+  const loginUser = async (email: string, password?: string) => {
+    const result = await loginWithEmailAsync(email, password);
     if (result.success && result.user) {
       setUserState(result.user);
     }
     return result;
   };
 
-  const resetPassword = (email: string, newPassword?: string) => {
-    const result = resetUserPassword(email, newPassword);
-    if (result.success && result.user) {
-      setUserState(result.user);
-    }
+  const resetPassword = async (email: string, newPassword?: string) => {
+    const result = await resetUserPasswordAsync(email, newPassword);
     return result;
   };
 
-  const logout = () => {
-    logoutUser();
+  const logout = async () => {
+    await logoutUserAsync();
     setUserState(DEFAULT_INITIAL_USER);
   };
 

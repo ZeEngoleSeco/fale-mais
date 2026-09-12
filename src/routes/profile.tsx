@@ -103,10 +103,10 @@ function ProfilePage() {
     }
   };
 
-  const handleSaveProfile = (e: React.FormEvent) => {
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editName.trim()) return;
-    updateName(editName, editRole, editBio, editAvatarUrl);
+    await updateName(editName, editRole, editBio, editAvatarUrl);
     setSaveSuccess(true);
     setTimeout(() => {
       setSaveSuccess(false);
@@ -114,8 +114,8 @@ function ProfilePage() {
     }, 800);
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate({ to: "/" });
   };
 

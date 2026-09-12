@@ -73,12 +73,18 @@ function LoginPage() {
     });
   };
 
-  const handleDirectLogin = () => {
+  const handleDirectLogin = async () => {
     const targetEmail = email.trim() || "orador@fale-mais.com";
     const targetPassword = password.trim() || "123456";
-    loginUser(targetEmail, targetPassword);
-    saveRememberMePreference(rememberMe, targetEmail, targetPassword);
-    navigate({ to: "/home" });
+    setLoading(true);
+    const result = await loginUser(targetEmail, targetPassword);
+    setLoading(false);
+    if (result.success) {
+      saveRememberMePreference(rememberMe, targetEmail, targetPassword);
+      navigate({ to: "/home" });
+    } else {
+      setErrorMessage(result.error || "Erro ao realizar login.");
+    }
   };
 
   const handleAlreadyHaveAccount = () => {
@@ -89,7 +95,7 @@ function LoginPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
     setSuccessMessage(null);
@@ -100,23 +106,23 @@ function LoginPage() {
       const targetEmail = email.trim();
       const targetRole = role.trim();
 
-      const result = registerUser(targetName, targetEmail, password, targetRole);
+      const result = await registerUser(targetName, targetEmail, password, targetRole);
       if (!result.success) {
-        setErrorMessage(result.error || "Erro ao criar conta.");
+        setErrorMessage(result.error || "Erro ao criar conta no Supabase.");
         setLoading(false);
         return;
       }
       saveRememberMePreference(rememberMe, targetEmail, password);
-      toast.success("Conta criada com sucesso! Bem-vindo ao Fale+ 🎉");
+      toast.success("Conta criada no Supabase! Bem-vindo ao Fale+ 🎉");
       setTimeout(() => {
         navigate({ to: "/home" });
       }, 500);
     } else if (mode === "signin") {
       const targetEmail = email.trim() || "orador@fale-mais.com";
       const targetPassword = password.trim() || "123456";
-      const result = loginUser(targetEmail, targetPassword);
+      const result = await loginUser(targetEmail, targetPassword);
       if (!result.success) {
-        setErrorMessage(result.error || "Erro ao realizar login.");
+        setErrorMessage(result.error || "Erro ao realizar login no Supabase.");
         setLoading(false);
         return;
       }
@@ -124,20 +130,20 @@ function LoginPage() {
       navigate({ to: "/home" });
     } else if (mode === "forgot") {
       const targetEmail = email.trim();
-      if (password !== confirmPassword) {
+      if (password && password !== confirmPassword) {
         setErrorMessage("As senhas não coincidem. Verifique a digitação.");
         setLoading(false);
         return;
       }
-      const result = resetPassword(targetEmail, password);
+      const result = await resetPassword(targetEmail, password);
       if (!result.success) {
         setErrorMessage(result.error || "Erro ao redefinir senha.");
         setLoading(false);
         return;
       }
       saveRememberMePreference(rememberMe, targetEmail, password);
-      setSuccessMessage("Senha redefinida com sucesso! Redirecionando para a plataforma...");
-      toast.success("Senha atualizada com sucesso!");
+      setSuccessMessage("E-mail de recuperação / senha processados no Supabase!");
+      toast.success("Operação concluída com sucesso!");
       setTimeout(() => {
         navigate({ to: "/home" });
       }, 1200);
