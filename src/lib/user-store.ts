@@ -266,30 +266,103 @@ export function loginWithEmail(email: string, password?: string): AuthResult {
   return { success: true };
 }
 
-// Async Supabase Password Reset
-export async function resetUserPasswordAsync(email: string, newPassword?: string): Promise<AuthResult> {
+// Format Supabase Auth Error Messages into user-friendly Portuguese text
+export function formatAuthError(error: any): string {
+  if (!error) return "Ocorreu um erro inesperado.";
+  const msg = typeof error === "string" ? error : error.message || "";
+
+  if (msg.includes("Invalid login credentials") || msg.includes("invalid_credentials")) {
+    return "E-mail ou senha incorretos. Verifique seus dados e tente novamente.";
+  }
+  if (msg.includes("Email not confirmed")) {
+    return "E-mail ainda não foi confirmado. Verifique a caixa de entrada do seu e-mail.";
+  }
+  if (msg.includes("User not found") || msg.includes("user_not_found")) {
+    return "Nenhum usuário encontrado com este e-mail.";
+  }
+  if (msg.includes("Password should be at least")) {
+    return "A senha deve ter no mínimo 6 caracteres.";
+  }
+  if (msg.includes("same password") || msg.includes("should be different")) {
+    return "A nova senha deve ser diferente da senha antiga.";
+  }
+  if (msg.includes("rate limit") || msg.includes("too many requests") || error?.status === 429) {
+    return "Muitas tentativas em pouco tempo. Aguarde alguns instantes antes de tentar novamente.";
+  }
+  if (msg.includes("FetchError") || msg.includes("Failed to fetch") || msg.includes("network")) {
+    return "Erro de conexão com o Supabase. Verifique sua conexão com a internet.";
+  }
+  if (msg.includes("Auth session missing") || msg.includes("recovery session") || msg.includes("jwt expired")) {
+    return "Sessão de recuperação inválida ou expirada. Solicite um novo link de redefinição de senha.";
+  }
+  return msg || "Ocorreu um erro ao processar sua solicitação.";
+}
+
+// Request Password Reset Link via Supabase Auth
+export async function requestPasswordResetAsync(email: string): Promise<AuthResult> {
   const cleanEmail = email.trim().toLowerCase();
   if (!cleanEmail) {
-    return { success: false, error: "Por favor, informe o seu e-mail cadastrado." };
+    return { success: false, error: "Por favor, informe o seu e-mail." };
+  }
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(cleanEmail)) {
+    return { success: false, error: "Por favor, informe um e-mail válido (ex: usuario@email.com)." };
   }
 
-  if (newPassword) {
-    const { error } = await supabase.auth.updateUser({
-      password: newPassword.trim(),
+  const redirectUrl = typeof window !== "undefined" ? `${window.location.origin}/reset-password` : "/reset-password";
+
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+      redirectTo: redirectUrl,
     });
-    if (error) return { success: false, error: error.message };
+
+    if (error) {
+      return { success: false, error: formatAuthError(error) };
+    }
+
     return { success: true };
+  } catch (err) {
+    return { success: false, error: formatAuthError(err) };
+  }
+}
+
+// Update Password for Authenticated Recovery Session via Supabase Auth
+export async function updateUserPasswordAsync(newPassword: string): Promise<AuthResult> {
+  const cleanPassword = newPassword.trim();
+  if (!cleanPassword) {
+    return { success: false, error: "Por favor, informe a nova senha." };
+  }
+  if (cleanPassword.length < 6) {
+    return { success: false, error: "A nova senha deve ter no mínimo 6 caracteres." };
   }
 
-  const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
-    redirectTo: `${window.location.origin}/`,
-  });
+  try {
+    const { data, error } = await supabase.auth.updateUser({
+      password: cleanPassword,
+    });
 
-  if (error) {
-    return { success: false, error: error.message };
+    if (error) {
+      return { success: false, error: formatAuthError(error) };
+    }
+
+    if (data?.user) {
+      const userProfile = mapSupabaseUserToProfile(data.user);
+      saveUser(userProfile);
+      return { success: true, user: userProfile };
+    }
+
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: formatAuthError(err) };
   }
+}
 
-  return { success: true };
+// Async Supabase Password Reset (backward compatible wrapper)
+export async function resetUserPasswordAsync(email: string, newPassword?: string): Promise<AuthResult> {
+  if (newPassword) {
+    return updateUserPasswordAsync(newPassword);
+  }
+  return requestPasswordResetAsync(email);
 }
 
 export function resetUserPassword(email: string, newPassword?: string): AuthResult {
@@ -392,8 +465,7 @@ export async function logoutUserAsync() {
   if (typeof window !== "undefined") {
     try {
       localStorage.removeItem(STORAGE_USER_KEY);
-      localStorage.removeItem(STORAGE_REMEMBER_KEY);
-      localStorage.removeItem(STORAGE_SAVED_CREDS_KEY);
+      // Keep saved credentials intact so 'Lembrar de mim' works when returning to login page
       window.dispatchEvent(new Event(EVENT_KEY));
     } catch (e) {
       console.error("Error logging out", e);
@@ -439,6 +511,7 @@ export function useCurrentUser(): {
   registerUser: (name: string, email: string, password?: string, role?: string, bio?: string) => Promise<AuthResult>;
   loginUser: (email: string, password?: string) => Promise<AuthResult>;
   resetPassword: (email: string, newPassword?: string) => Promise<AuthResult>;
+  updatePassword: (newPassword: string) => Promise<AuthResult>;
   logout: () => Promise<void>;
 } {
   const [user, setUserState] = useState<UserProfile>(() => getStoredUser() || DEFAULT_INITIAL_USER);
@@ -511,10 +584,15 @@ export function useCurrentUser(): {
     return result;
   };
 
+  const updatePassword = async (newPassword: string) => {
+    const result = await updateUserPasswordAsync(newPassword);
+    return result;
+  };
+
   const logout = async () => {
     await logoutUserAsync();
     setUserState(DEFAULT_INITIAL_USER);
   };
 
-  return { user, allUsers, updateName, setUser, registerUser, loginUser, resetPassword, logout };
+  return { user, allUsers, updateName, setUser, registerUser, loginUser, resetPassword, updatePassword, logout };
 }

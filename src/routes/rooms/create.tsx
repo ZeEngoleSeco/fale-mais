@@ -20,6 +20,8 @@ import {
   Mic,
   MessageSquare,
   Check,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { MOCK_USERS, CURRENT_USER } from "@/data/mock-data";
 import { useCurrentUser } from "@/lib/user-store";
@@ -45,6 +47,7 @@ export function CreateRoomPage() {
   const [initialTopic, setInitialTopic] = useState("");
   const [isPrivate, setIsPrivate] = useState(false);
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([MOCK_USERS[1].id]); // Pre-select Carlos Eduardo
 
   const toggleUserSelection = (userId: string) => {
@@ -262,13 +265,23 @@ export function CreateRoomPage() {
 
           {isPrivate && (
             <FieldStack label="Senha de Acesso à Sala">
-              <Input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Ex.: 123456"
-                className="h-11 rounded-2xl text-xs"
-              />
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Ex.: 123456"
+                  className="h-11 pl-3.5 pr-10 rounded-2xl text-xs"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer focus:outline-none p-1"
+                  title={showPassword ? "Ocultar senha" : "Exibir senha"}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </FieldStack>
           )}
         </Card>

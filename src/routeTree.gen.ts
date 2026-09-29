@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AiIndexRouteImport } from './routes/ai/index'
 import { Route as AiChatRouteImport } from './routes/ai/chat'
 import { Route as AiExercisesRouteImport } from './routes/ai/exercises'
@@ -46,6 +47,11 @@ const HomeRoute = HomeRouteImport.update({
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AiIndexRoute = AiIndexRouteImport.update({
@@ -153,6 +159,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/home': typeof HomeRoute
   '/profile': typeof ProfileRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/ai/chat': typeof AiChatRoute
   '/ai/exercises': typeof AiExercisesRoute
   '/ai/feedback': typeof AiFeedbackRoute
@@ -178,6 +185,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/home': typeof HomeRoute
   '/profile': typeof ProfileRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/ai/chat': typeof AiChatRoute
   '/ai/exercises': typeof AiExercisesRoute
   '/ai/feedback': typeof AiFeedbackRoute
@@ -204,6 +212,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/home': typeof HomeRoute
   '/profile': typeof ProfileRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/ai/chat': typeof AiChatRoute
   '/ai/exercises': typeof AiExercisesRoute
   '/ai/feedback': typeof AiFeedbackRoute
@@ -231,6 +240,7 @@ export interface FileRouteTypes {
     | '/'
     | '/home'
     | '/profile'
+    | '/reset-password'
     | '/ai/chat'
     | '/ai/exercises'
     | '/ai/feedback'
@@ -256,6 +266,7 @@ export interface FileRouteTypes {
     | '/'
     | '/home'
     | '/profile'
+    | '/reset-password'
     | '/ai/chat'
     | '/ai/exercises'
     | '/ai/feedback'
@@ -281,6 +292,7 @@ export interface FileRouteTypes {
     | '/'
     | '/home'
     | '/profile'
+    | '/reset-password'
     | '/ai/chat'
     | '/ai/exercises'
     | '/ai/feedback'
@@ -307,6 +319,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   HomeRoute: typeof HomeRoute
   ProfileRoute: typeof ProfileRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   AiChatRoute: typeof AiChatRoute
   AiExercisesRoute: typeof AiExercisesRoute
   AiFeedbackRoute: typeof AiFeedbackRoute
@@ -350,6 +363,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ai/': {
@@ -499,6 +519,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   HomeRoute: HomeRoute,
   ProfileRoute: ProfileRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   AiChatRoute: AiChatRoute,
   AiExercisesRoute: AiExercisesRoute,
   AiFeedbackRoute: AiFeedbackRoute,
