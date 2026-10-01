@@ -14,7 +14,8 @@ import {
   Share2,
   Star,
   Award,
-  Sparkles,
+  Ticket,
+  Tag,
   ExternalLink,
   ChevronDown,
   ChevronUp,
@@ -29,7 +30,7 @@ import { MOCK_EVENTS } from "@/data/mock-data";
 import { useState, useEffect } from "react";
 
 export const Route = createFileRoute("/events/offline/$id")({
-  head: () => ({ meta: [{ title: "Evento Presencial — Fale+" }] }),
+  head: () => ({ meta: [{ title: "Evento Presencial — Solta Voz" }] }),
   component: OfflineEvent,
 });
 
@@ -188,7 +189,7 @@ function OfflineEvent() {
             {/* Bottom Title inside Banner */}
             <div className="mt-3">
               <span className="text-[10px] font-semibold text-amber-200 uppercase tracking-wider flex items-center gap-1">
-                <Sparkles className="h-3 w-3" /> Encontro Presencial Fale+
+                <Tag className="h-3 w-3" /> Encontro Presencial Solta Voz
               </span>
               <h2 className="mt-0.5 text-lg font-extrabold leading-snug text-white tracking-tight">
                 {event.title}
@@ -303,7 +304,7 @@ function OfflineEvent() {
               ))}
             </div>
             <span className="text-xs text-muted-foreground font-medium">
-              {confirmed ? "Você e +41 membros" : "42 membros da Fale+"} já garantiram presença!
+              {confirmed ? "Você e +41 membros" : "42 membros da Solta Voz"} já garantiram presença!
             </span>
           </div>
         </Card>
@@ -364,7 +365,7 @@ function OfflineEvent() {
                             TEDx Speaker
                           </span>
                           <span className="rounded-full bg-secondary text-foreground px-2.5 py-0.5 text-[10px] font-bold">
-                            Mentor Fale+
+                            Mentor Solta Voz
                           </span>
                         </div>
                       </div>
@@ -461,7 +462,7 @@ function OfflineEvent() {
             </div>
             <div>
               <p className="text-sm font-bold text-foreground flex items-center gap-1">
-                {event.organizer?.name || "Comunidade Fale+"}
+                {event.organizer?.name || "Comunidade Solta Voz"}
                 <ShieldCheck className="h-4 w-4 text-primary" />
               </p>
               <p className="text-xs text-muted-foreground">
@@ -472,19 +473,51 @@ function OfflineEvent() {
         </Card>
       </div>
 
-      {/* Barra de Ação Flutuante Fixo no Rodapé */}
-      <div className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-md px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-2 bg-gradient-to-t from-background via-background/95 to-transparent backdrop-blur-md">
-        <Button
-          onClick={toggleRSVP}
-          className={`h-13 w-full rounded-2xl text-base font-bold shadow-lift transition-all ${
-            confirmed
-              ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-              : "bg-gradient-brand text-white hover:opacity-95"
-          }`}
-        >
-          <CheckCircle2 className="h-5 w-5 mr-2" />
-          {confirmed ? "Presença Confirmada 🎉 (Clique para cancelar)" : "Confirmar Presença Gratuitamente"}
-        </Button>
+      {/* Barra de Ação Flutuante Ultra-Moderna no Rodapé */}
+      <div className="fixed inset-x-0 bottom-[4.75rem] lg:bottom-6 z-30 mx-auto w-full max-w-md lg:max-w-2xl px-4 pointer-events-none">
+        <div className="pointer-events-auto rounded-3xl border border-primary/25 bg-card/90 dark:bg-card/85 p-2.5 sm:p-3 shadow-[0_12px_40px_-8px_rgba(0,0,0,0.35)] dark:shadow-[0_12px_40px_-8px_rgba(37,99,235,0.25)] backdrop-blur-2xl transition-all duration-300 ring-1 ring-white/10 flex items-center justify-between gap-3">
+          {/* Informações de Apoio no Floating Dock */}
+          <div className="hidden sm:flex items-center gap-3 pl-2">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-soft text-primary">
+              <Ticket className="h-5 w-5 text-amber-500 animate-pulse" />
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-extrabold text-foreground">Entrada Franca</span>
+                <Badge className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-[10px] px-2 py-0 font-extrabold">
+                  Gratuito
+                </Badge>
+              </div>
+              <p className="text-[11px] text-muted-foreground font-medium flex items-center gap-1 mt-0.5">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                {event.maxCapacity - effectiveCount} vagas restantes
+              </p>
+            </div>
+          </div>
+
+          {/* Botão de Ação Principal */}
+          <Button
+            onClick={toggleRSVP}
+            className={`h-12 sm:h-13 w-full sm:w-auto flex-1 rounded-2xl text-sm sm:text-base font-extrabold transition-all duration-300 cursor-pointer ${
+              confirmed
+                ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-[0_4px_25px_rgba(16,185,129,0.4)] border border-emerald-400/30"
+                : "bg-gradient-brand text-white shadow-[0_4px_25px_rgba(37,99,235,0.4)] hover:shadow-[0_6px_35px_rgba(124,58,237,0.55)] hover:scale-[1.02] active:scale-[0.98] border border-white/20"
+            }`}
+          >
+            {confirmed ? (
+              <span className="flex items-center justify-center gap-2">
+                <CheckCircle2 className="h-5 w-5 text-white animate-bounce" />
+                <span>Presença Confirmada 🎉</span>
+                <span className="text-xs opacity-80 font-normal hidden sm:inline">(Cancelar)</span>
+              </span>
+            ) : (
+              <span className="flex items-center justify-center gap-2">
+                <CheckCircle2 className="h-5 w-5 text-amber-300 animate-pulse" />
+                <span>Confirmar Presença Gratuitamente</span>
+              </span>
+            )}
+          </Button>
+        </div>
       </div>
     </AppShell>
   );

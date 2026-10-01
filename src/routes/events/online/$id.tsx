@@ -20,7 +20,6 @@ import {
   Heart,
   Flame,
   Hand,
-  Sparkles,
   ThumbsUp,
   FileText,
   MessageSquare,
@@ -33,7 +32,7 @@ import { MOCK_EVENTS } from "@/data/mock-data";
 import { useState } from "react";
 
 export const Route = createFileRoute("/events/online/$id")({
-  head: () => ({ meta: [{ title: "Transmissão Online — Fale+" }] }),
+  head: () => ({ meta: [{ title: "Transmissão Online — Solta Voz" }] }),
   component: OnlineEvent,
 });
 
@@ -153,7 +152,7 @@ export function OnlineEvent() {
                   <span className="h-1.5 w-1.5 rounded-full bg-white animate-ping" /> AO VIVO
                 </span>
                 <span className="inline-flex items-center gap-1 rounded-full bg-black/40 backdrop-blur px-2.5 py-0.5 text-[10px] font-semibold">
-                  <Tv className="h-3 w-3" /> Fale+ HD
+                  <Tv className="h-3 w-3" /> Solta Voz HD
                 </span>
               </div>
 
@@ -279,7 +278,7 @@ export function OnlineEvent() {
           <Card className="rounded-3xl border-border p-4 shadow-sm space-y-3">
             <div className="flex items-center justify-between">
               <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                <Sparkles className="h-4 w-4 text-primary" /> Chat Interativo da Sala
+                <MessageSquare className="h-4 w-4 text-primary" /> Chat Interativo da Sala
               </p>
               <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-full">
                 Ao Vivo

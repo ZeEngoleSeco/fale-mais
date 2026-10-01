@@ -1,4 +1,5 @@
 import { MOCK_EVENTS, MOCK_ROOMS, CURRENT_USER, type UserProfile } from "@/data/mock-data";
+import { getStoredUser } from "@/lib/user-store";
 
 export interface ChatReaction {
   emoji: string;
@@ -113,7 +114,7 @@ function getSeedDataForProject(projectId: string): ProjectChatData {
         name: event.organizer.name,
         initials: event.organizer.initials || "FM",
         role: "Organizador Principal & Facilitador",
-        company: event.speakers?.[0]?.company || "Fale+ Academy",
+        company: event.speakers?.[0]?.company || "Solta Voz Academy",
         avatarColor: "from-amber-500 to-orange-600",
       },
       pinnedMessageId: `pin-${projectId}-1`,
@@ -290,6 +291,8 @@ function getSeedDataForProject(projectId: string): ProjectChatData {
     };
   }
 
+  const activeUser = getStoredUser() || CURRENT_USER;
+
   // Check if it's a room
   const room = MOCK_ROOMS.find((r) => r.id === projectId) || MOCK_ROOMS[0];
   return {
@@ -301,7 +304,7 @@ function getSeedDataForProject(projectId: string): ProjectChatData {
       name: room.host.name,
       initials: room.host.initials,
       role: room.host.role || "Host & Mentor da Sala",
-      company: "Fale+ Live Hub",
+      company: "Solta Voz Live Hub",
       avatarColor: "from-blue-600 to-indigo-600",
     },
     pinnedMessageId: `pin-room-${projectId}-1`,
@@ -318,11 +321,11 @@ function getSeedDataForProject(projectId: string): ProjectChatData {
       },
       {
         id: "p-curr-user",
-        name: CURRENT_USER.name,
-        initials: CURRENT_USER.initials,
-        role: "Orador",
+        name: activeUser.name,
+        initials: activeUser.initials,
+        role: activeUser.role || "Orador",
         isOrganizer: false,
-        avatarColor: "from-purple-600 to-indigo-600",
+        avatarColor: activeUser.avatarColor || "from-purple-600 to-indigo-600",
         isOnline: true,
       },
       ...room.participants.map((p, idx) => ({
@@ -446,7 +449,7 @@ export function sendProjectMessage(params: SendMessageParams): ChatMessage {
     id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
     projectId: params.projectId,
     sender: params.senderName,
-    senderId: CURRENT_USER.id,
+    senderId: (getStoredUser() || CURRENT_USER).id,
     initials: params.initials,
     avatarColor: params.avatarColor || (params.isOrganizer ? "from-amber-500 to-orange-600" : "from-blue-600 to-indigo-600"),
     role: params.role,

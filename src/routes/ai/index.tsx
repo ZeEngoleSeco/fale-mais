@@ -13,7 +13,6 @@ import {
   History,
   Wind,
   Wand2,
-  Sparkles,
   Zap,
   Flame,
   ArrowRight,
@@ -25,7 +24,7 @@ import CardSpotlightEffect from "@/components/CardSpotlightEffect";
 import { useState } from "react";
 
 export const Route = createFileRoute("/ai/")({
-  head: () => ({ meta: [{ title: "Mentor IA — Fale+" }] }),
+  head: () => ({ meta: [{ title: "Mentor IA — Solta Voz" }] }),
   component: AIPage,
 });
 

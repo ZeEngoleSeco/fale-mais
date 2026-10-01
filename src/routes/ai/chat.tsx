@@ -13,7 +13,6 @@ import {
   Bot,
   Wand2,
   Lightbulb,
-  Sparkles,
   Zap,
   Brain,
   Wind,
@@ -27,9 +26,11 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { useCurrentUser } from "@/lib/user-store";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/ai/chat")({
-  head: () => ({ meta: [{ title: "Mentor de IA Thorel — Fale+" }] }),
+  head: () => ({ meta: [{ title: "Mentor de IA Thorel — Solta Voz" }] }),
   component: ChatPage,
 });
 
@@ -69,16 +70,31 @@ const QUICK_PROMPTS = [
 ];
 
 export function ChatPage() {
+  const { user } = useCurrentUser();
+  const firstName = user.name ? user.name.split(" ")[0] : "Orador";
   const [activeMode, setActiveMode] = useState("pitch");
-  const [msgs, setMsgs] = useState<Msg[]>([
+  const [msgs, setMsgs] = useState<Msg[]>(() => [
     {
       id: "1",
       from: "ai",
-      text: "Olá, Ana! Sou o Thorel, seu mentor de oratória e comunicação de alto impacto.\n\nEstou pronto para analisar seu discurso por texto ou áudio. Qual apresentação vamos lapidar hoje?",
+      text: `Olá, ${firstName}! Sou o Thorel, seu mentor de oratória e comunicação de alto impacto.\n\nEstou pronto para analisar seu discurso por texto ou áudio. Qual apresentação vamos lapidar hoje?`,
       time: "09:00",
       tips: ["Pitch para Investidores", "Discurso Executivo", "Combate ao Nervosismo"],
     },
   ]);
+
+  useEffect(() => {
+    setMsgs((prevMsgs) =>
+      prevMsgs.map((m) =>
+        m.id === "1"
+          ? {
+              ...m,
+              text: `Olá, ${firstName}! Sou o Thorel, seu mentor de oratória e comunicação de alto impacto.\n\nEstou pronto para analisar seu discurso por texto ou áudio. Qual apresentação vamos lapidar hoje?`,
+            }
+          : m
+      )
+    );
+  }, [firstName]);
 
   const [input, setInput] = useState("");
   const [isRecording, setIsRecording] = useState(false);
@@ -164,11 +180,11 @@ export function ChatPage() {
     };
   };
 
-  const send = (textToSend?: string, isAudio = false) => {
+  const send = async (textToSend?: string, isAudio = false) => {
     const text = (textToSend || input).trim();
     if (!text) return;
 
-    // Simulated metrics for user speech
+    // Simulated/calculated metrics for user speech
     const metrics: SpeechMetric = {
       clarity: Math.floor(Math.random() * 10) + 90, // 90% - 99%
       wpm: Math.floor(Math.random() * 20) + 125, // 125 - 145 PPM
@@ -179,7 +195,7 @@ export function ChatPage() {
       id: String(Date.now()),
       from: "me",
       text,
-      time: "Agora",
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       metrics,
     };
 
@@ -187,20 +203,96 @@ export function ChatPage() {
     setInput("");
     setIsTyping(true);
 
-    setTimeout(() => {
-      const response = getAiResponse(text);
+    try {
+      // 1. Try invoking real Supabase Edge Function 'thorel-ai'
+      const { data, error } = await supabase.functions.invoke("thorel-ai", {
+        body: {
+          prompt: text,
+          mode: activeMode,
+          history: msgs.map((m) => ({
+            role: m.from === "ai" ? "assistant" : "user",
+            content: m.text,
+          })),
+        },
+      });
+
+      let responseText = "";
+      let tips: string[] | undefined = undefined;
+      let reportCard: Msg["reportCard"] = undefined;
+
+      if (!error && data && data.text) {
+        responseText = data.text;
+        tips = data.tips;
+        reportCard = data.reportCard;
+      } else {
+        // Fallback if Edge function is not deployed yet or returning local structure
+        const fallback = getAiResponse(text);
+        responseText = fallback.text;
+        tips = fallback.tips;
+        reportCard = fallback.reportCard;
+      }
+
       const aiMsg: Msg = {
         id: String(Date.now() + 1),
         from: "ai",
-        text: response.text,
-        time: "Agora",
-        tips: response.tips,
-        reportCard: response.reportCard,
+        text: responseText,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        tips,
+        reportCard,
       };
 
       setMsgs((prev) => [...prev, aiMsg]);
+
+      // 2. Persist to real Supabase tables if authenticated or active user
+      try {
+        const { data: session } = await supabase
+          .from("ai_sessions")
+          .insert({
+            mode: activeMode,
+            title: `Treino de ${activeMode.toUpperCase()}`,
+            score: reportCard?.score || 8.8,
+            feedback_summary: responseText.slice(0, 150),
+            strengths: reportCard?.strengths || [],
+            improvements: reportCard?.improvement ? [reportCard.improvement] : [],
+          })
+          .select("id")
+          .single();
+
+        if (session) {
+          await supabase.from("ai_messages").insert([
+            {
+              session_id: session.id,
+              sender: "me",
+              text,
+              metrics: metrics as any,
+            },
+            {
+              session_id: session.id,
+              sender: "ai",
+              text: responseText,
+              tips: tips as any,
+              report_card: reportCard as any,
+            },
+          ]);
+        }
+      } catch (dbErr) {
+        console.warn("Real Supabase session logging warning:", dbErr);
+      }
+    } catch (err) {
+      console.error("Error in AI chat send:", err);
+      const fallback = getAiResponse(text);
+      const aiMsg: Msg = {
+        id: String(Date.now() + 1),
+        from: "ai",
+        text: fallback.text,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        tips: fallback.tips,
+        reportCard: fallback.reportCard,
+      };
+      setMsgs((prev) => [...prev, aiMsg]);
+    } finally {
       setIsTyping(false);
-    }, 800);
+    }
   };
 
   const handleMicClick = () => {

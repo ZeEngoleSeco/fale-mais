@@ -9,6 +9,7 @@ export interface UserProfile {
   xpNextLevel: number;
   initials: string;
   avatarColor: string;
+  avatarUrl?: string;
   bio: string;
   streakDays: number;
   stats: {
@@ -132,7 +133,7 @@ export const ALL_ACHIEVEMENTS = [
   {
     id: "badge-welcome",
     title: "Primeiro Passo",
-    description: "Criou sua conta na Fale+ e iniciou a jornada para dominar a oratória.",
+    description: "Criou sua conta na Solta Voz e iniciou a jornada para dominar a oratória.",
     icon: "Compass",
     category: "Início",
     xpReward: 50,
@@ -503,12 +504,12 @@ export const MOCK_EVENTS: EventItem[] = [
     category: "Meetup",
     isFeatured: true,
     organizer: {
-      name: "Comunidade Fale+ SP",
+      name: "Comunidade Solta Voz SP",
       initials: "FM",
       eventsHeld: 18,
     },
     speakers: [
-      { name: "Carlos Eduardo", role: "Palestrante TEDx", company: "Fale+" },
+      { name: "Carlos Eduardo", role: "Palestrante TEDx", company: "Solta Voz" },
       { name: "Dra. Juliana Prado", role: "Psicóloga Especialista em Fobia Social", company: "Instituto Mente Serena" },
     ],
     agenda: [
@@ -522,7 +523,7 @@ export const MOCK_EVENTS: EventItem[] = [
     id: "2",
     title: "Masterclass Online: Storytelling para Líderes",
     desc: "Aprenda a estruturar discursos que conectam pela emoção e convertem ideias em ação.",
-    place: "Online · Transmissão via Fale+ Live",
+    place: "Online · Transmissão via Solta Voz Live",
     date: "Qua, 19 Fev",
     fullDate: "Quarta-feira, 19 de Fevereiro de 2026",
     time: "20h00 às 21h30",
@@ -532,7 +533,7 @@ export const MOCK_EVENTS: EventItem[] = [
     category: "Masterclass",
     isFeatured: false,
     organizer: {
-      name: "Fale+ Academy",
+      name: "Solta Voz Academy",
       initials: "FA",
       eventsHeld: 34,
     },
@@ -559,7 +560,7 @@ export const MOCK_EVENTS: EventItem[] = [
     category: "Pitch",
     isFeatured: false,
     organizer: {
-      name: "Fale+ Rio Hub",
+      name: "Solta Voz Rio Hub",
       initials: "FR",
       eventsHeld: 9,
     },
@@ -586,7 +587,7 @@ export const MOCK_EVENTS: EventItem[] = [
     category: "Workshop",
     isFeatured: false,
     organizer: {
-      name: "Fale+ Academy",
+      name: "Solta Voz Academy",
       initials: "FA",
       eventsHeld: 34,
     },

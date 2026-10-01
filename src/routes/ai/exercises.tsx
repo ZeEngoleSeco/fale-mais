@@ -7,7 +7,7 @@ import { MOCK_EXERCISES, type ExerciseItem } from "@/data/mock-data";
 import { useState } from "react";
 
 export const Route = createFileRoute("/ai/exercises")({
-  head: () => ({ meta: [{ title: "Exercícios de Oratória — Fale+" }] }),
+  head: () => ({ meta: [{ title: "Exercícios de Oratória — Solta Voz" }] }),
   component: Exercises,
 });
 

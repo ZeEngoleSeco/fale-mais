@@ -1,4 +1,5 @@
 import { MOCK_ROOMS, MOCK_USERS, CURRENT_USER, type RoomItem } from "@/data/mock-data";
+import { getStoredUser } from "@/lib/user-store";
 
 const STORAGE_KEY = "fale_mais_custom_rooms";
 
@@ -38,11 +39,12 @@ export interface CreateRoomInput {
 export function createNewRoom(input: CreateRoomInput): RoomItem {
   const customRooms = getCustomRooms();
   const roomId = `custom-room-${Date.now()}`;
+  const currentUser = getStoredUser() || CURRENT_USER;
 
   const hostParticipant = {
     id: `p-host-${Date.now()}`,
-    name: CURRENT_USER.name,
-    initials: CURRENT_USER.initials,
+    name: currentUser.name,
+    initials: currentUser.initials,
     role: "Host" as const,
     isOnline: true,
   };
@@ -50,7 +52,7 @@ export function createNewRoom(input: CreateRoomInput): RoomItem {
   const invitedParticipants = (input.initialParticipantUserIds || [])
     .map((userId) => {
       const u = MOCK_USERS.find((user) => user.id === userId);
-      if (!u || u.id === CURRENT_USER.id) return null;
+      if (!u || u.id === currentUser.id) return null;
       return {
         id: `p-${u.id}-${Date.now()}`,
         name: u.name,
@@ -73,13 +75,13 @@ export function createNewRoom(input: CreateRoomInput): RoomItem {
     isPrivate: input.isPrivate,
     isLive: true,
     host: {
-      name: CURRENT_USER.name,
-      initials: CURRENT_USER.initials,
+      name: currentUser.name,
+      initials: currentUser.initials,
       role: input.hostRole || "Host & Facilitador",
     },
     currentSpeaker: {
-      name: CURRENT_USER.name,
-      initials: CURRENT_USER.initials,
+      name: currentUser.name,
+      initials: currentUser.initials,
       topic: input.initialTopic || `Apresentação Inicial na sala "${input.name}"`,
       turn: 1,
       timeRemaining: "03:00",
@@ -88,7 +90,7 @@ export function createNewRoom(input: CreateRoomInput): RoomItem {
     recentMessages: [
       {
         id: `m-init-${Date.now()}`,
-        sender: CURRENT_USER.name,
+        sender: currentUser.name,
         text: `Bem-vindos à sala "${input.name}"! Vamos começar nossa sessão prática de oratória. 🚀`,
         time: "Agora",
         isMe: true,

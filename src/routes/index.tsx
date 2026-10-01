@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Mail, Lock, User as UserIcon, ArrowRight, CheckCircle2, Briefcase, AlertCircle, Sparkles, KeyRound } from "lucide-react";
+import { Mail, Lock, User as UserIcon, ArrowRight, CheckCircle2, Briefcase, AlertCircle, Zap, KeyRound, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,8 +15,8 @@ import { MOCK_USERS } from "@/data/mock-data";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Entrar / Cadastro — Fale+" },
-      { name: "description", content: "Entre no Fale+ e comece a evoluir sua oratória hoje." },
+      { title: "Entrar / Cadastro — Solta Voz" },
+      { name: "description", content: "Entre no Solta Voz e comece a evoluir sua oratória hoje." },
     ],
   }),
   component: LoginPage,
@@ -29,6 +29,7 @@ function LoginPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
   const [role, setRole] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
@@ -38,10 +39,11 @@ function LoginPage() {
 
   useEffect(() => {
     const pref = getRememberMePreference();
-    if (pref.remember) {
+    if (pref.remember && pref.email) {
       setRememberMe(true);
-      if (pref.email) setEmail(pref.email);
+      setEmail(pref.email);
       if (pref.password) setPassword(pref.password);
+      setMode("signin");
     }
   }, []);
 
@@ -52,14 +54,17 @@ function LoginPage() {
     setConfirmPassword("");
 
     if (newMode === "signin") {
-      // If email is empty, prefill default demo user for convenience
-      if (!email.trim()) {
+      const pref = getRememberMePreference();
+      if (pref.remember && pref.email) {
+        setEmail(pref.email);
+        if (pref.password) setPassword(pref.password);
+      } else if (!email.trim()) {
         setEmail("ana.lima@exemplo.com");
         setPassword("123456");
       }
       toast.info("Modo de Login ativado! Informe seu e-mail e senha ou use as contas de demonstração.");
     } else if (newMode === "signup") {
-      toast.info("Modo de Cadastro ativado! Crie seu perfil no Fale+.");
+      toast.info("Modo de Cadastro ativado! Crie seu perfil no Solta Voz.");
     }
   };
 
@@ -73,7 +78,29 @@ function LoginPage() {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleDirectLogin = async () => {
+    const targetEmail = email.trim() || "orador@soltavoz.com";
+    const targetPassword = password.trim() || "123456";
+    setLoading(true);
+    const result = await loginUser(targetEmail, targetPassword);
+    setLoading(false);
+    if (result.success) {
+      saveRememberMePreference(rememberMe, targetEmail, targetPassword);
+      navigate({ to: "/home" });
+    } else {
+      setErrorMessage(result.error || "Erro ao realizar login.");
+    }
+  };
+
+  const handleAlreadyHaveAccount = () => {
+    if (mode === "signin") {
+      handleDirectLogin();
+    } else {
+      switchMode("signin");
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
     setSuccessMessage(null);
@@ -84,49 +111,59 @@ function LoginPage() {
       const targetEmail = email.trim();
       const targetRole = role.trim();
 
-      const result = registerUser(targetName, targetEmail, password, targetRole);
+      const result = await registerUser(targetName, targetEmail, password, targetRole);
       if (!result.success) {
-        setErrorMessage(result.error || "Erro ao criar conta.");
+        setErrorMessage(result.error || "Erro ao criar conta no Supabase.");
         setLoading(false);
         return;
       }
       saveRememberMePreference(rememberMe, targetEmail, password);
-      toast.success("Conta criada com sucesso! Bem-vindo ao Fale+ 🎉");
+      toast.success("Conta criada no Supabase! Bem-vindo ao Solta Voz 🎉");
       setTimeout(() => {
         navigate({ to: "/home" });
       }, 500);
     } else if (mode === "signin") {
-      const targetEmail = email.trim();
-      const result = loginUser(targetEmail, password);
+      const targetEmail = email.trim() || "orador@soltavoz.com";
+      const targetPassword = password.trim() || "123456";
+      const result = await loginUser(targetEmail, targetPassword);
       if (!result.success) {
-        setErrorMessage(result.error || "Erro ao realizar login.");
+        setErrorMessage(result.error || "Erro ao realizar login no Supabase.");
         setLoading(false);
         return;
       }
-      saveRememberMePreference(rememberMe, targetEmail, password);
-      toast.success(`Bem-vindo de volta, ${result.user?.name || "Orador"}! 🚀`);
-      setTimeout(() => {
-        navigate({ to: "/home" });
-      }, 500);
+      saveRememberMePreference(rememberMe, targetEmail, targetPassword);
+      navigate({ to: "/home" });
     } else if (mode === "forgot") {
       const targetEmail = email.trim();
-      if (password !== confirmPassword) {
-        setErrorMessage("As senhas não coincidem. Verifique a digitação.");
+      if (!targetEmail) {
+        setErrorMessage("Por favor, informe o seu e-mail.");
         setLoading(false);
         return;
       }
-      const result = resetPassword(targetEmail, password);
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(targetEmail)) {
+        setErrorMessage("Por favor, digite um e-mail válido (ex: usuario@email.com).");
+        setLoading(false);
+        return;
+      }
+
+      const result = await resetPassword(targetEmail);
+      setLoading(false);
+
       if (!result.success) {
-        setErrorMessage(result.error || "Erro ao redefinir senha.");
-        setLoading(false);
+        setErrorMessage(result.error || "Erro ao solicitar recuperação de senha.");
+        toast.error("Erro ao solicitar e-mail de recuperação", {
+          description: result.error,
+        });
         return;
       }
-      saveRememberMePreference(rememberMe, targetEmail, password);
-      setSuccessMessage("Senha redefinida com sucesso! Redirecionando para a plataforma...");
-      toast.success("Senha atualizada com sucesso!");
-      setTimeout(() => {
-        navigate({ to: "/home" });
-      }, 1200);
+
+      setSuccessMessage(
+        "Instruções enviadas! Se este e-mail estiver cadastrado no Supabase, você receberá o link em instantes. Verifique também a pasta de SPAM/Lixo Eletrônico."
+      );
+      toast.success("Solicitação enviada com sucesso!", {
+        description: `Link de redefinição solicitado para ${targetEmail}`,
+      });
     }
   };
 
@@ -157,7 +194,7 @@ function LoginPage() {
             <button
               id="tab-signin"
               type="button"
-              onClick={() => switchMode("signin")}
+              onClick={handleAlreadyHaveAccount}
               className={`rounded-full px-4 py-2 transition-all cursor-pointer ${
                 mode === "signin"
                   ? "bg-gradient-brand text-white shadow-soft font-bold scale-[1.02]"
@@ -180,7 +217,7 @@ function LoginPage() {
               ? "Acesse com seu e-mail e senha para continuar seus treinos de fala."
               : mode === "signup"
               ? "Cadastre-se para destravar sua oratória com treinos práticos e IA."
-              : "Informe o e-mail da sua conta cadastrada e defina a nova senha desejada."}
+              : "Informe o e-mail da sua conta cadastrada para receber as instruções de recuperação."}
           </p>
         </div>
 
@@ -189,7 +226,7 @@ function LoginPage() {
           <div className="mt-4 rounded-2xl border border-primary/20 bg-primary/5 p-3.5 space-y-2 animate-in fade-in-50 duration-200">
             <div className="flex items-center justify-between text-xs font-bold text-foreground">
               <span className="flex items-center gap-1.5 text-primary">
-                <Sparkles className="h-3.5 w-3.5" /> Acesso Rápido com Contas Demo:
+                <Zap className="h-3.5 w-3.5" /> Acesso Rápido com Contas Demo:
               </span>
               <span className="text-[10px] text-muted-foreground font-normal">Senha: 123456</span>
             </div>
@@ -271,44 +308,37 @@ function LoginPage() {
             />
           </Field>
 
-          <Field
-            id="password"
-            label={mode === "forgot" ? "Nova Senha" : "Senha"}
-            icon={<Lock className="h-4 w-4" />}
-          >
-            <Input
+          {mode !== "forgot" && (
+            <Field
               id="password"
-              type="password"
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                setErrorMessage(null);
-              }}
-              placeholder={
-                mode === "signup"
-                  ? "Crie uma senha (mínimo 4 caracteres)"
-                  : mode === "forgot"
-                  ? "Digite sua nova senha"
-                  : "Digite sua senha (demo: 123456)"
+              label="Senha"
+              icon={<Lock className="h-4 w-4" />}
+              endIcon={
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer focus:outline-none p-1"
+                  title={showPassword ? "Ocultar senha" : "Exibir senha"}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               }
-              className="h-12 pl-10 rounded-2xl"
-              required
-            />
-          </Field>
-
-          {mode === "forgot" && (
-            <Field id="confirmPassword" label="Confirmar Nova Senha" icon={<Lock className="h-4 w-4" />}>
+            >
               <Input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
+                id="password"
+                type={showPassword ? "text" : "password"}
+                value={password}
                 onChange={(e) => {
-                  setConfirmPassword(e.target.value);
+                  setPassword(e.target.value);
                   setErrorMessage(null);
                 }}
-                placeholder="Repita a nova senha"
-                className="h-12 pl-10 rounded-2xl"
-                required
+                placeholder={
+                  mode === "signup"
+                    ? "Crie uma senha (mínimo 6 caracteres)"
+                    : "Digite sua senha"
+                }
+                className="h-12 pl-10 pr-10 rounded-2xl"
+                required={mode === "signup"}
               />
             </Field>
           )}
@@ -360,14 +390,16 @@ function LoginPage() {
             className="h-12 w-full rounded-2xl bg-gradient-brand text-base font-semibold shadow-soft hover:opacity-95 active:scale-98 transition-all cursor-pointer"
           >
             {loading ? (
-              <span className="flex items-center gap-2">Entrando...</span>
+              <span className="flex items-center gap-2">
+                {mode === "forgot" ? "Enviando e-mail..." : "Processando..."}
+              </span>
             ) : (
               <>
                 {mode === "signin"
                   ? "Entrar na plataforma"
                   : mode === "signup"
                   ? "Criar conta e começar"
-                  : "Redefinir Senha e Entrar"}
+                  : "Enviar e-mail de recuperação"}
                 <ArrowRight className="ml-1 h-4 w-4" />
               </>
             )}
@@ -389,7 +421,7 @@ function LoginPage() {
             {mode === "signin" ? "Ainda não tem conta?" : "Já possui uma conta?"}{" "}
             <button
               type="button"
-              onClick={() => switchMode(mode === "signin" ? "signup" : "signin")}
+              onClick={mode === "signin" ? () => switchMode("signup") : handleAlreadyHaveAccount}
               className="font-semibold text-primary hover:underline cursor-pointer"
             >
               {mode === "signin" ? "Cadastre-se" : "Entrar"}
@@ -409,11 +441,13 @@ function Field({
   id,
   label,
   icon,
+  endIcon,
   children,
 }: {
   id: string;
   label: string;
   icon: React.ReactNode;
+  endIcon?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
@@ -424,6 +458,7 @@ function Field({
       <div className="relative">
         <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground">{icon}</span>
         {children}
+        {endIcon && <span className="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center justify-center">{endIcon}</span>}
       </div>
     </div>
   );

@@ -11,7 +11,7 @@ import { MOCK_ROOMS } from "@/data/mock-data";
 import { useState } from "react";
 
 export const Route = createFileRoute("/rooms/$id/settings")({
-  head: () => ({ meta: [{ title: "Configurações da Sala — Fale+" }] }),
+  head: () => ({ meta: [{ title: "Configurações da Sala — Solta Voz" }] }),
   component: RoomSettings,
 });
 

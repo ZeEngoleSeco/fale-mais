@@ -41,7 +41,6 @@ import {
   Search,
   CheckCircle2,
   Clock,
-  Sparkles,
   Volume2,
   Play,
   Pause,
@@ -75,6 +74,7 @@ import {
   type ProjectParticipant,
 } from "@/lib/project-chat-store";
 import { CURRENT_USER } from "@/data/mock-data";
+import { useCurrentUser } from "@/lib/user-store";
 
 interface ProjectChatRoomProps {
   projectId: string;
@@ -82,6 +82,12 @@ interface ProjectChatRoomProps {
 }
 
 export function ProjectChatRoom({ projectId, backUrl = "/events" }: ProjectChatRoomProps) {
+  const { user } = useCurrentUser();
+  const currentUserName = user?.name || CURRENT_USER.name;
+  const currentUserInitials = user?.initials || CURRENT_USER.initials;
+  const currentUserAvatarColor = user?.avatarColor || CURRENT_USER.avatarColor;
+  const currentUserId = user?.id || CURRENT_USER.id;
+
   const [data, setData] = useState<ProjectChatData>(() => getProjectChatData(projectId));
   const [activeTab, setActiveTab] = useState<"all" | "announcements" | "qa" | "polls">("all");
   const [isOrganizerMode, setIsOrganizerMode] = useState<boolean>(false);
@@ -154,8 +160,8 @@ export function ProjectChatRoom({ projectId, backUrl = "/events" }: ProjectChatR
         ? "question"
         : "normal";
 
-    const senderName = isOrganizerMode ? data.organizer.name : CURRENT_USER.name;
-    const senderInitials = isOrganizerMode ? data.organizer.initials : CURRENT_USER.initials;
+    const senderName = isOrganizerMode ? data.organizer.name : currentUserName;
+    const senderInitials = isOrganizerMode ? data.organizer.initials : currentUserInitials;
     const senderRole = isOrganizerMode ? "Organizador" : "Participante";
 
     const newMsg = sendProjectMessage({
@@ -164,7 +170,7 @@ export function ProjectChatRoom({ projectId, backUrl = "/events" }: ProjectChatR
       initials: senderInitials,
       role: senderRole,
       isOrganizer: isOrganizerMode,
-      avatarColor: isOrganizerMode ? data.organizer.avatarColor : CURRENT_USER.avatarColor,
+      avatarColor: isOrganizerMode ? data.organizer.avatarColor : currentUserAvatarColor,
       text: inputText.trim(),
       kind,
     });
@@ -203,11 +209,11 @@ export function ProjectChatRoom({ projectId, backUrl = "/events" }: ProjectChatR
 
     sendProjectMessage({
       projectId,
-      senderName: isOrganizerMode ? data.organizer.name : CURRENT_USER.name,
-      initials: isOrganizerMode ? data.organizer.initials : CURRENT_USER.initials,
+      senderName: isOrganizerMode ? data.organizer.name : currentUserName,
+      initials: isOrganizerMode ? data.organizer.initials : currentUserInitials,
       role: isOrganizerMode ? "Organizador" : "Participante",
       isOrganizer: isOrganizerMode,
-      avatarColor: isOrganizerMode ? data.organizer.avatarColor : CURRENT_USER.avatarColor,
+      avatarColor: isOrganizerMode ? data.organizer.avatarColor : currentUserAvatarColor,
       text: isOrganizerMode
         ? "Áudio do Organizador com orientações do projeto."
         : "Mensagem de voz com dúvida / comentário.",
@@ -223,11 +229,11 @@ export function ProjectChatRoom({ projectId, backUrl = "/events" }: ProjectChatR
   const handleSendQuickAttachment = (name: string, type: "pdf" | "slides" | "link", size = "2.1 MB") => {
     sendProjectMessage({
       projectId,
-      senderName: isOrganizerMode ? data.organizer.name : CURRENT_USER.name,
-      initials: isOrganizerMode ? data.organizer.initials : CURRENT_USER.initials,
+      senderName: isOrganizerMode ? data.organizer.name : currentUserName,
+      initials: isOrganizerMode ? data.organizer.initials : currentUserInitials,
       role: isOrganizerMode ? "Organizador" : "Participante",
       isOrganizer: isOrganizerMode,
-      avatarColor: isOrganizerMode ? data.organizer.avatarColor : CURRENT_USER.avatarColor,
+      avatarColor: isOrganizerMode ? data.organizer.avatarColor : currentUserAvatarColor,
       text: isOrganizerMode
         ? `Material oficial disponibilizado: ${name}`
         : `Compartilhando material complementar: ${name}`,
@@ -245,7 +251,7 @@ export function ProjectChatRoom({ projectId, backUrl = "/events" }: ProjectChatR
 
   // Handle Reactions
   const handleToggleReaction = (messageId: string, emoji: string) => {
-    const updated = toggleReaction(projectId, messageId, emoji, isOrganizerMode ? data.organizer.name : "Você");
+    const updated = toggleReaction(projectId, messageId, emoji, isOrganizerMode ? data.organizer.name : currentUserName);
     setData(updated);
   };
 
@@ -262,7 +268,7 @@ export function ProjectChatRoom({ projectId, backUrl = "/events" }: ProjectChatR
 
   // Handle Poll Vote
   const handleVotePoll = (messageId: string, optionIndex: number) => {
-    const updated = voteOnPoll(projectId, messageId, optionIndex, CURRENT_USER.id);
+    const updated = voteOnPoll(projectId, messageId, optionIndex, currentUserId);
     setData(updated);
     toast.success("Seu voto foi registrado! 📊");
   };

@@ -6,7 +6,7 @@ import { Lightbulb, ChevronRight, Target, Clock, Volume2, UserCheck, Wind, Volum
 import { MOCK_SUGGESTIONS } from "@/data/mock-data";
 
 export const Route = createFileRoute("/ai/suggestions")({
-  head: () => ({ meta: [{ title: "Sugestões da IA — Fale+" }] }),
+  head: () => ({ meta: [{ title: "Sugestões da IA — Solta Voz" }] }),
   component: Suggestions,
 });
 

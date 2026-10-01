@@ -6,7 +6,7 @@ import { MoreVertical, Mic, Hand, UserPlus } from "lucide-react";
 import { MOCK_ROOMS } from "@/data/mock-data";
 
 export const Route = createFileRoute("/rooms/$id/participants")({
-  head: () => ({ meta: [{ title: "Participantes — Fale+" }] }),
+  head: () => ({ meta: [{ title: "Participantes — Solta Voz" }] }),
   component: Participants,
 });
 
