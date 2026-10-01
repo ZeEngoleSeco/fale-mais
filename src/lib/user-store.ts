@@ -157,6 +157,7 @@ export function mapSupabaseUserToProfile(sbUser: any, profileData?: any): UserPr
     avatarUrl: meta.avatarUrl || profileData?.avatar_url,
     bio: bio,
     streakDays: profileData?.streak_days || 1,
+    speakerStatus: profileData?.speaker_status || 'none',
     stats: {
       presentations: 0,
       roomsCreated: 0,
@@ -505,11 +506,30 @@ export const DEFAULT_INITIAL_USER: UserProfile = ensureFullBadges({
   })),
 });
 
+export async function fetchAndApplySpeakerStatus(userId: string, currentProfile: UserProfile): Promise<UserProfile> {
+  try {
+    const { data } = await supabase
+      .from('profiles')
+      .select('speaker_status')
+      .eq('id', userId)
+      .single();
+    if (data?.speaker_status) {
+      const updated = { ...currentProfile, speakerStatus: data.speaker_status as UserProfile['speakerStatus'] };
+      saveUser(updated);
+      return updated;
+    }
+  } catch (e) {
+    console.warn('Could not fetch speaker_status from profiles', e);
+  }
+  return currentProfile;
+}
+
 export function useCurrentUser(): {
   user: UserProfile;
   allUsers: UserProfile[];
   updateName: (newName: string, role?: string, bio?: string, avatarUrl?: string | null) => Promise<UserProfile>;
   setUser: (user: UserProfile) => void;
+  updateSpeakerStatus: (status: UserProfile['speakerStatus']) => void;
   registerUser: (name: string, email: string, password?: string, role?: string, bio?: string) => Promise<AuthResult>;
   loginUser: (email: string, password?: string) => Promise<AuthResult>;
   resetPassword: (email: string, newPassword?: string) => Promise<AuthResult>;
@@ -520,21 +540,23 @@ export function useCurrentUser(): {
   const [allUsers, setAllUsers] = useState<UserProfile[]>(getAllUsers);
 
   useEffect(() => {
-    // 1. Initial Supabase Session check
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // 1. Initial Supabase Session check (also fetches speaker_status from profiles)
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
         const userProfile = mapSupabaseUserToProfile(session.user);
-        setUserState(userProfile);
-        saveUser(userProfile);
+        const withSpeaker = await fetchAndApplySpeakerStatus(session.user.id, userProfile);
+        setUserState(withSpeaker);
+        saveUser(withSpeaker);
       }
     });
 
     // 2. Real-time auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
         const userProfile = mapSupabaseUserToProfile(session.user);
-        setUserState(userProfile);
-        saveUser(userProfile);
+        const withSpeaker = await fetchAndApplySpeakerStatus(session.user.id, userProfile);
+        setUserState(withSpeaker);
+        saveUser(withSpeaker);
       } else if (_event === "SIGNED_OUT") {
         setUserState(DEFAULT_INITIAL_USER);
       }
@@ -563,6 +585,12 @@ export function useCurrentUser(): {
   const setUser = (newUser: UserProfile) => {
     saveUser(newUser);
     setUserState(newUser);
+  };
+
+  const updateSpeakerStatus = (status: UserProfile['speakerStatus']) => {
+    const updated = { ...user, speakerStatus: status };
+    saveUser(updated);
+    setUserState(updated);
   };
 
   const registerUser = async (name: string, email: string, password?: string, role?: string, bio?: string) => {
@@ -596,5 +624,5 @@ export function useCurrentUser(): {
     setUserState(DEFAULT_INITIAL_USER);
   };
 
-  return { user, allUsers, updateName, setUser, registerUser, loginUser, resetPassword, updatePassword, logout };
+  return { user, allUsers, updateName, setUser, updateSpeakerStatus, registerUser, loginUser, resetPassword, updatePassword, logout };
 }

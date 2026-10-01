@@ -12,6 +12,7 @@ export interface UserProfile {
   avatarUrl?: string;
   bio: string;
   streakDays: number;
+  speakerStatus?: 'none' | 'pending' | 'verified';
   stats: {
     presentations: number;
     roomsCreated: number;

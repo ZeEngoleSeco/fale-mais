@@ -12,6 +12,8 @@ import {
   VolumeX,
   Radio,
   Crown,
+  UserPlus,
+  X,
 } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
@@ -28,6 +30,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import {
@@ -43,6 +52,8 @@ import {
   subscribeToRoomMessages,
   subscribeToRoomParticipants,
   subscribeToRoomDeletion,
+  addParticipant,
+  removeParticipant,
   type RoomDB,
   type RoomMessageDB,
   type RoomParticipantDB,
@@ -69,6 +80,8 @@ function RoomPage() {
   const [msgInput, setMsgInput] = useState("");
   const [sending, setSending] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Voice call state
   const [voicePeers, setVoicePeers] = useState<VoicePeer[]>([]);
@@ -285,6 +298,30 @@ function RoomPage() {
     setShowDeleteDialog(false);
   };
 
+  const handleAddParticipant = async (selectedUser: any) => {
+    await addParticipant(id, {
+      id: selectedUser.id,
+      name: selectedUser.name,
+      initials: selectedUser.initials,
+    });
+    setIsAddOpen(false);
+    toast.success("Participante adicionado.");
+  };
+
+  const handleRemoveParticipant = async (participantId: string) => {
+    if (confirm("Remover participante?")) {
+      await removeParticipant(id, participantId);
+      toast.success("Participante removido.");
+    }
+  };
+
+  const { allUsers } = useCurrentUser();
+  const filteredUsers = allUsers.filter(u => 
+    !participants.find(p => p.user_id === u.id) &&
+    (u.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+     u.email.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
   const isOwner = currentUserId && room && room.host_id === currentUserId;
 
   if (loading) {
@@ -317,7 +354,7 @@ function RoomPage() {
 
       <PageHeader
         title={room.name}
-        subtitle={`Ao vivo · ${room.people_count} participante${room.people_count !== 1 ? "s" : ""}`}
+        subtitle={`Ao vivo · ${participants.length} participante${participants.length !== 1 ? "s" : ""}`}
         back="/rooms"
         action={
           isOwner ? (
@@ -459,6 +496,7 @@ function RoomPage() {
               <Users className="h-4 w-4 text-primary" />
               Participantes ({participants.length})
             </div>
+<<<<<<< HEAD
             <Link
               to="/rooms/$id/participants"
               params={{ id }}
@@ -466,12 +504,59 @@ function RoomPage() {
             >
               {isOwner ? "Gerenciar / Adicionar" : "Ver todos"}
             </Link>
+=======
+            
+            {isOwner && (
+              <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-8 rounded-full text-xs bg-secondary text-primary hover:bg-secondary/80">
+                    <UserPlus className="h-3 w-3 mr-1.5" /> Adicionar
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px] rounded-3xl">
+                  <DialogHeader>
+                    <DialogTitle>Adicionar Participante</DialogTitle>
+                  </DialogHeader>
+                  <div className="py-4">
+                    <Input 
+                      placeholder="Buscar por nome ou email..." 
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="mb-4"
+                    />
+                    <div className="max-h-[300px] overflow-y-auto space-y-2 minimal-scrollbar">
+                      {filteredUsers.length === 0 ? (
+                        <p className="text-center text-sm text-muted-foreground">Nenhum usuário encontrado.</p>
+                      ) : (
+                        filteredUsers.map(u => (
+                          <div key={u.id} className="flex items-center justify-between p-2 rounded-xl border border-border">
+                            <div className="flex items-center gap-3">
+                              <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${u.avatarColor || 'from-blue-500 to-cyan-500'} text-sm font-bold text-white`}>
+                                {u.initials}
+                              </div>
+                              <div>
+                                <p className="text-sm font-semibold">{u.name}</p>
+                                <p className="text-xs text-muted-foreground">{u.email}</p>
+                              </div>
+                            </div>
+                            <Button size="sm" variant="secondary" onClick={() => handleAddParticipant(u)}>
+                              Adicionar
+                            </Button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
+>>>>>>> 9183840f718d11e91a176ac7ae7a0e7a1720d576
           </div>
           <div className="flex flex-wrap gap-2">
             {participants.map((p) => (
               <div
                 key={p.id}
-                className="flex items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium"
+                className="group flex items-center gap-1.5 rounded-full bg-secondary pl-1.5 pr-2.5 py-1 text-xs font-medium"
               >
                 <div className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-soft text-[9px] font-bold text-primary">
                   {p.user_initials}
@@ -481,6 +566,7 @@ function RoomPage() {
                   <Crown className="h-3 w-3 text-amber-500" />
                 )}
                 {isOwner && p.user_id !== currentUserId && (
+<<<<<<< HEAD
                   <button
                     onClick={async (e) => {
                       e.stopPropagation();
@@ -494,6 +580,14 @@ function RoomPage() {
                     className="ml-1 text-muted-foreground hover:text-destructive transition p-0.5 rounded-full"
                   >
                     <Trash2 className="h-3 w-3" />
+=======
+                  <button 
+                    onClick={() => handleRemoveParticipant(p.user_id)}
+                    className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive/10 text-destructive opacity-0 transition-opacity hover:bg-destructive hover:text-white group-hover:opacity-100"
+                    title="Remover"
+                  >
+                    <X className="h-3 w-3" />
+>>>>>>> 9183840f718d11e91a176ac7ae7a0e7a1720d576
                   </button>
                 )}
               </div>
@@ -591,6 +685,7 @@ function RoomPage() {
             {inVoiceCall ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
           </CtrlBtn>
 
+<<<<<<< HEAD
           {/* Participants count button */}
           <Link
             to="/rooms/$id/participants"
@@ -598,15 +693,27 @@ function RoomPage() {
             className="flex flex-col items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition cursor-pointer"
           >
             <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary relative">
+=======
+          {/* Participants count */}
+          <button 
+            className="flex flex-col items-center gap-1 text-[10px] text-muted-foreground"
+            onClick={() => navigate({ to: `/rooms/${id}/participants` })}
+          >
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary relative transition-colors hover:bg-secondary/80">
+>>>>>>> 9183840f718d11e91a176ac7ae7a0e7a1720d576
               <Users className="h-5 w-5" />
               {participants.length > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[8px] font-bold text-white">
+                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[8px] font-bold text-white shadow-sm">
                   {participants.length}
                 </span>
               )}
             </span>
             Pessoas
+<<<<<<< HEAD
           </Link>
+=======
+          </button>
+>>>>>>> 9183840f718d11e91a176ac7ae7a0e7a1720d576
 
           {/* Leave room */}
           <CtrlBtn destructive onClick={handleLeave} label="Sair">
