@@ -14,7 +14,146 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          id: string
+          name: string | null
+          email: string | null
+          avatar_url: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          name?: string | null
+          email?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string | null
+          email?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      rooms: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          category: string
+          max_people: number
+          is_private: boolean
+          password: string | null
+          host_id: string
+          host_name: string
+          host_initials: string
+          is_live: boolean
+          initial_topic: string | null
+          people_count: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          category?: string
+          max_people?: number
+          is_private?: boolean
+          password?: string | null
+          host_id: string
+          host_name: string
+          host_initials: string
+          is_live?: boolean
+          initial_topic?: string | null
+          people_count?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          category?: string
+          max_people?: number
+          is_private?: boolean
+          password?: string | null
+          host_id?: string
+          host_name?: string
+          host_initials?: string
+          is_live?: boolean
+          initial_topic?: string | null
+          people_count?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      room_messages: {
+        Row: {
+          id: string
+          room_id: string
+          sender_id: string
+          sender_name: string
+          sender_initials: string
+          text: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          room_id: string
+          sender_id: string
+          sender_name: string
+          sender_initials: string
+          text: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          room_id?: string
+          sender_id?: string
+          sender_name?: string
+          sender_initials?: string
+          text?: string
+          created_at?: string
+        }
+      }
+      room_participants: {
+        Row: {
+          id: string
+          room_id: string
+          user_id: string
+          user_name: string
+          user_initials: string
+          role: string
+          joined_at: string
+          last_seen: string
+        }
+        Insert: {
+          id?: string
+          room_id: string
+          user_id: string
+          user_name: string
+          user_initials: string
+          role?: string
+          joined_at?: string
+          last_seen?: string
+        }
+        Update: {
+          id?: string
+          room_id?: string
+          user_id?: string
+          user_name?: string
+          user_initials?: string
+          role?: string
+          joined_at?: string
+          last_seen?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never

@@ -13,8 +13,8 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/reset-password")({
   head: () => ({
     meta: [
-      { title: "Redefinir Senha — Fale+" },
-      { name: "description", content: "Redefina sua senha de acesso no Fale+." },
+      { title: "Redefinir Senha — Solta Voz" },
+      { name: "description", content: "Redefina sua senha de acesso no Solta Voz." },
     ],
   }),
   component: ResetPasswordPage,
@@ -160,7 +160,7 @@ function ResetPasswordPage() {
             Crie sua nova senha
           </h1>
           <p className="mt-2 text-[15px] text-muted-foreground leading-relaxed">
-            Escolha uma nova senha forte para sua conta no Fale+ e confirme abaixo.
+            Escolha uma nova senha forte para sua conta no Solta Voz e confirme abaixo.
           </p>
         </div>
 

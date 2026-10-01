@@ -18,7 +18,7 @@ import {
   ChevronDown,
   ChevronUp,
   Share2,
-  Sparkles,
+  Tag,
   Clock,
   UserCheck,
   Video,
@@ -30,7 +30,7 @@ import { MOCK_EVENTS, type EventItem } from "@/data/mock-data";
 import { useState, useMemo, useEffect } from "react";
 
 export const Route = createFileRoute("/events/")({
-  head: () => ({ meta: [{ title: "Eventos & Workshops — Fale+" }] }),
+  head: () => ({ meta: [{ title: "Eventos & Workshops — Solta Voz" }] }),
   component: EventsPage,
 });
 
@@ -240,7 +240,7 @@ export function EventsPage() {
                 <span className="text-[10px] text-amber-200 font-medium">15 a 22 de Fev · +400 inscritos</span>
               </div>
               <h3 className="text-sm font-bold leading-snug truncate text-white">
-                Semana Nacional da Oratória Fale+
+                Semana Nacional da Oratória Solta Voz
               </h3>
               <p className="mt-0.5 text-xs text-white/85 line-clamp-1">
                 7 dias de workshops práticos, mentorias individuais e desafios diários de pitch.
@@ -337,7 +337,7 @@ export function EventsPage() {
                         )}
                         {!isMarked && !isConfirmed && (
                           <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-muted-foreground bg-secondary px-2.5 py-0.5 rounded-full">
-                            <Sparkles className="h-3 w-3 text-primary" /> {e.category}
+                            <Tag className="h-3 w-3 text-primary" /> {e.category}
                           </span>
                         )}
                       </div>
@@ -450,7 +450,7 @@ export function EventsPage() {
                         </div>
 
                         <span className="text-[10px] text-muted-foreground bg-secondary/70 px-2 py-0.5 rounded-full shrink-0 font-medium">
-                          Por: {e.organizer?.name || "Fale+"}
+                          Por: {e.organizer?.name || "Solta Voz"}
                         </span>
                       </div>
                     )}

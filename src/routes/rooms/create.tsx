@@ -6,30 +6,24 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import {
   Users,
   Lock,
   Globe,
-  Sparkles,
-  UserPlus,
-  Shield,
-  Zap,
-  Mic,
-  MessageSquare,
-  Check,
+  SlidersHorizontal,
+  PlusCircle,
   Eye,
   EyeOff,
+  Loader2,
 } from "lucide-react";
-import { MOCK_USERS, CURRENT_USER } from "@/data/mock-data";
 import { useCurrentUser } from "@/lib/user-store";
-import { createNewRoom } from "@/lib/room-store";
+import { createRoom } from "@/lib/supabase-room-store";
 import { useState } from "react";
 
 export const Route = createFileRoute("/rooms/create")({
-  head: () => ({ meta: [{ title: "Criar Sala — Fale+" }] }),
+  head: () => ({ meta: [{ title: "Criar Sala — Solta Voz" }] }),
   component: CreateRoomPage,
 });
 
@@ -38,7 +32,6 @@ const categories = ["Pitch", "Improviso", "Corporativo", "Bem-estar", "Storytell
 export function CreateRoomPage() {
   const navigate = useNavigate();
   const { user } = useCurrentUser();
-  const activeUser = user || CURRENT_USER;
 
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
@@ -48,15 +41,21 @@ export function CreateRoomPage() {
   const [isPrivate, setIsPrivate] = useState(false);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([MOCK_USERS[1].id]); // Pre-select Carlos Eduardo
+  const [isLoading, setIsLoading] = useState(false);
 
-  const toggleUserSelection = (userId: string) => {
-    setSelectedUserIds((prev) =>
-      prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]
+  if (!user) {
+    return (
+      <AppShell>
+        <PageHeader title="Criar Sala" subtitle="Faça login para criar uma sala" back="/rooms" />
+        <div className="px-5 py-12 text-center text-muted-foreground">
+          <Lock className="mx-auto mb-3 h-10 w-10 opacity-40" />
+          <p className="text-sm font-medium">Você precisa estar logado para criar salas.</p>
+        </div>
+      </AppShell>
     );
-  };
+  }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!name.trim()) {
@@ -64,38 +63,49 @@ export function CreateRoomPage() {
       return;
     }
 
-    // Create room dynamically
-    const room = createNewRoom({
-      name,
-      desc,
-      category,
-      maxPeople,
-      isPrivate,
-      password: isPrivate ? password : undefined,
-      initialParticipantUserIds: selectedUserIds,
-      initialTopic,
-    });
+    setIsLoading(true);
 
-    toast.success(`Sala "${room.name}" criada com sucesso! 🚀`, {
-      description: "Entrando na sala ao vivo como Host...",
-    });
+    try {
+      const room = await createRoom({
+        name,
+        description: desc,
+        category,
+        maxPeople,
+        isPrivate,
+        password: isPrivate ? password : undefined,
+        initialTopic,
+      });
 
-    // Navigate directly into newly created live room
-    setTimeout(() => {
-      navigate({ to: "/rooms/$id", params: { id: room.id } });
-    }, 600);
+      if (!room) {
+        toast.error("Erro ao criar sala. Tente novamente.");
+        setIsLoading(false);
+        return;
+      }
+
+      toast.success(`Sala "${room.name}" criada! 🚀`, {
+        description: "Entrando na sala ao vivo...",
+      });
+
+      setTimeout(() => {
+        navigate({ to: "/rooms/$id", params: { id: room.id } });
+      }, 600);
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro ao criar sala.");
+      setIsLoading(false);
+    }
   };
 
   return (
     <AppShell>
       <Toaster position="top-center" />
-      <PageHeader title="Criar Sala de Prática" subtitle="Configure o espaço ao vivo e convide pessoas" back="/rooms" />
+      <PageHeader title="Criar Sala de Prática" subtitle="Configure o espaço ao vivo" back="/rooms" />
 
       <form className="px-5 space-y-4 pb-16" onSubmit={handleSubmit}>
-        {/* Informações Básicas da Sala */}
+        {/* Informações Básicas */}
         <Card className="rounded-3xl p-5 space-y-4 border-border shadow-xs">
           <div className="flex items-center gap-2 pb-2 border-b border-border/60">
-            <Sparkles className="h-4 w-4 text-primary" />
+            <SlidersHorizontal className="h-4 w-4 text-primary" />
             <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
               Configurações Gerais
             </span>
@@ -120,7 +130,6 @@ export function CreateRoomPage() {
             />
           </FieldStack>
 
-          {/* Categoria */}
           <FieldStack label="Categoria da Sala">
             <div className="flex flex-wrap gap-2 pt-1">
               {categories.map((cat) => (
@@ -140,7 +149,6 @@ export function CreateRoomPage() {
             </div>
           </FieldStack>
 
-          {/* Tema Inicial de Fala */}
           <FieldStack label="Tema da Primeira Apresentação (Opcional)">
             <Input
               value={initialTopic}
@@ -151,21 +159,15 @@ export function CreateRoomPage() {
           </FieldStack>
         </Card>
 
-        {/* Capacidade e Convidar Usuários da Plataforma */}
+        {/* Capacidade */}
         <Card className="rounded-3xl p-5 space-y-4 border-border shadow-xs">
-          <div className="flex items-center justify-between pb-2 border-b border-border/60">
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-primary" />
-              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Participantes & Capacidade
-              </span>
-            </div>
-            <Badge variant="secondary" className="rounded-full text-[10px] font-bold">
-              {selectedUserIds.length + 1} Confirmados
-            </Badge>
+          <div className="flex items-center gap-2 pb-2 border-b border-border/60">
+            <Users className="h-4 w-4 text-primary" />
+            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              Capacidade
+            </span>
           </div>
 
-          {/* Botões Rápido de Lotação */}
           <FieldStack label={`Capacidade Máxima: ${maxPeople} pessoas`}>
             <div className="flex gap-2 pt-1">
               {[5, 10, 20, 35, 50].map((num) => (
@@ -184,69 +186,9 @@ export function CreateRoomPage() {
               ))}
             </div>
           </FieldStack>
-
-          {/* Lista de Usuários para Incluir/Convidar */}
-          <FieldStack label="Adicionar Membros na Sala Inicial">
-            <p className="text-[11px] text-muted-foreground mb-2">
-              Selecione os usuários da comunidade Fale+ que iniciarão conectados com você:
-            </p>
-
-            <div className="space-y-2 max-h-48 overflow-y-auto pr-1 minimal-scrollbar">
-              {/* Host fixa */}
-              <div className="flex items-center justify-between p-2.5 rounded-2xl bg-primary/10 border border-primary/20">
-                <div className="flex items-center gap-2.5">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-brand text-xs font-bold text-white shadow-xs">
-                    {activeUser.initials}
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-foreground">{activeUser.name} (Você)</p>
-                    <p className="text-[10px] text-primary font-semibold">Host Criador</p>
-                  </div>
-                </div>
-                <Badge className="bg-primary text-white text-[10px] rounded-full">Host</Badge>
-              </div>
-
-              {/* Outros usuários */}
-              {MOCK_USERS.filter((u) => u.id !== activeUser.id).map((u) => {
-                const isSelected = selectedUserIds.includes(u.id);
-
-                return (
-                  <div
-                    key={u.id}
-                    onClick={() => toggleUserSelection(u.id)}
-                    className={`flex items-center justify-between p-2.5 rounded-2xl border cursor-pointer transition-all ${
-                      isSelected
-                        ? "bg-secondary/80 border-primary/40 shadow-xs"
-                        : "bg-card border-border hover:bg-secondary/50"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-soft text-xs font-bold text-primary">
-                        {u.initials}
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold text-foreground">{u.name}</p>
-                        <p className="text-[10px] text-muted-foreground">{u.role}</p>
-                      </div>
-                    </div>
-
-                    <div
-                      className={`flex h-5 w-5 items-center justify-center rounded-full border transition-all ${
-                        isSelected
-                          ? "bg-primary border-primary text-white"
-                          : "border-muted-foreground/40"
-                      }`}
-                    >
-                      {isSelected && <Check className="h-3 w-3" />}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </FieldStack>
         </Card>
 
-        {/* Configurações de Privacidade */}
+        {/* Privacidade */}
         <Card className="rounded-3xl p-5 space-y-4 border-border shadow-xs">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -277,7 +219,6 @@ export function CreateRoomPage() {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer focus:outline-none p-1"
-                  title={showPassword ? "Ocultar senha" : "Exibir senha"}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -286,12 +227,20 @@ export function CreateRoomPage() {
           )}
         </Card>
 
-        {/* Botão de Criação */}
         <Button
           type="submit"
+          disabled={isLoading}
           className="h-13 w-full rounded-2xl bg-gradient-brand text-base font-bold shadow-lift hover:opacity-95 transition-all"
         >
-          <Sparkles className="h-5 w-5 mr-2" /> Criar e Entrar na Sala
+          {isLoading ? (
+            <>
+              <Loader2 className="h-5 w-5 mr-2 animate-spin" /> Criando sala...
+            </>
+          ) : (
+            <>
+              <PlusCircle className="h-5 w-5 mr-2" /> Criar e Entrar na Sala
+            </>
+          )}
         </Button>
       </form>
     </AppShell>
@@ -306,4 +255,3 @@ function FieldStack({ label, children }: { label: string; children: React.ReactN
     </div>
   );
 }
-

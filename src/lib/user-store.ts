@@ -139,7 +139,7 @@ export function mapSupabaseUserToProfile(sbUser: any, profileData?: any): UserPr
   const meta = sbUser.user_metadata || {};
   const cleanName = meta.name || profileData?.name || nameFromEmail(sbUser.email || "") || "Usuário";
   const role = meta.role || profileData?.role || "Orador Iniciante";
-  const bio = meta.bio || profileData?.bio || "Membro da comunidade Fale+ pronto para desenvolver a comunicação e vencer o palco.";
+  const bio = meta.bio || profileData?.bio || "Membro da comunidade Solta Voz pronto para desenvolver a comunicação e vencer o palco.";
   const avatarColor = profileData?.avatar_color || meta.avatarColor || GRADIENT_COLORS[0];
 
   const profile: UserProfile = {
@@ -166,7 +166,7 @@ export function mapSupabaseUserToProfile(sbUser: any, profileData?: any): UserPr
       {
         id: "badge-welcome",
         title: "Primeiro Passo",
-        description: "Criou sua conta na plataforma Fale+ e iniciou a jornada.",
+        description: "Criou sua conta na plataforma Solta Voz e iniciou a jornada.",
         icon: "Compass",
         unlocked: true,
         unlockedAt: "Hoje",
@@ -183,7 +183,7 @@ export async function registerNewUserAsync(
   email: string,
   password?: string,
   role = "Orador Iniciante",
-  bio = "Membro da comunidade Fale+ pronto para desenvolver a comunicação e vencer o palco."
+  bio = "Membro da comunidade Solta Voz pronto para desenvolver a comunicação e vencer o palco."
 ): Promise<AuthResult> {
   const cleanEmail = email.trim().toLowerCase();
   if (!cleanEmail) {
@@ -480,14 +480,14 @@ export function logoutUser() {
 const DEFAULT_INITIAL_USER: UserProfile = ensureFullBadges({
   id: "user-default",
   name: "Visitante",
-  email: "visitante@fale-mais.com",
+  email: "visitante@soltavoz.com",
   role: "Orador em Desenvolvimento",
   level: 1,
   xp: 0,
   xpNextLevel: 100,
   initials: "VI",
   avatarColor: "from-blue-600 to-indigo-600",
-  bio: "Conhecendo a plataforma Fale+ para aprimorar comunicação.",
+  bio: "Conhecendo a plataforma Solta Voz para aprimorar comunicação.",
   streakDays: 1,
   stats: {
     presentations: 0,

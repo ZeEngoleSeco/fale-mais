@@ -4,7 +4,7 @@ import { ProjectChatRoom } from "@/components/project-chat/ProjectChatRoom";
 export const Route = createFileRoute("/rooms/$id/chat")({
   head: () => ({
     meta: [
-      { title: "Bate-Papo da Sala com o Host — Fale+" },
+      { title: "Bate-Papo da Sala com o Host — Solta Voz" },
       { name: "description", content: "Canal direto de comunicação entre o host/organizador da sala e os oradores/ouvintes." },
     ],
   }),

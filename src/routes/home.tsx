@@ -10,7 +10,7 @@ import { useCurrentUser } from "@/lib/user-store";
 export const Route = createFileRoute("/home")({
   head: () => ({
     meta: [
-      { title: "Início — Fale+" },
+      { title: "Início — Solta Voz" },
       { name: "description", content: "Seu painel diário para praticar oratória com IA, salas e eventos." },
     ],
   }),
@@ -39,7 +39,7 @@ function HomePage() {
             <div>
               <p className="text-xs text-muted-foreground">Olá, {user.name} 👋</p>
               <div className="flex items-center gap-1.5">
-                <p className="text-base font-semibold">Bem-vindo ao Fale+</p>
+                <p className="text-base font-semibold">Bem-vindo ao Solta Voz</p>
                 <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
                   Nv. {user.level}
                 </span>
@@ -239,7 +239,7 @@ function HomePage() {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
                   <span className="text-xs font-bold text-foreground truncate">
-                    Canal com {featuredEvent?.organizer?.name || "Organizador Fale+"}
+                    Canal com {featuredEvent?.organizer?.name || "Organizador Solta Voz"}
                   </span>
                   <Badge className="bg-amber-500 text-white border-0 text-[9px] px-1.5 py-0 font-extrabold">
                     HOST

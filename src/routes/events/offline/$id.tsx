@@ -14,7 +14,8 @@ import {
   Share2,
   Star,
   Award,
-  Sparkles,
+  Ticket,
+  Tag,
   ExternalLink,
   ChevronDown,
   ChevronUp,
@@ -29,7 +30,7 @@ import { MOCK_EVENTS } from "@/data/mock-data";
 import { useState, useEffect } from "react";
 
 export const Route = createFileRoute("/events/offline/$id")({
-  head: () => ({ meta: [{ title: "Evento Presencial — Fale+" }] }),
+  head: () => ({ meta: [{ title: "Evento Presencial — Solta Voz" }] }),
   component: OfflineEvent,
 });
 
@@ -188,7 +189,7 @@ function OfflineEvent() {
             {/* Bottom Title inside Banner */}
             <div className="mt-3">
               <span className="text-[10px] font-semibold text-amber-200 uppercase tracking-wider flex items-center gap-1">
-                <Sparkles className="h-3 w-3" /> Encontro Presencial Fale+
+                <Tag className="h-3 w-3" /> Encontro Presencial Solta Voz
               </span>
               <h2 className="mt-0.5 text-lg font-extrabold leading-snug text-white tracking-tight">
                 {event.title}
@@ -303,7 +304,7 @@ function OfflineEvent() {
               ))}
             </div>
             <span className="text-xs text-muted-foreground font-medium">
-              {confirmed ? "Você e +41 membros" : "42 membros da Fale+"} já garantiram presença!
+              {confirmed ? "Você e +41 membros" : "42 membros da Solta Voz"} já garantiram presença!
             </span>
           </div>
         </Card>
@@ -364,7 +365,7 @@ function OfflineEvent() {
                             TEDx Speaker
                           </span>
                           <span className="rounded-full bg-secondary text-foreground px-2.5 py-0.5 text-[10px] font-bold">
-                            Mentor Fale+
+                            Mentor Solta Voz
                           </span>
                         </div>
                       </div>
@@ -461,7 +462,7 @@ function OfflineEvent() {
             </div>
             <div>
               <p className="text-sm font-bold text-foreground flex items-center gap-1">
-                {event.organizer?.name || "Comunidade Fale+"}
+                {event.organizer?.name || "Comunidade Solta Voz"}
                 <ShieldCheck className="h-4 w-4 text-primary" />
               </p>
               <p className="text-xs text-muted-foreground">
@@ -478,7 +479,7 @@ function OfflineEvent() {
           {/* Informações de Apoio no Floating Dock */}
           <div className="hidden sm:flex items-center gap-3 pl-2">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-soft text-primary">
-              <Sparkles className="h-5 w-5 text-amber-500 animate-pulse" />
+              <Ticket className="h-5 w-5 text-amber-500 animate-pulse" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
@@ -511,7 +512,7 @@ function OfflineEvent() {
               </span>
             ) : (
               <span className="flex items-center justify-center gap-2">
-                <Sparkles className="h-5 w-5 text-amber-300 animate-pulse" />
+                <CheckCircle2 className="h-5 w-5 text-amber-300 animate-pulse" />
                 <span>Confirmar Presença Gratuitamente</span>
               </span>
             )}

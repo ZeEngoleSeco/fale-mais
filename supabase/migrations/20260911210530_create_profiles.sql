@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   name TEXT NOT NULL,
   email TEXT NOT NULL,
   role TEXT DEFAULT 'Orador Iniciante',
-  bio TEXT DEFAULT 'Membro da comunidade Fale+ pronto para desenvolver a comunicação e vencer o palco.',
+  bio TEXT DEFAULT 'Membro da comunidade Solta Voz pronto para desenvolver a comunicação e vencer o palco.',
   avatar_color TEXT DEFAULT 'from-blue-600 to-indigo-600',
   avatar_url TEXT,
   level INT DEFAULT 1,
@@ -51,7 +51,7 @@ BEGIN
     COALESCE(NEW.raw_user_meta_data->>'name', split_part(NEW.email, '@', 1)),
     NEW.email,
     COALESCE(NEW.raw_user_meta_data->>'role', 'Orador Iniciante'),
-    COALESCE(NEW.raw_user_meta_data->>'bio', 'Membro da comunidade Fale+ pronto para desenvolver a comunicação e vencer o palco.')
+    COALESCE(NEW.raw_user_meta_data->>'bio', 'Membro da comunidade Solta Voz pronto para desenvolver a comunicação e vencer o palco.')
   )
   ON CONFLICT (id) DO UPDATE SET
     name = EXCLUDED.name,

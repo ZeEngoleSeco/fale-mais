@@ -5,13 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Copy, Share2, QrCode } from "lucide-react";
 
 export const Route = createFileRoute("/rooms/$id/invite")({
-  head: () => ({ meta: [{ title: "Convites — Fale+" }] }),
+  head: () => ({ meta: [{ title: "Convites — Solta Voz" }] }),
   component: Invite,
 });
 
 function Invite() {
   const { id } = Route.useParams();
-  const link = `https://falemais.app/sala/${id}?convite=xj4k9`;
+  const link = `https://soltavoz.app/sala/${id}?convite=xj4k9`;
 
   return (
     <AppShell>

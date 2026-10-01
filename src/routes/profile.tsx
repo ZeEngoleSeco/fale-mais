@@ -42,7 +42,7 @@ function GetBadgeIcon({ name, unlocked }: { name: string; unlocked: boolean }) {
 }
 
 export const Route = createFileRoute("/profile")({
-  head: () => ({ meta: [{ title: "Perfil — Fale+" }] }),
+  head: () => ({ meta: [{ title: "Perfil — Solta Voz" }] }),
   component: ProfilePage,
 });
 

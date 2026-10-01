@@ -7,7 +7,7 @@ import { TrendingUp, Award, CheckCircle2, AlertTriangle, ArrowRight, Target } fr
 import { MOCK_INSIGHTS_METRICS } from "@/data/mock-data";
 
 export const Route = createFileRoute("/ai/insights")({
-  head: () => ({ meta: [{ title: "Insights de Oratória — Fale+" }] }),
+  head: () => ({ meta: [{ title: "Insights de Oratória — Solta Voz" }] }),
   component: Insights,
 });
 

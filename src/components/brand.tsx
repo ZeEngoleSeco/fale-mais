@@ -13,7 +13,7 @@ export function BrandLogo({ className, size = 40 }: { className?: string; size?:
     >
       <img
         src="/app-icon.png"
-        alt="Fale+ Ícone Oficial"
+        alt="Solta Voz Ícone Oficial"
         className="h-full w-full object-cover rounded-xl filter drop-shadow-md transition-all"
       />
     </div>
@@ -23,8 +23,7 @@ export function BrandLogo({ className, size = 40 }: { className?: string; size?:
 export function BrandWordmark({ className }: { className?: string }) {
   return (
     <span className={cn("text-xl font-extrabold tracking-tight", className)}>
-      <span className="text-foreground">Fale</span>
-      <span className="text-gradient-brand">+</span>
+      <span className="text-foreground">Solta </span><span className="text-gradient-brand">Voz</span>
     </span>
   );
 }

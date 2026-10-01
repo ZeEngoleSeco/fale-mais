@@ -13,7 +13,6 @@ import {
   Bot,
   Wand2,
   Lightbulb,
-  Sparkles,
   Zap,
   Brain,
   Wind,
@@ -30,7 +29,7 @@ import { useState, useRef, useEffect } from "react";
 import { useCurrentUser } from "@/lib/user-store";
 
 export const Route = createFileRoute("/ai/chat")({
-  head: () => ({ meta: [{ title: "Mentor de IA Thorel — Fale+" }] }),
+  head: () => ({ meta: [{ title: "Mentor de IA Thorel — Solta Voz" }] }),
   component: ChatPage,
 });
 

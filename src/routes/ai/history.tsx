@@ -7,7 +7,7 @@ import { MOCK_HISTORY, type AIHistoryItem } from "@/data/mock-data";
 import { useState } from "react";
 
 export const Route = createFileRoute("/ai/history")({
-  head: () => ({ meta: [{ title: "Histórico de Sessões — Fale+" }] }),
+  head: () => ({ meta: [{ title: "Histórico de Sessões — Solta Voz" }] }),
   component: HistoryPage,
 });
 

@@ -41,7 +41,6 @@ import {
   Search,
   CheckCircle2,
   Clock,
-  Sparkles,
   Volume2,
   Play,
   Pause,
