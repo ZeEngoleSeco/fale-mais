@@ -232,11 +232,21 @@ export async function leaveRoomParticipant(roomId: string): Promise<void> {
   const userId = authData?.user?.id;
   if (!userId) return;
 
-  await supabase
+  await removeParticipant(roomId, userId);
+}
+
+/** Remove a participant by ID (useful for host) */
+export async function removeParticipant(roomId: string, targetUserId: string): Promise<boolean> {
+  const { error } = await supabase
     .from("room_participants")
     .delete()
     .eq("room_id", roomId)
-    .eq("user_id", userId);
+    .eq("user_id", targetUserId);
+
+  if (error) {
+    console.error("Error removing participant:", error);
+    return false;
+  }
 
   // Update people_count
   const { data: participants } = await supabase
@@ -250,6 +260,44 @@ export async function leaveRoomParticipant(roomId: string): Promise<void> {
       .update({ people_count: participants.length })
       .eq("id", roomId);
   }
+  
+  return true;
+}
+
+/** Add a specific user as participant (useful for host) */
+export async function addParticipant(
+  roomId: string, 
+  user: { id: string; name: string; initials: string },
+  role = "Ouvinte"
+): Promise<boolean> {
+  const { error } = await supabase.from("room_participants").upsert({
+    room_id: roomId,
+    user_id: user.id,
+    user_name: user.name,
+    user_initials: user.initials,
+    role,
+    last_seen: new Date().toISOString(),
+  });
+
+  if (error) {
+    console.error("Error adding participant:", error);
+    return false;
+  }
+
+  // Update people_count
+  const { data: participants } = await supabase
+    .from("room_participants")
+    .select("id")
+    .eq("room_id", roomId);
+
+  if (participants !== null) {
+    await supabase
+      .from("rooms")
+      .update({ people_count: participants.length })
+      .eq("id", roomId);
+  }
+  
+  return true;
 }
 
 /** Fetch participants for a room */
