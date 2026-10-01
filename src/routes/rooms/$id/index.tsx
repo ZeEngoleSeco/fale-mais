@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import {
   Mic,
   MicOff,
@@ -37,7 +37,9 @@ import {
   sendRoomMessage,
   joinRoomParticipant,
   leaveRoomParticipant,
+  removeParticipant,
   deleteRoom,
+  isUserRemovedFromRoom,
   subscribeToRoomMessages,
   subscribeToRoomParticipants,
   subscribeToRoomDeletion,
@@ -77,13 +79,35 @@ function RoomPage() {
 
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const chatBottomRef = useRef<HTMLDivElement>(null);
+  const joinedRef = useRef(false);
+  const kickedRef = useRef(false);
 
-  // Get supabase user ID
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setCurrentUserId(data?.user?.id || null);
+  const handleKicked = async () => {
+    if (kickedRef.current) return;
+    kickedRef.current = true;
+    voiceCallManager.leaveRoomVoice();
+    try {
+      await leaveRoomParticipant(id);
+    } catch {}
+    toast.error("Você foi removido dessa sala.", {
+      duration: 6000,
     });
-  }, []);
+    navigate({ to: "/rooms" });
+  };
+
+  // Get supabase user ID & check if removed
+  useEffect(() => {
+    supabase.auth.getUser().then(async ({ data }) => {
+      const uid = data?.user?.id || null;
+      setCurrentUserId(uid);
+      if (uid) {
+        const isRemoved = await isUserRemovedFromRoom(id, uid);
+        if (isRemoved) {
+          handleKicked();
+        }
+      }
+    });
+  }, [id]);
 
   // Load room data
   useEffect(() => {
@@ -102,13 +126,43 @@ function RoomPage() {
     load();
   }, [id]);
 
-  // Join room as participant when loaded
+  // Join room as participant when loaded (if not removed)
   useEffect(() => {
-    if (!loading && user) {
-      const isHost = room && currentUserId && room.host_id === currentUserId;
-      joinRoomParticipant(id, isHost ? "Host" : "Ouvinte");
+    if (!loading && user && currentUserId && !joinedRef.current) {
+      const isHost = room && room.host_id === currentUserId;
+      joinRoomParticipant(id, isHost ? "Host" : "Ouvinte").then((res) => {
+        if (res.removed) {
+          handleKicked();
+          return;
+        }
+        if (res.success) {
+          joinedRef.current = true;
+        }
+      });
     }
   }, [loading, user, id, room, currentUserId]);
+
+  // Fallback heartbeat polling to guarantee removal detection within 2s even if WS drops
+  useEffect(() => {
+    if (!currentUserId || !room || room.host_id === currentUserId) return;
+
+    const interval = setInterval(async () => {
+      if (kickedRef.current) return;
+      const isRemoved = await isUserRemovedFromRoom(id, currentUserId);
+      if (isRemoved) {
+        handleKicked();
+        return;
+      }
+      if (joinedRef.current) {
+        const parts = await fetchRoomParticipants(id);
+        if (!parts.some((p) => p.user_id === currentUserId)) {
+          handleKicked();
+        }
+      }
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [id, currentUserId, room]);
 
   // Subscribe to realtime messages
   useEffect(() => {
@@ -122,13 +176,22 @@ function RoomPage() {
     return unsub;
   }, [id]);
 
-  // Subscribe to realtime participants
+  // Subscribe to realtime participants & removals
   useEffect(() => {
-    const unsub = subscribeToRoomParticipants(id, (parts) => {
-      setParticipants(parts);
-    });
+    const unsub = subscribeToRoomParticipants(
+      id,
+      (parts) => {
+        setParticipants(parts);
+      },
+      (removedUserId) => {
+        // Only act if THIS client's user was the one removed
+        if (currentUserId && removedUserId === currentUserId) {
+          handleKicked();
+        }
+      }
+    );
     return unsub;
-  }, [id]);
+  }, [id, currentUserId]);
 
   // Subscribe to room deletion
   useEffect(() => {
@@ -396,6 +459,13 @@ function RoomPage() {
               <Users className="h-4 w-4 text-primary" />
               Participantes ({participants.length})
             </div>
+            <Link
+              to="/rooms/$id/participants"
+              params={{ id }}
+              className="text-xs font-semibold text-primary hover:underline hover:opacity-80 transition cursor-pointer"
+            >
+              {isOwner ? "Gerenciar / Adicionar" : "Ver todos"}
+            </Link>
           </div>
           <div className="flex flex-wrap gap-2">
             {participants.map((p) => (
@@ -409,6 +479,22 @@ function RoomPage() {
                 <span className="text-foreground">{p.user_name.split(" ")[0]}</span>
                 {p.role === "Host" && (
                   <Crown className="h-3 w-3 text-amber-500" />
+                )}
+                {isOwner && p.user_id !== currentUserId && (
+                  <button
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      if (confirm(`Remover ${p.user_name} desta sala?`)) {
+                        setParticipants((prev) => prev.filter((item) => item.id !== p.id && item.user_id !== p.user_id));
+                        toast.success(`${p.user_name} foi removido da sala.`);
+                        await removeParticipant(id, p.user_id, p.id);
+                      }
+                    }}
+                    title="Remover da sala"
+                    className="ml-1 text-muted-foreground hover:text-destructive transition p-0.5 rounded-full"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </button>
                 )}
               </div>
             ))}
@@ -505,8 +591,12 @@ function RoomPage() {
             {inVoiceCall ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
           </CtrlBtn>
 
-          {/* Participants count */}
-          <div className="flex flex-col items-center gap-1 text-[10px] text-muted-foreground">
+          {/* Participants count button */}
+          <Link
+            to="/rooms/$id/participants"
+            params={{ id }}
+            className="flex flex-col items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition cursor-pointer"
+          >
             <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary relative">
               <Users className="h-5 w-5" />
               {participants.length > 0 && (
@@ -516,7 +606,7 @@ function RoomPage() {
               )}
             </span>
             Pessoas
-          </div>
+          </Link>
 
           {/* Leave room */}
           <CtrlBtn destructive onClick={handleLeave} label="Sair">
