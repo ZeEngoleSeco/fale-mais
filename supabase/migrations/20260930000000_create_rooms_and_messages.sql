@@ -1,4 +1,4 @@
-﻿-- Drop existing tables if they partially exist (from failed migration)
+-- Drop existing tables if they partially exist (from failed migration)
 DROP TABLE IF EXISTS public.room_participants CASCADE;
 DROP TABLE IF EXISTS public.room_messages CASCADE;
 DROP TABLE IF EXISTS public.rooms CASCADE;
@@ -55,8 +55,8 @@ ALTER TABLE public.room_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.room_participants ENABLE ROW LEVEL SECURITY;
 
 -- Rooms policies
-CREATE POLICY "Anyone authenticated can view rooms"
-  ON public.rooms FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Anyone can view rooms"
+  ON public.rooms FOR SELECT TO public USING (true);
 
 CREATE POLICY "Authenticated users can create rooms"
   ON public.rooms FOR INSERT TO authenticated
@@ -71,8 +71,8 @@ CREATE POLICY "Only host can delete their rooms"
   USING (auth.uid() = host_id);
 
 -- Room messages policies
-CREATE POLICY "Authenticated users can view messages in any room"
-  ON public.room_messages FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Anyone can view messages in any room"
+  ON public.room_messages FOR SELECT TO public USING (true);
 
 CREATE POLICY "Authenticated users can send messages"
   ON public.room_messages FOR INSERT TO authenticated
@@ -83,8 +83,8 @@ CREATE POLICY "Users can delete their own messages"
   USING (auth.uid() = sender_id);
 
 -- Room participants policies
-CREATE POLICY "Anyone authenticated can view participants"
-  ON public.room_participants FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Anyone can view participants"
+  ON public.room_participants FOR SELECT TO public USING (true);
 
 CREATE POLICY "Users can join rooms"
   ON public.room_participants FOR INSERT TO authenticated
@@ -100,10 +100,28 @@ CREATE POLICY "Users can leave rooms"
     SELECT 1 FROM public.rooms WHERE id = room_id AND host_id = auth.uid()
   ));
 
--- Enable realtime
-ALTER PUBLICATION supabase_realtime ADD TABLE public.rooms;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.room_messages;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.room_participants;
+-- Enable realtime safely
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' AND tablename = 'rooms'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.rooms;
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' AND tablename = 'room_messages'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.room_messages;
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' AND tablename = 'room_participants'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.room_participants;
+  END IF;
+END $$;
 
 -- Auto-update updated_at
 CREATE OR REPLACE FUNCTION public.handle_updated_at()

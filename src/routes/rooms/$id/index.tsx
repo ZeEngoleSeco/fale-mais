@@ -40,6 +40,7 @@ import {
   deleteRoom,
   subscribeToRoomMessages,
   subscribeToRoomParticipants,
+  subscribeToRoomDeletion,
   type RoomDB,
   type RoomMessageDB,
   type RoomParticipantDB,
@@ -128,6 +129,16 @@ function RoomPage() {
     });
     return unsub;
   }, [id]);
+
+  // Subscribe to room deletion
+  useEffect(() => {
+    const unsub = subscribeToRoomDeletion(id, () => {
+      toast.info("Esta sala foi encerrada pelo criador.");
+      voiceCallManager.leaveRoomVoice();
+      navigate({ to: "/rooms" });
+    });
+    return unsub;
+  }, [id, navigate]);
 
   // Subscribe to voice call state
   useEffect(() => {

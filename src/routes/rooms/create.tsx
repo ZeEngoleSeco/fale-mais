@@ -43,13 +43,28 @@ export function CreateRoomPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  if (!user) {
+  const isGuest = !user || user.id === "user-default";
+
+  if (isGuest) {
     return (
       <AppShell>
         <PageHeader title="Criar Sala" subtitle="Faça login para criar uma sala" back="/rooms" />
-        <div className="px-5 py-12 text-center text-muted-foreground">
-          <Lock className="mx-auto mb-3 h-10 w-10 opacity-40" />
-          <p className="text-sm font-medium">Você precisa estar logado para criar salas.</p>
+        <div className="px-5 py-12 text-center text-muted-foreground space-y-4">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-secondary text-primary">
+            <Lock className="h-8 w-8" />
+          </div>
+          <p className="text-base font-bold text-foreground">Acesso Reservado a Membros</p>
+          <p className="text-xs text-muted-foreground max-w-xs mx-auto">
+            Qualquer usuário cadastrado na plataforma pode criar suas próprias salas de prática e gerenciá-las.
+          </p>
+          <div className="pt-2">
+            <button
+              onClick={() => navigate({ to: "/profile" })}
+              className="rounded-full bg-gradient-brand px-6 py-2.5 text-xs font-bold text-white shadow-soft transition hover:opacity-90"
+            >
+              Criar Conta / Entrar
+            </button>
+          </div>
         </div>
       </AppShell>
     );

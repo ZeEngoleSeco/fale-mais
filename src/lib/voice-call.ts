@@ -1,5 +1,5 @@
-// Voice Call Manager using WebAudio API + BroadcastChannel for real-time audio sync
-import { getStoredUser, CURRENT_USER, type UserProfile } from "@/lib/user-store";
+import { supabase } from "@/integrations/supabase/client";
+import { getStoredUser, DEFAULT_INITIAL_USER, type UserProfile } from "@/lib/user-store";
 
 export interface VoicePeer {
   id: string;
@@ -12,14 +12,24 @@ export interface VoicePeer {
 
 type VoiceStateCallback = (peers: VoicePeer[], isMyMicActive: boolean, myVolume: number) => void;
 
+const ICE_SERVERS: RTCConfiguration = {
+  iceServers: [
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: "stun:stun1.l.google.com:19302" },
+    { urls: "stun:stun2.l.google.com:19302" },
+    { urls: "stun:stun3.l.google.com:19302" },
+    { urls: "stun:stun4.l.google.com:19302" },
+  ],
+};
+
 class VoiceCallManager {
   private roomId: string | null = null;
-  private currentUser: UserProfile = CURRENT_USER;
-  private channel: BroadcastChannel | null = null;
+  private currentUser: UserProfile = DEFAULT_INITIAL_USER;
+  private channel: any = null;
+
   private audioContext: AudioContext | null = null;
   private mediaStream: MediaStream | null = null;
   private analyser: AnalyserNode | null = null;
-  private mediaRecorder: MediaRecorder | null = null;
   private animFrameId: number | null = null;
 
   private isMyMicActive = false;
@@ -28,8 +38,9 @@ class VoiceCallManager {
   private isSpeaking = false;
 
   private peers: Map<string, VoicePeer> = new Map();
-  private listeners: Set<VoiceStateCallback> = new Set();
+  private peerConnections: Map<string, RTCPeerConnection> = new Map();
   private audioElements: Map<string, HTMLAudioElement> = new Map();
+  private listeners: Set<VoiceStateCallback> = new Set();
 
   public subscribe(cb: VoiceStateCallback): () => void {
     this.listeners.add(cb);
@@ -43,42 +54,69 @@ class VoiceCallManager {
   }
 
   public async joinRoomVoice(roomId: string, user?: UserProfile): Promise<boolean> {
-    this.leaveRoomVoice(); // Clean previous if any
+    this.leaveRoomVoice(); // Clean previous connection
 
     this.roomId = roomId;
-    this.currentUser = user || getStoredUser() || CURRENT_USER;
 
-    // Set up BroadcastChannel
-    try {
-      this.channel = new BroadcastChannel(`fale_mais_voice_${roomId}`);
-      this.channel.onmessage = (evt) => this.handleChannelMessage(evt.data);
-
-      // Broadcast JOIN
-      this.broadcastMessage({
-        type: "PEER_JOIN",
-        user: {
-          id: this.currentUser.id,
-          name: this.currentUser.name,
-          initials: this.currentUser.initials,
-          isMuted: true,
-          isSpeaking: false,
-          volume: 0,
-        },
-      });
-    } catch (e) {
-      console.warn("BroadcastChannel not supported or error:", e);
+    // Get currentUser identity
+    if (user) {
+      this.currentUser = user;
+    } else {
+      const stored = getStoredUser();
+      const { data: authData } = await supabase.auth.getUser();
+      if (authData?.user) {
+        this.currentUser = {
+          ...stored,
+          id: authData.user.id,
+          name: stored?.name || authData.user.user_metadata?.name || "Usuário",
+          initials: stored?.initials || "U",
+        } as UserProfile;
+      } else if (stored) {
+        this.currentUser = stored;
+      }
     }
 
-    return true;
+    try {
+      // Connect to Supabase Realtime Broadcast channel
+      this.channel = supabase.channel(`voice_room:${roomId}`, {
+        config: {
+          broadcast: { self: false },
+        },
+      });
+
+      this.channel
+        .on("broadcast", { event: "PEER_JOIN" }, ({ payload }: any) => this.handlePeerJoin(payload))
+        .on("broadcast", { event: "PEER_STATUS" }, ({ payload }: any) => this.handlePeerStatus(payload))
+        .on("broadcast", { event: "WEBRTC_OFFER" }, ({ payload }: any) => this.handleWebRTCOffer(payload))
+        .on("broadcast", { event: "WEBRTC_ANSWER" }, ({ payload }: any) => this.handleWebRTCAnswer(payload))
+        .on("broadcast", { event: "WEBRTC_ICE" }, ({ payload }: any) => this.handleWebRTCIce(payload))
+        .on("broadcast", { event: "PEER_LEAVE" }, ({ payload }: any) => this.handlePeerLeave(payload))
+        .subscribe((status: string) => {
+          if (status === "SUBSCRIBED") {
+            // Broadcast JOIN to all existing users in the room
+            this.broadcastMessage("PEER_JOIN", {
+              id: this.currentUser.id,
+              name: this.currentUser.name,
+              initials: this.currentUser.initials,
+              isMuted: this.isMuted,
+              isSpeaking: false,
+              volume: 0,
+            });
+          }
+        });
+
+      return true;
+    } catch (e) {
+      console.error("Failed to connect voice channel:", e);
+      return false;
+    }
   }
 
   public async toggleMicrophone(): Promise<boolean> {
     if (this.isMyMicActive && !this.isMuted) {
-      // Mute microphone
       this.muteMicrophone();
       return false;
     } else {
-      // Unmute or start microphone
       return await this.unmuteMicrophone();
     }
   }
@@ -95,12 +133,25 @@ class VoiceCallManager {
         });
       }
 
-      // Enable tracks
       this.mediaStream.getAudioTracks().forEach((t) => (t.enabled = true));
       this.isMyMicActive = true;
       this.isMuted = false;
 
-      // Setup WebAudio Analyser for real-time voice volume detection
+      // Add track to all existing RTCPeerConnections
+      const audioTrack = this.mediaStream.getAudioTracks()[0];
+      if (audioTrack) {
+        this.peerConnections.forEach((pc) => {
+          const senders = pc.getSenders();
+          const audioSender = senders.find((s) => s.track?.kind === "audio");
+          if (audioSender) {
+            audioSender.replaceTrack(audioTrack);
+          } else {
+            pc.addTrack(audioTrack, this.mediaStream!);
+          }
+        });
+      }
+
+      // AudioContext Analyser
       if (!this.audioContext) {
         const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
         this.audioContext = new AudioCtx();
@@ -114,17 +165,11 @@ class VoiceCallManager {
       this.analyser.fftSize = 128;
       source.connect(this.analyser);
 
-      // Setup Audio Recorder to stream voice chunks across tabs/peers
-      this.setupAudioStreaming();
-
-      // Start Volume Analyzer loop
       this.startVolumeMonitoring();
-
-      // Broadcast status
       this.broadcastStatus();
       this.notify();
       return true;
-    } catch (err: any) {
+    } catch (err) {
       console.error("Microphone access error:", err);
       this.isMyMicActive = false;
       this.isMuted = true;
@@ -141,44 +186,9 @@ class VoiceCallManager {
     if (this.mediaStream) {
       this.mediaStream.getAudioTracks().forEach((t) => (t.enabled = false));
     }
-    if (this.mediaRecorder && this.mediaRecorder.state !== "inactive") {
-      try {
-        this.mediaRecorder.stop();
-      } catch (e) {}
-    }
 
     this.broadcastStatus();
     this.notify();
-  }
-
-  private setupAudioStreaming() {
-    if (!this.mediaStream || typeof MediaRecorder === "undefined") return;
-
-    try {
-      // Stream audio chunks every 300ms to open channels
-      const recorderOptions = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-        ? { mimeType: "audio/webm;codecs=opus" }
-        : {};
-
-      this.mediaRecorder = new MediaRecorder(this.mediaStream, recorderOptions);
-      this.mediaRecorder.ondataavailable = async (e) => {
-        if (e.data.size > 0 && !this.isMuted && this.isSpeaking) {
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            const base64Audio = reader.result as string;
-            this.broadcastMessage({
-              type: "AUDIO_CHUNK",
-              userId: this.currentUser.id,
-              audioData: base64Audio,
-            });
-          };
-          reader.readAsDataURL(e.data);
-        }
-      };
-      this.mediaRecorder.start(300);
-    } catch (e) {
-      console.warn("MediaRecorder setup error:", e);
-    }
   }
 
   private startVolumeMonitoring() {
@@ -205,7 +215,7 @@ class VoiceCallManager {
       this.myVolume = volume;
       this.isSpeaking = volume > 12;
 
-      if (wasSpeaking !== this.isSpeaking || volume % 10 === 0) {
+      if (wasSpeaking !== this.isSpeaking || volume % 15 === 0) {
         this.broadcastStatus();
       }
 
@@ -217,9 +227,8 @@ class VoiceCallManager {
   }
 
   private broadcastStatus() {
-    this.broadcastMessage({
-      type: "VOICE_STATUS",
-      userId: this.currentUser.id,
+    this.broadcastMessage("PEER_STATUS", {
+      id: this.currentUser.id,
       name: this.currentUser.name,
       initials: this.currentUser.initials,
       isMuted: this.isMuted,
@@ -228,67 +237,194 @@ class VoiceCallManager {
     });
   }
 
-  private broadcastMessage(data: any) {
+  private broadcastMessage(event: string, payload: any) {
     if (this.channel) {
-      try {
-        this.channel.postMessage(data);
-      } catch (e) {
-        console.warn("BroadcastChannel send error:", e);
-      }
+      this.channel.send({
+        type: "broadcast",
+        event,
+        payload,
+      }).catch((e: any) => console.warn("Channel broadcast error:", e));
     }
   }
 
-  private handleChannelMessage(msg: any) {
-    if (!msg || !msg.type) return;
+  private async handlePeerJoin(peer: any) {
+    if (!peer || !peer.id || peer.id === this.currentUser.id) return;
 
-    if (msg.type === "PEER_JOIN") {
-      const peer = msg.user;
-      if (peer && peer.id !== this.currentUser.id) {
-        this.peers.set(peer.id, peer);
-        // Reply with our status
-        this.broadcastStatus();
-      }
-    } else if (msg.type === "VOICE_STATUS") {
-      if (msg.userId !== this.currentUser.id) {
-        const existing = this.peers.get(msg.userId) || {
-          id: msg.userId,
-          name: msg.name || "Participante",
-          initials: msg.initials || "P",
-          isMuted: true,
-          isSpeaking: false,
-          volume: 0,
-        };
-        existing.isMuted = msg.isMuted;
-        existing.isSpeaking = msg.isSpeaking;
-        existing.volume = msg.volume;
-        this.peers.set(msg.userId, existing);
-      }
-    } else if (msg.type === "PEER_LEAVE") {
-      this.peers.delete(msg.userId);
-    } else if (msg.type === "AUDIO_CHUNK") {
-      if (msg.userId !== this.currentUser.id && msg.audioData) {
-        this.playIncomingAudio(msg.userId, msg.audioData);
-      }
+    this.peers.set(peer.id, {
+      id: peer.id,
+      name: peer.name || "Participante",
+      initials: peer.initials || "P",
+      isMuted: peer.isMuted ?? true,
+      isSpeaking: peer.isSpeaking ?? false,
+      volume: peer.volume ?? 0,
+    });
+
+    // Respond with our status so the newly joined peer knows we are here
+    this.broadcastStatus();
+
+    // Create WebRTC connection as initiator if our ID is lexicographically greater
+    if (this.currentUser.id > peer.id) {
+      await this.initiateWebRTCConnection(peer.id);
     }
     this.notify();
   }
 
-  private playIncomingAudio(userId: string, base64Audio: string) {
+  private handlePeerStatus(peer: any) {
+    if (!peer || !peer.id || peer.id === this.currentUser.id) return;
+
+    const existing = this.peers.get(peer.id) || {
+      id: peer.id,
+      name: peer.name || "Participante",
+      initials: peer.initials || "P",
+      isMuted: true,
+      isSpeaking: false,
+      volume: 0,
+    };
+
+    existing.isMuted = peer.isMuted;
+    existing.isSpeaking = peer.isSpeaking;
+    existing.volume = peer.volume;
+    this.peers.set(peer.id, existing);
+    this.notify();
+  }
+
+  private async initiateWebRTCConnection(targetId: string) {
+    const pc = this.createRTCPeerConnection(targetId);
     try {
-      let audioEl = this.audioElements.get(userId);
-      if (!audioEl) {
-        audioEl = new Audio();
-        audioEl.autoplay = true;
-        this.audioElements.set(userId, audioEl);
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      this.broadcastMessage("WEBRTC_OFFER", {
+        targetId,
+        senderId: this.currentUser.id,
+        sdp: offer,
+      });
+    } catch (e) {
+      console.error("Error creating WebRTC offer:", e);
+    }
+  }
+
+  private createRTCPeerConnection(peerId: string): RTCPeerConnection {
+    if (this.peerConnections.has(peerId)) {
+      this.peerConnections.get(peerId)?.close();
+    }
+
+    const pc = new RTCPeerConnection(ICE_SERVERS);
+    this.peerConnections.set(peerId, pc);
+
+    // Add local tracks if mic is active
+    if (this.mediaStream) {
+      this.mediaStream.getAudioTracks().forEach((track) => {
+        pc.addTrack(track, this.mediaStream!);
+      });
+    }
+
+    pc.onicecandidate = (event) => {
+      if (event.candidate) {
+        this.broadcastMessage("WEBRTC_ICE", {
+          targetId: peerId,
+          senderId: this.currentUser.id,
+          candidate: event.candidate,
+        });
       }
-      audioEl.src = base64Audio;
-      audioEl.play().catch(() => {});
-    } catch (e) {}
+    };
+
+    pc.ontrack = (event) => {
+      const remoteStream = event.streams[0] || new MediaStream([event.track]);
+      this.attachRemoteAudioStream(peerId, remoteStream);
+    };
+
+    return pc;
+  }
+
+  private async handleWebRTCOffer(payload: any) {
+    if (payload.targetId !== this.currentUser.id) return;
+    const senderId = payload.senderId;
+    if (!senderId) return;
+
+    const pc = this.createRTCPeerConnection(senderId);
+    try {
+      await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp));
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      this.broadcastMessage("WEBRTC_ANSWER", {
+        targetId: senderId,
+        senderId: this.currentUser.id,
+        sdp: answer,
+      });
+    } catch (e) {
+      console.error("Error handling WebRTC offer:", e);
+    }
+  }
+
+  private async handleWebRTCAnswer(payload: any) {
+    if (payload.targetId !== this.currentUser.id) return;
+    const pc = this.peerConnections.get(payload.senderId);
+    if (pc) {
+      try {
+        await pc.setRemoteDescription(new RTCSessionDescription(payload.sdp));
+      } catch (e) {
+        console.error("Error setting remote description from answer:", e);
+      }
+    }
+  }
+
+  private async handleWebRTCIce(payload: any) {
+    if (payload.targetId !== this.currentUser.id) return;
+    const pc = this.peerConnections.get(payload.senderId);
+    if (pc && payload.candidate) {
+      try {
+        await pc.addIceCandidate(new RTCIceCandidate(payload.candidate));
+      } catch (e) {
+        console.error("Error adding ICE candidate:", e);
+      }
+    }
+  }
+
+  private handlePeerLeave(payload: any) {
+    const peerId = typeof payload === "string" ? payload : payload?.id;
+    if (!peerId) return;
+
+    this.peers.delete(peerId);
+
+    const pc = this.peerConnections.get(peerId);
+    if (pc) {
+      pc.close();
+      this.peerConnections.delete(peerId);
+    }
+
+    const audioEl = this.audioElements.get(peerId);
+    if (audioEl) {
+      audioEl.pause();
+      audioEl.srcObject = null;
+      audioEl.remove();
+      this.audioElements.delete(peerId);
+    }
+
+    this.notify();
+  }
+
+  private attachRemoteAudioStream(peerId: string, stream: MediaStream) {
+    let audioEl = this.audioElements.get(peerId);
+    if (!audioEl) {
+      audioEl = document.createElement("audio");
+      audioEl.autoplay = true;
+      audioEl.style.display = "none";
+      document.body.appendChild(audioEl);
+      this.audioElements.set(peerId, audioEl);
+    }
+    audioEl.srcObject = stream;
+    audioEl.play().catch(() => {});
   }
 
   public leaveRoomVoice() {
     if (this.animFrameId) cancelAnimationFrame(this.animFrameId);
     this.muteMicrophone();
+
+    if (this.channel) {
+      this.broadcastMessage("PEER_LEAVE", { id: this.currentUser.id });
+      supabase.removeChannel(this.channel);
+      this.channel = null;
+    }
 
     if (this.mediaStream) {
       this.mediaStream.getTracks().forEach((t) => t.stop());
@@ -299,22 +435,22 @@ class VoiceCallManager {
       this.audioContext = null;
     }
 
-    if (this.channel) {
-      this.broadcastMessage({ type: "PEER_LEAVE", userId: this.currentUser.id });
-      this.channel.close();
-      this.channel = null;
-    }
+    this.peerConnections.forEach((pc) => pc.close());
+    this.peerConnections.clear();
 
     this.audioElements.forEach((el) => {
       el.pause();
-      el.src = "";
+      el.srcObject = null;
+      el.remove();
     });
     this.audioElements.clear();
+
     this.peers.clear();
     this.isMyMicActive = false;
     this.isMuted = true;
     this.myVolume = 0;
     this.isSpeaking = false;
+    this.roomId = null;
     this.notify();
   }
 

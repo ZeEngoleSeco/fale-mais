@@ -15,30 +15,6 @@ export type Database = {
       profiles: {
         Row: {
           id: string
-<<<<<<< HEAD
-          name: string | null
-          email: string | null
-          avatar_url: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id: string
-          name?: string | null
-          email?: string | null
-          avatar_url?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          name?: string | null
-          email?: string | null
-          avatar_url?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-=======
           name: string
           email: string
           role: string | null
@@ -83,13 +59,11 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
->>>>>>> 16a2a63fe4df4d1a27964967f9334b301c305492
       }
       rooms: {
         Row: {
           id: string
           name: string
-<<<<<<< HEAD
           description: string | null
           category: string
           max_people: number
@@ -103,25 +77,10 @@ export type Database = {
           people_count: number
           created_at: string
           updated_at: string
-=======
-          desc: string | null
-          category: string | null
-          people_count: number | null
-          max_people: number | null
-          is_private: boolean | null
-          is_live: boolean | null
-          host_id: string | null
-          host_name: string
-          host_initials: string
-          host_role: string | null
-          created_at: string | null
-          updated_at: string | null
->>>>>>> 16a2a63fe4df4d1a27964967f9334b301c305492
         }
         Insert: {
           id?: string
           name: string
-<<<<<<< HEAD
           description?: string | null
           category?: string
           max_people?: number
@@ -135,25 +94,10 @@ export type Database = {
           people_count?: number
           created_at?: string
           updated_at?: string
-=======
-          desc?: string | null
-          category?: string | null
-          people_count?: number | null
-          max_people?: number | null
-          is_private?: boolean | null
-          is_live?: boolean | null
-          host_id?: string | null
-          host_name: string
-          host_initials: string
-          host_role?: string | null
-          created_at?: string | null
-          updated_at?: string | null
->>>>>>> 16a2a63fe4df4d1a27964967f9334b301c305492
         }
         Update: {
           id?: string
           name?: string
-<<<<<<< HEAD
           description?: string | null
           category?: string
           max_people?: number
@@ -168,6 +112,7 @@ export type Database = {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       room_messages: {
         Row: {
@@ -197,113 +142,38 @@ export type Database = {
           text?: string
           created_at?: string
         }
-=======
-          desc?: string | null
-          category?: string | null
-          people_count?: number | null
-          max_people?: number | null
-          is_private?: boolean | null
-          is_live?: boolean | null
-          host_id?: string | null
-          host_name?: string
-          host_initials?: string
-          host_role?: string | null
-          created_at?: string | null
-          updated_at?: string | null
-        }
         Relationships: []
->>>>>>> 16a2a63fe4df4d1a27964967f9334b301c305492
       }
       room_participants: {
         Row: {
           id: string
           room_id: string
-<<<<<<< HEAD
           user_id: string
           user_name: string
           user_initials: string
           role: string
           joined_at: string
           last_seen: string
-=======
-          user_id: string | null
-          name: string
-          initials: string
-          role: string | null
-          is_online: boolean | null
-          has_hand_raised: boolean | null
-          is_muted: boolean | null
-          joined_at: string | null
->>>>>>> 16a2a63fe4df4d1a27964967f9334b301c305492
         }
         Insert: {
           id?: string
           room_id: string
-<<<<<<< HEAD
           user_id: string
           user_name: string
           user_initials: string
           role?: string
           joined_at?: string
           last_seen?: string
-=======
-          user_id?: string | null
-          name: string
-          initials: string
-          role?: string | null
-          is_online?: boolean | null
-          has_hand_raised?: boolean | null
-          is_muted?: boolean | null
-          joined_at?: string | null
->>>>>>> 16a2a63fe4df4d1a27964967f9334b301c305492
         }
         Update: {
           id?: string
           room_id?: string
-<<<<<<< HEAD
           user_id?: string
           user_name?: string
           user_initials?: string
           role?: string
           joined_at?: string
           last_seen?: string
-        }
-=======
-          user_id?: string | null
-          name?: string
-          initials?: string
-          role?: string | null
-          is_online?: boolean | null
-          has_hand_raised?: boolean | null
-          is_muted?: boolean | null
-          joined_at?: string | null
-        }
-        Relationships: []
-      }
-      room_messages: {
-        Row: {
-          id: string
-          room_id: string
-          user_id: string | null
-          sender_name: string
-          text: string
-          created_at: string | null
-        }
-        Insert: {
-          id?: string
-          room_id: string
-          user_id?: string | null
-          sender_name: string
-          text: string
-          created_at?: string | null
-        }
-        Update: {
-          id?: string
-          room_id?: string
-          user_id?: string | null
-          sender_name?: string
-          text?: string
-          created_at?: string | null
         }
         Relationships: []
       }
@@ -507,7 +377,6 @@ export type Database = {
           unlocked_at?: string | null
         }
         Relationships: []
->>>>>>> 16a2a63fe4df4d1a27964967f9334b301c305492
       }
     }
     Views: {
@@ -524,85 +393,3 @@ export type Database = {
     }
   }
 }
-
-type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
-
-export type Tables<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends (DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never) = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R
-    }
-    ? R
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R
-      }
-      ? R
-      : never
-    : never
-
-export type TablesInsert<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends (DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never) = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
-    }
-    ? I
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I
-      }
-      ? I
-      : never
-    : never
-
-export type TablesUpdate<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends (DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never) = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
-    }
-    ? U
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U
-      }
-      ? U
-      : never
-    : never

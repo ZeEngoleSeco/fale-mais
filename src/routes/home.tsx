@@ -4,8 +4,10 @@ import { AppShell } from "@/components/app-shell";
 import { BrandLogo } from "@/components/brand";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MOCK_ROOMS, MOCK_EVENTS } from "@/data/mock-data";
+import { MOCK_EVENTS } from "@/data/mock-data";
 import { useCurrentUser } from "@/lib/user-store";
+import { fetchAllRooms, type RoomDB } from "@/lib/supabase-room-store";
+import { useState, useEffect } from "react";
 
 export const Route = createFileRoute("/home")({
   head: () => ({
@@ -27,7 +29,13 @@ const shortcuts = [
 
 function HomePage() {
   const { user } = useCurrentUser();
-  const activeRooms = MOCK_ROOMS.filter((r) => r.isLive).slice(0, 2);
+  const [realRooms, setRealRooms] = useState<RoomDB[]>([]);
+
+  useEffect(() => {
+    fetchAllRooms().then((data) => setRealRooms(data));
+  }, []);
+
+  const activeRooms = realRooms.slice(0, 2);
   const featuredEvent = MOCK_EVENTS[0];
 
   return (
@@ -143,7 +151,7 @@ function HomePage() {
             </span>
           </div>
           <Link to="/rooms" className="text-xs font-semibold text-primary hover:underline">
-            Ver todas ({MOCK_ROOMS.length})
+            Ver todas ({realRooms.length})
           </Link>
         </div>
 
@@ -159,16 +167,14 @@ function HomePage() {
                     <Badge variant="outline" className="rounded-full text-[10px]">{room.category}</Badge>
                   </div>
                   <p className="mt-1.5 truncate text-[14px] font-semibold">{room.name}</p>
-                  <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{room.desc}</p>
+                  <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{room.description}</p>
                   <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
                     <span className="inline-flex items-center gap-1">
-                      <Users className="h-3.5 w-3.5" /> {room.peopleCount} online
+                      <Users className="h-3.5 w-3.5" /> {room.people_count} online
                     </span>
-                    {room.currentSpeaker && (
-                      <span className="truncate text-xs font-medium text-foreground">
-                        🎙️ {room.currentSpeaker.name}
-                      </span>
-                    )}
+                    <span className="truncate text-xs font-medium text-foreground">
+                      Host: <strong>{room.host_name}</strong>
+                    </span>
                   </div>
                 </div>
                 <Link

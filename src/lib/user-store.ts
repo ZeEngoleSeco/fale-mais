@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { MOCK_USERS, ALL_ACHIEVEMENTS, type UserProfile } from "@/data/mock-data";
 import { supabase } from "@/integrations/supabase/client";
 
+export type { UserProfile } from "@/data/mock-data";
+
 const STORAGE_USER_KEY = "fale_mais_user_profile";
 const STORAGE_USERS_LIST_KEY = "fale_mais_all_users_list";
 const STORAGE_REMEMBER_KEY = "fale_mais_remember_me";
@@ -477,7 +479,7 @@ export function logoutUser() {
   logoutUserAsync();
 }
 
-const DEFAULT_INITIAL_USER: UserProfile = ensureFullBadges({
+export const DEFAULT_INITIAL_USER: UserProfile = ensureFullBadges({
   id: "user-default",
   name: "Visitante",
   email: "visitante@soltavoz.com",
