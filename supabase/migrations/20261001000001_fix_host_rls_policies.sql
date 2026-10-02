@@ -3,6 +3,9 @@ DROP POLICY IF EXISTS "Users can join rooms" ON public.room_participants;
 DROP POLICY IF EXISTS "Users can update their own participant entry" ON public.room_participants;
 DROP POLICY IF EXISTS "Users can leave rooms" ON public.room_participants;
 DROP POLICY IF EXISTS "Users can join or host can add" ON public.room_participants;
+DROP POLICY IF EXISTS "Participant Insert" ON public.room_participants;
+DROP POLICY IF EXISTS "Participant Update" ON public.room_participants;
+DROP POLICY IF EXISTS "Participant Delete" ON public.room_participants;
 
 -- Recreate policies with full host access
 CREATE POLICY "Participant Insert"

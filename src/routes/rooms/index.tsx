@@ -139,6 +139,9 @@ function RoomsPage() {
     setVerifying(false);
 
     if (result === "ok" || result === "not_private") {
+      if (result === "ok") {
+        sessionStorage.setItem(`room_pwd_${passwordRoom.id}`, "verified");
+      }
       setPasswordRoom(null);
       navigate({ to: "/rooms/$id", params: { id: passwordRoom.id } });
     } else if (result === "wrong_password") {

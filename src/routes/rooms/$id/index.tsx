@@ -14,6 +14,7 @@ import {
   Crown,
   UserPlus,
   X,
+  Lock,
 } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
@@ -53,7 +54,7 @@ import {
   subscribeToRoomParticipants,
   subscribeToRoomDeletion,
   addParticipant,
-  removeParticipant,
+  verifyRoomPassword,
   type RoomDB,
   type RoomMessageDB,
   type RoomParticipantDB,
@@ -82,6 +83,11 @@ function RoomPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const [needsPassword, setNeedsPassword] = useState(false);
+  const [passwordInput, setPasswordInput] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [verifyingPwd, setVerifyingPwd] = useState(false);
 
   // Voice call state
   const [voicePeers, setVoicePeers] = useState<VoicePeer[]>([]);
@@ -142,6 +148,14 @@ function RoomPage() {
   // Join room as participant when loaded (if not removed)
   useEffect(() => {
     if (!loading && user && currentUserId && !joinedRef.current) {
+      if (room?.is_private && room.host_id !== currentUserId) {
+        const hasAccess = sessionStorage.getItem(`room_pwd_${id}`) === "verified" || participants.some(p => p.user_id === currentUserId);
+        if (!hasAccess) {
+          setNeedsPassword(true);
+          return;
+        }
+      }
+
       const isHost = room && room.host_id === currentUserId;
       joinRoomParticipant(id, isHost ? "Host" : "Ouvinte").then((res) => {
         if (res.removed) {
@@ -153,7 +167,7 @@ function RoomPage() {
         }
       });
     }
-  }, [loading, user, id, room, currentUserId]);
+  }, [loading, user, id, room, currentUserId, participants]);
 
   // Fallback heartbeat polling to guarantee removal detection within 2s even if WS drops
   useEffect(() => {
@@ -323,6 +337,54 @@ function RoomPage() {
   );
 
   const isOwner = currentUserId && room && room.host_id === currentUserId;
+
+  if (needsPassword) {
+    return (
+      <AppShell hideNav>
+        <PageHeader title="Sala Privada" back="/rooms" />
+        <div className="flex h-[80vh] items-center justify-center px-5">
+          <Card className="w-full max-w-sm rounded-3xl border-border p-6 shadow-lift text-center">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/10">
+              <Lock className="h-7 w-7 text-amber-500" />
+            </div>
+            <h2 className="text-lg font-bold">Sala Protegida</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Esta sala requer uma senha para entrar.
+            </p>
+            <form 
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setVerifyingPwd(true);
+                setPasswordError("");
+                const result = await verifyRoomPassword(id, passwordInput.trim());
+                setVerifyingPwd(false);
+                if (result === "ok" || result === "not_private") {
+                  sessionStorage.setItem(`room_pwd_${id}`, "verified");
+                  setNeedsPassword(false);
+                } else {
+                  setPasswordError("Senha incorreta.");
+                }
+              }} 
+              className="mt-6 space-y-4"
+            >
+              <Input
+                type="password"
+                placeholder="Digite a senha..."
+                value={passwordInput}
+                onChange={(e) => setPasswordInput(e.target.value)}
+                className="h-12 rounded-2xl"
+              />
+              {passwordError && <p className="text-xs font-semibold text-destructive">{passwordError}</p>}
+              <Button type="submit" disabled={verifyingPwd || !passwordInput.trim()} className="w-full h-12 rounded-2xl bg-gradient-brand text-white font-semibold">
+                {verifyingPwd ? <Loader2 className="h-4 w-4 animate-spin inline mr-2" /> : null}
+                Entrar na Sala
+              </Button>
+            </form>
+          </Card>
+        </div>
+      </AppShell>
+    );
+  }
 
   if (loading) {
     return (
@@ -496,7 +558,6 @@ function RoomPage() {
               <Users className="h-4 w-4 text-primary" />
               Participantes ({participants.length})
             </div>
-<<<<<<< HEAD
             <Link
               to="/rooms/$id/participants"
               params={{ id }}
@@ -504,53 +565,6 @@ function RoomPage() {
             >
               {isOwner ? "Gerenciar / Adicionar" : "Ver todos"}
             </Link>
-=======
-            
-            {isOwner && (
-              <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 rounded-full text-xs bg-secondary text-primary hover:bg-secondary/80">
-                    <UserPlus className="h-3 w-3 mr-1.5" /> Adicionar
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px] rounded-3xl">
-                  <DialogHeader>
-                    <DialogTitle>Adicionar Participante</DialogTitle>
-                  </DialogHeader>
-                  <div className="py-4">
-                    <Input 
-                      placeholder="Buscar por nome ou email..." 
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="mb-4"
-                    />
-                    <div className="max-h-[300px] overflow-y-auto space-y-2 minimal-scrollbar">
-                      {filteredUsers.length === 0 ? (
-                        <p className="text-center text-sm text-muted-foreground">Nenhum usuário encontrado.</p>
-                      ) : (
-                        filteredUsers.map(u => (
-                          <div key={u.id} className="flex items-center justify-between p-2 rounded-xl border border-border">
-                            <div className="flex items-center gap-3">
-                              <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${u.avatarColor || 'from-blue-500 to-cyan-500'} text-sm font-bold text-white`}>
-                                {u.initials}
-                              </div>
-                              <div>
-                                <p className="text-sm font-semibold">{u.name}</p>
-                                <p className="text-xs text-muted-foreground">{u.email}</p>
-                              </div>
-                            </div>
-                            <Button size="sm" variant="secondary" onClick={() => handleAddParticipant(u)}>
-                              Adicionar
-                            </Button>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            )}
->>>>>>> 9183840f718d11e91a176ac7ae7a0e7a1720d576
           </div>
           <div className="flex flex-wrap gap-2">
             {participants.map((p) => (
@@ -566,7 +580,6 @@ function RoomPage() {
                   <Crown className="h-3 w-3 text-amber-500" />
                 )}
                 {isOwner && p.user_id !== currentUserId && (
-<<<<<<< HEAD
                   <button
                     onClick={async (e) => {
                       e.stopPropagation();
@@ -580,14 +593,6 @@ function RoomPage() {
                     className="ml-1 text-muted-foreground hover:text-destructive transition p-0.5 rounded-full"
                   >
                     <Trash2 className="h-3 w-3" />
-=======
-                  <button 
-                    onClick={() => handleRemoveParticipant(p.user_id)}
-                    className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive/10 text-destructive opacity-0 transition-opacity hover:bg-destructive hover:text-white group-hover:opacity-100"
-                    title="Remover"
-                  >
-                    <X className="h-3 w-3" />
->>>>>>> 9183840f718d11e91a176ac7ae7a0e7a1720d576
                   </button>
                 )}
               </div>
@@ -685,7 +690,6 @@ function RoomPage() {
             {inVoiceCall ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
           </CtrlBtn>
 
-<<<<<<< HEAD
           {/* Participants count button */}
           <Link
             to="/rooms/$id/participants"
@@ -693,14 +697,6 @@ function RoomPage() {
             className="flex flex-col items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition cursor-pointer"
           >
             <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary relative">
-=======
-          {/* Participants count */}
-          <button 
-            className="flex flex-col items-center gap-1 text-[10px] text-muted-foreground"
-            onClick={() => navigate({ to: `/rooms/${id}/participants` })}
-          >
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary relative transition-colors hover:bg-secondary/80">
->>>>>>> 9183840f718d11e91a176ac7ae7a0e7a1720d576
               <Users className="h-5 w-5" />
               {participants.length > 0 && (
                 <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[8px] font-bold text-white shadow-sm">
@@ -709,11 +705,7 @@ function RoomPage() {
               )}
             </span>
             Pessoas
-<<<<<<< HEAD
           </Link>
-=======
-          </button>
->>>>>>> 9183840f718d11e91a176ac7ae7a0e7a1720d576
 
           {/* Leave room */}
           <CtrlBtn destructive onClick={handleLeave} label="Sair">

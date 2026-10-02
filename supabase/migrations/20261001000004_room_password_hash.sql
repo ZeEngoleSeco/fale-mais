@@ -2,7 +2,7 @@
 -- Migration: Senha de sala com hash seguro (pgcrypto)
 -- ============================================================
 -- Habilita pgcrypto para usar crypt() e gen_salt()
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
 
 -- Adiciona coluna password_hash (substitui a coluna password plain-text)
 ALTER TABLE public.rooms
@@ -10,16 +10,23 @@ ALTER TABLE public.rooms
 
 -- Migra senhas plain-text existentes para hash bcrypt
 -- (somente para salas privadas que já tinham senha)
-UPDATE public.rooms
-SET password_hash = crypt(password, gen_salt('bf', 10))
-WHERE is_private = true
-  AND password IS NOT NULL
-  AND password <> ''
-  AND password_hash IS NULL;
-
--- Remove a coluna plain-text
-ALTER TABLE public.rooms
-  DROP COLUMN IF EXISTS password;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'rooms' AND column_name = 'password'
+  ) THEN
+    EXECUTE '
+      UPDATE public.rooms
+      SET password_hash = extensions.crypt(password, extensions.gen_salt(''bf'', 10))
+      WHERE is_private = true
+        AND password IS NOT NULL
+        AND password <> ''''
+        AND password_hash IS NULL
+    ';
+    ALTER TABLE public.rooms DROP COLUMN password;
+  END IF;
+END $$;
 
 -- ============================================================
 -- RPC: verify_room_password
@@ -33,7 +40,7 @@ CREATE OR REPLACE FUNCTION public.verify_room_password(
 RETURNS TEXT
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, extensions
 AS $$
 DECLARE
   v_is_private    BOOLEAN;
@@ -98,7 +105,7 @@ RETURNS TABLE (
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, extensions
 AS $$
 DECLARE
   v_hash TEXT;
