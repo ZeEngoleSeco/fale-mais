@@ -97,22 +97,27 @@ export async function createRoom(input: CreateRoomInput): Promise<RoomDB | null>
 
   const initials = calculateInitials(currentUser.name);
 
+  const payload: any = {
+    name: input.name.trim(),
+    description: (input.description || "").trim(),
+    category: input.category || "Pitch",
+    max_people: input.maxPeople || 20,
+    is_private: input.isPrivate || false,
+    host_id: userId,
+    host_name: currentUser.name,
+    host_initials: initials,
+    is_live: true,
+    initial_topic: (input.initialTopic || "").trim(),
+    people_count: 1,
+  };
+
+  if (input.isPrivate && input.password) {
+    payload.password = input.password;
+  }
+
   const { data, error } = await supabase
     .from("rooms")
-    .insert({
-      name: input.name.trim(),
-      description: (input.description || "").trim(),
-      category: input.category || "Pitch",
-      max_people: input.maxPeople || 20,
-      is_private: input.isPrivate || false,
-      password: input.isPrivate ? (input.password || null) : null,
-      host_id: userId,
-      host_name: currentUser.name,
-      host_initials: initials,
-      is_live: true,
-      initial_topic: (input.initialTopic || "").trim(),
-      people_count: 1,
-    })
+    .insert(payload)
     .select()
     .single();
 

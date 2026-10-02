@@ -78,6 +78,11 @@ export function CreateRoomPage() {
       return;
     }
 
+    if (isPrivate && !password.trim()) {
+      toast.error("Por favor, informe uma senha para a sala privada!");
+      return;
+    }
+
     setIsLoading(true);
 
     try {

@@ -12,6 +12,7 @@ import {
   VolumeX,
   Radio,
   Crown,
+  Lock,
 } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
@@ -75,15 +76,12 @@ function RoomPage() {
   const [voiceLoading, setVoiceLoading] = useState(false);
   const [inVoiceCall, setInVoiceCall] = useState(false);
 
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
-  // Get supabase user ID
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setCurrentUserId(data?.user?.id || null);
-    });
-  }, []);
+  // Password protection state
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [passwordInput, setPasswordInput] = useState("");
+  const [passwordError, setPasswordError] = useState("");
 
   // Load room data
   useEffect(() => {
@@ -102,13 +100,15 @@ function RoomPage() {
     load();
   }, [id]);
 
-  // Join room as participant when loaded
+  // Join room as participant when loaded and unlocked
   useEffect(() => {
-    if (!loading && user) {
-      const isHost = room && currentUserId && room.host_id === currentUserId;
-      joinRoomParticipant(id, isHost ? "Host" : "Ouvinte");
+    if (!loading && user && room) {
+      const isOwner = user.id === room.host_id;
+      if (!room.is_private || isOwner || isUnlocked) {
+        joinRoomParticipant(id, isOwner ? "Host" : "Ouvinte");
+      }
     }
-  }, [loading, user, id, room, currentUserId]);
+  }, [loading, user, id, room, isUnlocked]);
 
   // Subscribe to realtime messages
   useEffect(() => {
@@ -222,7 +222,7 @@ function RoomPage() {
     setShowDeleteDialog(false);
   };
 
-  const isOwner = currentUserId && room && room.host_id === currentUserId;
+  const isOwner = user?.id === room?.host_id;
 
   if (loading) {
     return (
@@ -243,6 +243,56 @@ function RoomPage() {
           <Button onClick={() => navigate({ to: "/rooms" })} className="mt-4">
             Ver salas
           </Button>
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (room.is_private && !isOwner && !isUnlocked) {
+    return (
+      <AppShell hideNav>
+        <PageHeader title="Sala Privada" back="/rooms" />
+        <div className="flex h-[80vh] flex-col items-center justify-center px-5">
+          <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-secondary">
+            <Lock className="h-8 w-8 text-primary" />
+          </div>
+          <h2 className="text-xl font-bold mb-2">Acesso Restrito</h2>
+          <p className="text-sm text-muted-foreground mb-6 text-center">
+            Esta sala é privada. Digite a senha para entrar.
+          </p>
+          <div className="w-full max-w-xs space-y-3">
+            <Input
+              type="password"
+              placeholder="Senha da sala"
+              value={passwordInput}
+              onChange={(e) => {
+                setPasswordInput(e.target.value);
+                setPasswordError("");
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && passwordInput.trim()) {
+                  if (passwordInput === room.password) {
+                    setIsUnlocked(true);
+                  } else {
+                    setPasswordError("Senha incorreta");
+                  }
+                }
+              }}
+            />
+            {passwordError && <p className="text-destructive text-xs text-center">{passwordError}</p>}
+            <Button
+              className="w-full"
+              onClick={() => {
+                if (passwordInput === room.password) {
+                  setIsUnlocked(true);
+                } else {
+                  setPasswordError("Senha incorreta");
+                }
+              }}
+            >
+              Entrar na sala
+            </Button>
+          </div>
         </div>
       </AppShell>
     );
@@ -434,7 +484,7 @@ function RoomPage() {
               </p>
             )}
             {messages.map((msg) => {
-              const isMe = currentUserId && msg.sender_id === currentUserId;
+              const isMe = user?.id === msg.sender_id;
               return (
                 <ChatLine
                   key={msg.id}
