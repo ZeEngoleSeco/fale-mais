@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import {
   Mic,
   MicOff,
@@ -12,6 +12,11 @@ import {
   VolumeX,
   Radio,
   Crown,
+<<<<<<< HEAD
+=======
+  UserPlus,
+  X,
+>>>>>>> fefeb1173c423d6c8a90e0483d9ed91b423bdb22
   Lock,
 } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/app-shell";
@@ -29,6 +34,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import {
@@ -38,10 +50,14 @@ import {
   sendRoomMessage,
   joinRoomParticipant,
   leaveRoomParticipant,
+  removeParticipant,
   deleteRoom,
+  isUserRemovedFromRoom,
   subscribeToRoomMessages,
   subscribeToRoomParticipants,
   subscribeToRoomDeletion,
+  addParticipant,
+  verifyRoomPassword,
   type RoomDB,
   type RoomMessageDB,
   type RoomParticipantDB,
@@ -68,6 +84,13 @@ function RoomPage() {
   const [msgInput, setMsgInput] = useState("");
   const [sending, setSending] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const [needsPassword, setNeedsPassword] = useState(false);
+  const [passwordInput, setPasswordInput] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [verifyingPwd, setVerifyingPwd] = useState(false);
 
   // Voice call state
   const [voicePeers, setVoicePeers] = useState<VoicePeer[]>([]);
@@ -77,11 +100,42 @@ function RoomPage() {
   const [inVoiceCall, setInVoiceCall] = useState(false);
 
   const chatBottomRef = useRef<HTMLDivElement>(null);
+  const joinedRef = useRef(false);
+  const kickedRef = useRef(false);
 
+<<<<<<< HEAD
   // Password protection state
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
   const [passwordError, setPasswordError] = useState("");
+=======
+  const handleKicked = async () => {
+    if (kickedRef.current) return;
+    kickedRef.current = true;
+    voiceCallManager.leaveRoomVoice();
+    try {
+      await leaveRoomParticipant(id);
+    } catch {}
+    toast.error("Você foi removido dessa sala.", {
+      duration: 6000,
+    });
+    navigate({ to: "/rooms" });
+  };
+
+  // Get supabase user ID & check if removed
+  useEffect(() => {
+    supabase.auth.getUser().then(async ({ data }) => {
+      const uid = data?.user?.id || null;
+      setCurrentUserId(uid);
+      if (uid) {
+        const isRemoved = await isUserRemovedFromRoom(id, uid);
+        if (isRemoved) {
+          handleKicked();
+        }
+      }
+    });
+  }, [id]);
+>>>>>>> fefeb1173c423d6c8a90e0483d9ed91b423bdb22
 
   // Load room data
   useEffect(() => {
@@ -100,6 +154,7 @@ function RoomPage() {
     load();
   }, [id]);
 
+<<<<<<< HEAD
   // Join room as participant when loaded and unlocked
   useEffect(() => {
     if (!loading && user && room) {
@@ -109,6 +164,53 @@ function RoomPage() {
       }
     }
   }, [loading, user, id, room, isUnlocked]);
+=======
+  // Join room as participant when loaded (if not removed)
+  useEffect(() => {
+    if (!loading && user && currentUserId && !joinedRef.current) {
+      if (room?.is_private && room.host_id !== currentUserId) {
+        const hasAccess = sessionStorage.getItem(`room_pwd_${id}`) === "verified" || participants.some(p => p.user_id === currentUserId);
+        if (!hasAccess) {
+          setNeedsPassword(true);
+          return;
+        }
+      }
+
+      const isHost = room && room.host_id === currentUserId;
+      joinRoomParticipant(id, isHost ? "Host" : "Ouvinte").then((res) => {
+        if (res.removed) {
+          handleKicked();
+          return;
+        }
+        if (res.success) {
+          joinedRef.current = true;
+        }
+      });
+    }
+  }, [loading, user, id, room, currentUserId, participants]);
+
+  // Fallback heartbeat polling to guarantee removal detection within 2s even if WS drops
+  useEffect(() => {
+    if (!currentUserId || !room || room.host_id === currentUserId) return;
+
+    const interval = setInterval(async () => {
+      if (kickedRef.current) return;
+      const isRemoved = await isUserRemovedFromRoom(id, currentUserId);
+      if (isRemoved) {
+        handleKicked();
+        return;
+      }
+      if (joinedRef.current) {
+        const parts = await fetchRoomParticipants(id);
+        if (!parts.some((p) => p.user_id === currentUserId)) {
+          handleKicked();
+        }
+      }
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [id, currentUserId, room]);
+>>>>>>> fefeb1173c423d6c8a90e0483d9ed91b423bdb22
 
   // Subscribe to realtime messages
   useEffect(() => {
@@ -122,13 +224,22 @@ function RoomPage() {
     return unsub;
   }, [id]);
 
-  // Subscribe to realtime participants
+  // Subscribe to realtime participants & removals
   useEffect(() => {
-    const unsub = subscribeToRoomParticipants(id, (parts) => {
-      setParticipants(parts);
-    });
+    const unsub = subscribeToRoomParticipants(
+      id,
+      (parts) => {
+        setParticipants(parts);
+      },
+      (removedUserId) => {
+        // Only act if THIS client's user was the one removed
+        if (currentUserId && removedUserId === currentUserId) {
+          handleKicked();
+        }
+      }
+    );
     return unsub;
-  }, [id]);
+  }, [id, currentUserId]);
 
   // Subscribe to room deletion
   useEffect(() => {
@@ -222,7 +333,83 @@ function RoomPage() {
     setShowDeleteDialog(false);
   };
 
+<<<<<<< HEAD
   const isOwner = user?.id === room?.host_id;
+=======
+  const handleAddParticipant = async (selectedUser: any) => {
+    await addParticipant(id, {
+      id: selectedUser.id,
+      name: selectedUser.name,
+      initials: selectedUser.initials,
+    });
+    setIsAddOpen(false);
+    toast.success("Participante adicionado.");
+  };
+
+  const handleRemoveParticipant = async (participantId: string) => {
+    if (confirm("Remover participante?")) {
+      await removeParticipant(id, participantId);
+      toast.success("Participante removido.");
+    }
+  };
+
+  const { allUsers } = useCurrentUser();
+  const filteredUsers = allUsers.filter(u => 
+    !participants.find(p => p.user_id === u.id) &&
+    (u.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+     u.email.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  const isOwner = currentUserId && room && room.host_id === currentUserId;
+>>>>>>> fefeb1173c423d6c8a90e0483d9ed91b423bdb22
+
+  if (needsPassword) {
+    return (
+      <AppShell hideNav>
+        <PageHeader title="Sala Privada" back="/rooms" />
+        <div className="flex h-[80vh] items-center justify-center px-5">
+          <Card className="w-full max-w-sm rounded-3xl border-border p-6 shadow-lift text-center">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/10">
+              <Lock className="h-7 w-7 text-amber-500" />
+            </div>
+            <h2 className="text-lg font-bold">Sala Protegida</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Esta sala requer uma senha para entrar.
+            </p>
+            <form 
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setVerifyingPwd(true);
+                setPasswordError("");
+                const result = await verifyRoomPassword(id, passwordInput.trim());
+                setVerifyingPwd(false);
+                if (result === "ok" || result === "not_private") {
+                  sessionStorage.setItem(`room_pwd_${id}`, "verified");
+                  setNeedsPassword(false);
+                } else {
+                  setPasswordError("Senha incorreta.");
+                }
+              }} 
+              className="mt-6 space-y-4"
+            >
+              <Input
+                type="password"
+                placeholder="Digite a senha..."
+                value={passwordInput}
+                onChange={(e) => setPasswordInput(e.target.value)}
+                className="h-12 rounded-2xl"
+              />
+              {passwordError && <p className="text-xs font-semibold text-destructive">{passwordError}</p>}
+              <Button type="submit" disabled={verifyingPwd || !passwordInput.trim()} className="w-full h-12 rounded-2xl bg-gradient-brand text-white font-semibold">
+                {verifyingPwd ? <Loader2 className="h-4 w-4 animate-spin inline mr-2" /> : null}
+                Entrar na Sala
+              </Button>
+            </form>
+          </Card>
+        </div>
+      </AppShell>
+    );
+  }
 
   if (loading) {
     return (
@@ -304,7 +491,7 @@ function RoomPage() {
 
       <PageHeader
         title={room.name}
-        subtitle={`Ao vivo · ${room.people_count} participante${room.people_count !== 1 ? "s" : ""}`}
+        subtitle={`Ao vivo · ${participants.length} participante${participants.length !== 1 ? "s" : ""}`}
         back="/rooms"
         action={
           isOwner ? (
@@ -446,12 +633,19 @@ function RoomPage() {
               <Users className="h-4 w-4 text-primary" />
               Participantes ({participants.length})
             </div>
+            <Link
+              to="/rooms/$id/participants"
+              params={{ id }}
+              className="text-xs font-semibold text-primary hover:underline hover:opacity-80 transition cursor-pointer"
+            >
+              {isOwner ? "Gerenciar / Adicionar" : "Ver todos"}
+            </Link>
           </div>
           <div className="flex flex-wrap gap-2">
             {participants.map((p) => (
               <div
                 key={p.id}
-                className="flex items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium"
+                className="group flex items-center gap-1.5 rounded-full bg-secondary pl-1.5 pr-2.5 py-1 text-xs font-medium"
               >
                 <div className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-soft text-[9px] font-bold text-primary">
                   {p.user_initials}
@@ -459,6 +653,22 @@ function RoomPage() {
                 <span className="text-foreground">{p.user_name.split(" ")[0]}</span>
                 {p.role === "Host" && (
                   <Crown className="h-3 w-3 text-amber-500" />
+                )}
+                {isOwner && p.user_id !== currentUserId && (
+                  <button
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      if (confirm(`Remover ${p.user_name} desta sala?`)) {
+                        setParticipants((prev) => prev.filter((item) => item.id !== p.id && item.user_id !== p.user_id));
+                        toast.success(`${p.user_name} foi removido da sala.`);
+                        await removeParticipant(id, p.user_id, p.id);
+                      }
+                    }}
+                    title="Remover da sala"
+                    className="ml-1 text-muted-foreground hover:text-destructive transition p-0.5 rounded-full"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </button>
                 )}
               </div>
             ))}
@@ -555,18 +765,22 @@ function RoomPage() {
             {inVoiceCall ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
           </CtrlBtn>
 
-          {/* Participants count */}
-          <div className="flex flex-col items-center gap-1 text-[10px] text-muted-foreground">
+          {/* Participants count button */}
+          <Link
+            to="/rooms/$id/participants"
+            params={{ id }}
+            className="flex flex-col items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition cursor-pointer"
+          >
             <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary relative">
               <Users className="h-5 w-5" />
               {participants.length > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[8px] font-bold text-white">
+                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[8px] font-bold text-white shadow-sm">
                   {participants.length}
                 </span>
               )}
             </span>
             Pessoas
-          </div>
+          </Link>
 
           {/* Leave room */}
           <CtrlBtn destructive onClick={handleLeave} label="Sair">

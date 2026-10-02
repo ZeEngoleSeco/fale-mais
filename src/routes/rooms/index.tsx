@@ -1,5 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { Search, Plus, Users, Lock, Globe, Trash2, Loader2, Radio } from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { Search, Plus, Users, Lock, Globe, Trash2, Loader2, Radio, Eye, EyeOff, KeyRound } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,17 +15,25 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import {
   fetchAllRooms,
   deleteRoom,
   subscribeToRooms,
+  verifyRoomPassword,
   type RoomDB,
 } from "@/lib/supabase-room-store";
 import { useCurrentUser } from "@/lib/user-store";
 import { supabase } from "@/integrations/supabase/client";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 
 export const Route = createFileRoute("/rooms/")({
   head: () => ({ meta: [{ title: "Salas de Prática — Solta Voz" }] }),
@@ -36,6 +44,7 @@ const categories = ["Todas", "Pitch", "Improviso", "Corporativo", "Bem-estar", "
 
 function RoomsPage() {
   const { user } = useCurrentUser();
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [selectedCat, setSelectedCat] = useState("Todas");
   const [roomsList, setRoomsList] = useState<RoomDB[]>([]);
@@ -44,14 +53,20 @@ function RoomsPage() {
   const [deleteTarget, setDeleteTarget] = useState<RoomDB | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  // Get the Supabase auth user ID for ownership checks
+  // Password modal state
+  const [passwordRoom, setPasswordRoom] = useState<RoomDB | null>(null);
+  const [passwordInput, setPasswordInput] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const passwordInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setCurrentUserId(data?.user?.id || null);
     });
   }, []);
 
-  // Load rooms
   const loadRooms = async () => {
     setLoading(true);
     const rooms = await fetchAllRooms();
@@ -61,12 +76,7 @@ function RoomsPage() {
 
   useEffect(() => {
     loadRooms();
-
-    // Subscribe to realtime room changes
-    const unsub = subscribeToRooms(() => {
-      loadRooms();
-    });
-
+    const unsub = subscribeToRooms(() => { loadRooms(); });
     return unsub;
   }, []);
 
@@ -93,6 +103,56 @@ function RoomsPage() {
     }
     setDeleteTarget(null);
     setDeletingId(null);
+  };
+
+  /** Called when user clicks "Entrar na sala" */
+  const handleEnterRoom = (room: RoomDB) => {
+    // Owner always enters directly, no password needed
+    if (currentUserId && room.host_id === currentUserId) {
+      navigate({ to: "/rooms/$id", params: { id: room.id } });
+      return;
+    }
+
+    if (room.is_private) {
+      setPasswordRoom(room);
+      setPasswordInput("");
+      setPasswordError("");
+      setShowPassword(false);
+      setTimeout(() => passwordInputRef.current?.focus(), 100);
+    } else {
+      navigate({ to: "/rooms/$id", params: { id: room.id } });
+    }
+  };
+
+  /** Validate password via SECURITY DEFINER RPC — hash never leaves the DB */
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!passwordRoom || !passwordInput.trim()) {
+      setPasswordError("Digite a senha para continuar.");
+      return;
+    }
+
+    setVerifying(true);
+    setPasswordError("");
+
+    const result = await verifyRoomPassword(passwordRoom.id, passwordInput.trim());
+    setVerifying(false);
+
+    if (result === "ok" || result === "not_private") {
+      if (result === "ok") {
+        sessionStorage.setItem(`room_pwd_${passwordRoom.id}`, "verified");
+      }
+      setPasswordRoom(null);
+      navigate({ to: "/rooms/$id", params: { id: passwordRoom.id } });
+    } else if (result === "wrong_password") {
+      setPasswordError("Senha incorreta. Tente novamente.");
+      setPasswordInput("");
+      setTimeout(() => passwordInputRef.current?.focus(), 50);
+    } else if (result === "not_found") {
+      setPasswordError("Sala não encontrada.");
+    } else {
+      setPasswordError("Erro ao verificar a senha. Tente novamente.");
+    }
   };
 
   return (
@@ -191,7 +251,7 @@ function RoomsPage() {
                           {r.category}
                         </Badge>
                         {r.is_private ? (
-                          <Lock className="h-3.5 w-3.5 text-muted-foreground ml-auto" />
+                          <Lock className="h-3.5 w-3.5 text-amber-500 ml-auto" title="Sala privada — requer senha" />
                         ) : (
                           <Globe className="h-3.5 w-3.5 text-muted-foreground ml-auto" />
                         )}
@@ -217,7 +277,6 @@ function RoomsPage() {
                   </div>
 
                   <div className="mt-3.5 flex items-center justify-between gap-2">
-                    {/* Host avatar */}
                     <div className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gradient-soft text-[9px] font-bold text-primary ring-2 ring-background">
                       {r.host_initials}
                     </div>
@@ -237,13 +296,13 @@ function RoomsPage() {
                           )}
                         </button>
                       )}
-                      <Link
-                        to="/rooms/$id"
-                        params={{ id: r.id }}
-                        className="rounded-full bg-gradient-brand px-4 py-1.5 text-xs font-semibold text-white shadow-soft transition hover:opacity-90"
+                      <button
+                        onClick={() => handleEnterRoom(r)}
+                        className="rounded-full bg-gradient-brand px-4 py-1.5 text-xs font-semibold text-white shadow-soft transition hover:opacity-90 inline-flex items-center gap-1.5"
                       >
+                        {r.is_private && !isOwner && <Lock className="h-3 w-3" />}
                         Entrar na sala
-                      </Link>
+                      </button>
                     </div>
                   </div>
                 </Card>
@@ -252,6 +311,78 @@ function RoomsPage() {
           )}
         </div>
       </div>
+
+      {/* ── Password Modal ─────────────────────────────────────── */}
+      <Dialog
+        open={!!passwordRoom}
+        onOpenChange={(open) => { if (!open) setPasswordRoom(null); }}
+      >
+        <DialogContent className="sm:max-w-[400px] rounded-3xl">
+          <DialogHeader className="text-left">
+            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10">
+              <KeyRound className="h-6 w-6 text-amber-500" />
+            </div>
+            <DialogTitle className="text-lg font-bold">Sala Privada</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              <span className="font-semibold text-foreground">{passwordRoom?.name}</span>{" "}
+              requer uma senha para entrar.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handlePasswordSubmit} className="space-y-4 pt-1">
+            <div className="relative">
+              <Input
+                ref={passwordInputRef}
+                type={showPassword ? "text" : "password"}
+                value={passwordInput}
+                onChange={(e) => {
+                  setPasswordInput(e.target.value);
+                  setPasswordError("");
+                }}
+                placeholder="Digite a senha da sala..."
+                className={`h-12 rounded-2xl pr-11 ${
+                  passwordError ? "border-destructive focus-visible:ring-destructive" : ""
+                }`}
+                disabled={verifying}
+                autoComplete="off"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition p-1"
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+
+            {passwordError && (
+              <p className="text-xs font-semibold text-destructive flex items-center gap-1.5 animate-in slide-in-from-top-1">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-destructive shrink-0" />
+                {passwordError}
+              </p>
+            )}
+
+            <div className="flex gap-2 pt-1">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1 rounded-2xl"
+                onClick={() => setPasswordRoom(null)}
+                disabled={verifying}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={verifying || !passwordInput.trim()}
+                className="flex-1 rounded-2xl bg-gradient-brand text-white font-semibold shadow-soft"
+              >
+                {verifying ? <Loader2 className="h-4 w-4 animate-spin" /> : "Entrar"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete confirmation dialog */}
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
