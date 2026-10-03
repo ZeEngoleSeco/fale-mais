@@ -131,13 +131,9 @@ export async function createRoom(input: CreateRoomInput): Promise<RoomDB | null>
 
   const initials = calculateInitials(currentUser.name);
 
-<<<<<<< HEAD
-  const payload: any = {
-=======
   // Build insert payload — never send plain-text password to a regular column.
   // We use a DB function to hash it, or pass null if not private.
-  const insertPayload: Record<string, unknown> = {
->>>>>>> fefeb1173c423d6c8a90e0483d9ed91b423bdb22
+  const insertPayload: any = {
     name: input.name.trim(),
     description: (input.description || "").trim(),
     category: input.category || "Pitch",
@@ -151,16 +147,6 @@ export async function createRoom(input: CreateRoomInput): Promise<RoomDB | null>
     people_count: 1,
   };
 
-<<<<<<< HEAD
-  if (input.isPrivate && input.password) {
-    payload.password = input.password;
-  }
-
-  const { data, error } = await supabase
-    .from("rooms")
-    .insert(payload)
-    .select()
-=======
   // If private and a password was supplied, hash it server-side by calling
   // a helper RPC that inserts the row with crypt(). This keeps the plain-text
   // password from ever being stored unprotected.
@@ -181,7 +167,7 @@ export async function createRoom(input: CreateRoomInput): Promise<RoomDB | null>
       return null;
     }
     // RPC returns the new room row
-    const room = data as RoomDB;
+    const room = data as unknown as RoomDB;
     await supabase.from("room_participants").upsert({
       room_id: room.id,
       user_id: userId,
@@ -199,7 +185,6 @@ export async function createRoom(input: CreateRoomInput): Promise<RoomDB | null>
     .select(
       "id,name,description,category,max_people,is_private,host_id,host_name,host_initials,is_live,initial_topic,people_count,created_at,updated_at"
     )
->>>>>>> fefeb1173c423d6c8a90e0483d9ed91b423bdb22
     .single();
 
   if (error) {
@@ -315,13 +300,13 @@ export async function fetchAvailableProfiles(): Promise<{
   try {
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, name, email, avatar_color, avatar_url")
+      .select("*")
       .order("name", { ascending: true })
       .limit(100);
 
     if (error || !data) return [];
 
-    return data.map((p) => ({
+    return (data as any[]).map((p) => ({
       id: p.id,
       name: p.name || "Usuário",
       email: p.email || "",

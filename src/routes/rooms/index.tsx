@@ -251,7 +251,7 @@ function RoomsPage() {
                           {r.category}
                         </Badge>
                         {r.is_private ? (
-                          <Lock className="h-3.5 w-3.5 text-amber-500 ml-auto" title="Sala privada — requer senha" />
+                          <Lock className="h-3.5 w-3.5 text-amber-500 ml-auto" />
                         ) : (
                           <Globe className="h-3.5 w-3.5 text-muted-foreground ml-auto" />
                         )}

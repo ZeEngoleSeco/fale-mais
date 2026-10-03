@@ -12,11 +12,8 @@ import {
   VolumeX,
   Radio,
   Crown,
-<<<<<<< HEAD
-=======
   UserPlus,
   X,
->>>>>>> fefeb1173c423d6c8a90e0483d9ed91b423bdb22
   Lock,
 } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/app-shell";
@@ -103,12 +100,6 @@ function RoomPage() {
   const joinedRef = useRef(false);
   const kickedRef = useRef(false);
 
-<<<<<<< HEAD
-  // Password protection state
-  const [isUnlocked, setIsUnlocked] = useState(false);
-  const [passwordInput, setPasswordInput] = useState("");
-  const [passwordError, setPasswordError] = useState("");
-=======
   const handleKicked = async () => {
     if (kickedRef.current) return;
     kickedRef.current = true;
@@ -123,6 +114,8 @@ function RoomPage() {
   };
 
   // Get supabase user ID & check if removed
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data }) => {
       const uid = data?.user?.id || null;
@@ -135,7 +128,6 @@ function RoomPage() {
       }
     });
   }, [id]);
->>>>>>> fefeb1173c423d6c8a90e0483d9ed91b423bdb22
 
   // Load room data
   useEffect(() => {
@@ -154,17 +146,6 @@ function RoomPage() {
     load();
   }, [id]);
 
-<<<<<<< HEAD
-  // Join room as participant when loaded and unlocked
-  useEffect(() => {
-    if (!loading && user && room) {
-      const isOwner = user.id === room.host_id;
-      if (!room.is_private || isOwner || isUnlocked) {
-        joinRoomParticipant(id, isOwner ? "Host" : "Ouvinte");
-      }
-    }
-  }, [loading, user, id, room, isUnlocked]);
-=======
   // Join room as participant when loaded (if not removed)
   useEffect(() => {
     if (!loading && user && currentUserId && !joinedRef.current) {
@@ -210,7 +191,6 @@ function RoomPage() {
 
     return () => clearInterval(interval);
   }, [id, currentUserId, room]);
->>>>>>> fefeb1173c423d6c8a90e0483d9ed91b423bdb22
 
   // Subscribe to realtime messages
   useEffect(() => {
@@ -333,9 +313,6 @@ function RoomPage() {
     setShowDeleteDialog(false);
   };
 
-<<<<<<< HEAD
-  const isOwner = user?.id === room?.host_id;
-=======
   const handleAddParticipant = async (selectedUser: any) => {
     await addParticipant(id, {
       id: selectedUser.id,
@@ -360,8 +337,7 @@ function RoomPage() {
      u.email.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  const isOwner = currentUserId && room && room.host_id === currentUserId;
->>>>>>> fefeb1173c423d6c8a90e0483d9ed91b423bdb22
+  const isOwner = user?.id === room?.host_id;
 
   if (needsPassword) {
     return (
@@ -435,55 +411,6 @@ function RoomPage() {
     );
   }
 
-  if (room.is_private && !isOwner && !isUnlocked) {
-    return (
-      <AppShell hideNav>
-        <PageHeader title="Sala Privada" back="/rooms" />
-        <div className="flex h-[80vh] flex-col items-center justify-center px-5">
-          <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-secondary">
-            <Lock className="h-8 w-8 text-primary" />
-          </div>
-          <h2 className="text-xl font-bold mb-2">Acesso Restrito</h2>
-          <p className="text-sm text-muted-foreground mb-6 text-center">
-            Esta sala é privada. Digite a senha para entrar.
-          </p>
-          <div className="w-full max-w-xs space-y-3">
-            <Input
-              type="password"
-              placeholder="Senha da sala"
-              value={passwordInput}
-              onChange={(e) => {
-                setPasswordInput(e.target.value);
-                setPasswordError("");
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && passwordInput.trim()) {
-                  if (passwordInput === room.password) {
-                    setIsUnlocked(true);
-                  } else {
-                    setPasswordError("Senha incorreta");
-                  }
-                }
-              }}
-            />
-            {passwordError && <p className="text-destructive text-xs text-center">{passwordError}</p>}
-            <Button
-              className="w-full"
-              onClick={() => {
-                if (passwordInput === room.password) {
-                  setIsUnlocked(true);
-                } else {
-                  setPasswordError("Senha incorreta");
-                }
-              }}
-            >
-              Entrar na sala
-            </Button>
-          </div>
-        </div>
-      </AppShell>
-    );
-  }
 
   return (
     <AppShell hideNav>

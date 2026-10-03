@@ -14,7 +14,8 @@ import {
   leaveRoomParticipant,
   fetchAvailableProfiles,
   RoomDB, 
-  RoomParticipantDB 
+  RoomParticipantDB,
+  isUserRemovedFromRoom
 } from "@/lib/supabase-room-store";
 import { useCurrentUser } from "@/lib/user-store";
 import { supabase } from "@/integrations/supabase/client";
