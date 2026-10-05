@@ -19,6 +19,17 @@ CREATE TABLE IF NOT EXISTS public.rooms (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+ALTER TABLE public.rooms ALTER COLUMN host_id DROP NOT NULL;
+ALTER TABLE public.rooms ADD COLUMN IF NOT EXISTS "desc" TEXT DEFAULT 'Sala prática de oratória em tempo real.';
+ALTER TABLE public.rooms ADD COLUMN IF NOT EXISTS category TEXT DEFAULT 'Pitch';
+ALTER TABLE public.rooms ADD COLUMN IF NOT EXISTS people_count INT DEFAULT 1;
+ALTER TABLE public.rooms ADD COLUMN IF NOT EXISTS max_people INT DEFAULT 20;
+ALTER TABLE public.rooms ADD COLUMN IF NOT EXISTS is_private BOOLEAN DEFAULT false;
+ALTER TABLE public.rooms ADD COLUMN IF NOT EXISTS is_live BOOLEAN DEFAULT true;
+ALTER TABLE public.rooms ADD COLUMN IF NOT EXISTS host_name TEXT;
+ALTER TABLE public.rooms ADD COLUMN IF NOT EXISTS host_initials TEXT;
+ALTER TABLE public.rooms ADD COLUMN IF NOT EXISTS host_role TEXT;
+
 -- Enable RLS for rooms
 ALTER TABLE public.rooms ENABLE ROW LEVEL SECURITY;
 
@@ -111,6 +122,22 @@ CREATE TABLE IF NOT EXISTS public.events (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS "desc" TEXT DEFAULT '';
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS place TEXT DEFAULT '';
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS date TEXT DEFAULT '';
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS full_date TEXT;
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS time TEXT DEFAULT '';
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS confirmed_count INT DEFAULT 0;
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS max_capacity INT DEFAULT 50;
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS kind TEXT DEFAULT 'Online';
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS category TEXT DEFAULT 'Workshop';
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS is_featured BOOLEAN DEFAULT false;
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS organizer_name TEXT DEFAULT 'Comunidade Fale+';
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS organizer_initials TEXT DEFAULT 'FM';
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS organizer_events_held INT DEFAULT 10;
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS speakers JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS agenda JSONB DEFAULT '[]'::jsonb;
 
 ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
 

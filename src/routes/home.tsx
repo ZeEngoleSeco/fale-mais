@@ -4,13 +4,15 @@ import { AppShell } from "@/components/app-shell";
 import { BrandLogo } from "@/components/brand";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MOCK_ROOMS, MOCK_EVENTS } from "@/data/mock-data";
+import { MOCK_EVENTS } from "@/data/mock-data";
 import { useCurrentUser } from "@/lib/user-store";
+import { fetchAllRooms, type RoomDB } from "@/lib/supabase-room-store";
+import { useState, useEffect } from "react";
 
 export const Route = createFileRoute("/home")({
   head: () => ({
     meta: [
-      { title: "Início — Fale+" },
+      { title: "Início — Solta Voz" },
       { name: "description", content: "Seu painel diário para praticar oratória com IA, salas e eventos." },
     ],
   }),
@@ -27,7 +29,13 @@ const shortcuts = [
 
 function HomePage() {
   const { user } = useCurrentUser();
-  const activeRooms = MOCK_ROOMS.filter((r) => r.isLive).slice(0, 2);
+  const [realRooms, setRealRooms] = useState<RoomDB[]>([]);
+
+  useEffect(() => {
+    fetchAllRooms().then((data) => setRealRooms(data));
+  }, []);
+
+  const activeRooms = realRooms.slice(0, 2);
   const featuredEvent = MOCK_EVENTS[0];
 
   return (
@@ -39,7 +47,7 @@ function HomePage() {
             <div>
               <p className="text-xs text-muted-foreground">Olá, {user.name} 👋</p>
               <div className="flex items-center gap-1.5">
-                <p className="text-base font-semibold">Bem-vindo ao Fale+</p>
+                <p className="text-base font-semibold">Bem-vindo ao Solta Voz</p>
                 <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
                   Nv. {user.level}
                 </span>
@@ -143,7 +151,7 @@ function HomePage() {
             </span>
           </div>
           <Link to="/rooms" className="text-xs font-semibold text-primary hover:underline">
-            Ver todas ({MOCK_ROOMS.length})
+            Ver todas ({realRooms.length})
           </Link>
         </div>
 
@@ -159,16 +167,14 @@ function HomePage() {
                     <Badge variant="outline" className="rounded-full text-[10px]">{room.category}</Badge>
                   </div>
                   <p className="mt-1.5 truncate text-[14px] font-semibold">{room.name}</p>
-                  <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{room.desc}</p>
+                  <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{room.description}</p>
                   <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
                     <span className="inline-flex items-center gap-1">
-                      <Users className="h-3.5 w-3.5" /> {room.peopleCount} online
+                      <Users className="h-3.5 w-3.5" /> {room.people_count} online
                     </span>
-                    {room.currentSpeaker && (
-                      <span className="truncate text-xs font-medium text-foreground">
-                        🎙️ {room.currentSpeaker.name}
-                      </span>
-                    )}
+                    <span className="truncate text-xs font-medium text-foreground">
+                      Host: <strong>{room.host_name}</strong>
+                    </span>
                   </div>
                 </div>
                 <Link
@@ -239,7 +245,7 @@ function HomePage() {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
                   <span className="text-xs font-bold text-foreground truncate">
-                    Canal com {featuredEvent?.organizer?.name || "Organizador Fale+"}
+                    Canal com {featuredEvent?.organizer?.name || "Organizador Solta Voz"}
                   </span>
                   <Badge className="bg-amber-500 text-white border-0 text-[9px] px-1.5 py-0 font-extrabold">
                     HOST

@@ -5,7 +5,7 @@ import { Users, Clock, Mic, Star, Activity } from "lucide-react";
 import { MOCK_ROOMS } from "@/data/mock-data";
 
 export const Route = createFileRoute("/rooms/$id/overview")({
-  head: () => ({ meta: [{ title: "Visão Geral da Sala — Fale+" }] }),
+  head: () => ({ meta: [{ title: "Visão Geral da Sala — Solta Voz" }] }),
   component: Overview,
 });
 

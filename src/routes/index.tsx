@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Mail, Lock, User as UserIcon, ArrowRight, CheckCircle2, Briefcase, AlertCircle, Sparkles, KeyRound, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, User as UserIcon, ArrowRight, CheckCircle2, Briefcase, AlertCircle, Zap, KeyRound, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,8 +15,8 @@ import { MOCK_USERS } from "@/data/mock-data";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Entrar / Cadastro — Fale+" },
-      { name: "description", content: "Entre no Fale+ e comece a evoluir sua oratória hoje." },
+      { title: "Entrar / Cadastro — Solta Voz" },
+      { name: "description", content: "Entre no Solta Voz e comece a evoluir sua oratória hoje." },
     ],
   }),
   component: LoginPage,
@@ -64,7 +64,7 @@ function LoginPage() {
       }
       toast.info("Modo de Login ativado! Informe seu e-mail e senha ou use as contas de demonstração.");
     } else if (newMode === "signup") {
-      toast.info("Modo de Cadastro ativado! Crie seu perfil no Fale+.");
+      toast.info("Modo de Cadastro ativado! Crie seu perfil no Solta Voz.");
     }
   };
 
@@ -79,7 +79,7 @@ function LoginPage() {
   };
 
   const handleDirectLogin = async () => {
-    const targetEmail = email.trim() || "orador@fale-mais.com";
+    const targetEmail = email.trim() || "orador@soltavoz.com";
     const targetPassword = password.trim() || "123456";
     setLoading(true);
     const result = await loginUser(targetEmail, targetPassword);
@@ -118,12 +118,12 @@ function LoginPage() {
         return;
       }
       saveRememberMePreference(rememberMe, targetEmail, password);
-      toast.success("Conta criada no Supabase! Bem-vindo ao Fale+ 🎉");
+      toast.success("Conta criada no Supabase! Bem-vindo ao Solta Voz 🎉");
       setTimeout(() => {
         navigate({ to: "/home" });
       }, 500);
     } else if (mode === "signin") {
-      const targetEmail = email.trim() || "orador@fale-mais.com";
+      const targetEmail = email.trim() || "orador@soltavoz.com";
       const targetPassword = password.trim() || "123456";
       const result = await loginUser(targetEmail, targetPassword);
       if (!result.success) {
@@ -226,7 +226,7 @@ function LoginPage() {
           <div className="mt-4 rounded-2xl border border-primary/20 bg-primary/5 p-3.5 space-y-2 animate-in fade-in-50 duration-200">
             <div className="flex items-center justify-between text-xs font-bold text-foreground">
               <span className="flex items-center gap-1.5 text-primary">
-                <Sparkles className="h-3.5 w-3.5" /> Acesso Rápido com Contas Demo:
+                <Zap className="h-3.5 w-3.5" /> Acesso Rápido com Contas Demo:
               </span>
               <span className="text-[10px] text-muted-foreground font-normal">Senha: 123456</span>
             </div>

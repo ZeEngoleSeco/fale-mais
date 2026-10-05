@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { ThemeSelector } from "@/components/theme-toggle";
 import { useCurrentUser } from "@/lib/user-store";
 import { useState, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const ICON_MAP: Record<string, React.ElementType> = {
   Mic,
@@ -42,13 +43,13 @@ function GetBadgeIcon({ name, unlocked }: { name: string; unlocked: boolean }) {
 }
 
 export const Route = createFileRoute("/profile")({
-  head: () => ({ meta: [{ title: "Perfil — Fale+" }] }),
+  head: () => ({ meta: [{ title: "Perfil — Solta Voz" }] }),
   component: ProfilePage,
 });
 
 function ProfilePage() {
   const navigate = useNavigate();
-  const { user, updateName, logout } = useCurrentUser();
+  const { user, updateName, logout, updateSpeakerStatus } = useCurrentUser();
   const xpPercent = Math.round((user.xp / user.xpNextLevel) * 100);
 
   const [isEditing, setIsEditing] = useState(false);
@@ -57,6 +58,17 @@ function ProfilePage() {
   const [editBio, setEditBio] = useState(user.bio);
   const [editAvatarUrl, setEditAvatarUrl] = useState<string | null | undefined>(user.avatarUrl);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  
+  const [isVerificationOpen, setIsVerificationOpen] = useState(false);
+  const [verifyName, setVerifyName] = useState(user.name);
+  const [verifyArea, setVerifyArea] = useState("");
+  const [verifyDesc, setVerifyDesc] = useState("");
+  const [verifyExp, setVerifyExp] = useState("");
+  const [verifySocial, setVerifySocial] = useState("");
+  const [verifyEvents, setVerifyEvents] = useState("");
+  const [verifyInfo, setVerifyInfo] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
+
   const [badgeFilter, setBadgeFilter] = useState<"all" | "unlocked" | "locked">("all");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -117,6 +129,82 @@ function ProfilePage() {
   const handleLogout = async () => {
     await logout();
     navigate({ to: "/" });
+  };
+
+  const handleVerificationSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!verifyName.trim() || !verifyArea.trim() || !verifyDesc.trim()) return;
+    
+    if (!window.confirm("A sua solicitação será analisada pela equipe de desenvolvimento e não garante a aprovação. Deseja confirmar o envio?")) {
+      return;
+    }
+
+    setIsVerifying(true);
+    try {
+      // 1. Salva a solicitação no banco e retorna os e-mails dos desenvolvedores
+      const { data, error } = await supabase.rpc('submit_speaker_verification', {
+        p_full_name: verifyName,
+        p_expertise_area: verifyArea,
+        p_experience_desc: verifyDesc,
+        p_professional_exp: verifyExp,
+        p_social_links: verifySocial,
+        p_previous_events: verifyEvents,
+        p_additional_info: verifyInfo
+      });
+
+      if (error) throw error;
+
+      // 2. Dispara e-mails via Gmail para todos os desenvolvedores encontrados
+      if (data && data.length > 0) {
+        const recipientEmails: string[] = data.map((d: any) => d.dev_email).filter(Boolean);
+
+        const { error: emailError } = await supabase.functions.invoke('notify-speaker-verification', {
+          body: {
+            recipients: recipientEmails,
+            applicant: {
+              fullName: verifyName,
+              email: user.email,
+              area: verifyArea,
+              experience: verifyDesc,
+              professionalExp: verifyExp,
+              socialLinks: verifySocial,
+              previousEvents: verifyEvents,
+              additionalInfo: verifyInfo,
+            },
+          },
+        });
+
+        if (emailError) {
+          console.warn("Solicitação salva, mas houve um erro ao enviar o e-mail:", emailError.message);
+          alert("Solicitação enviada com sucesso! (Atenção: o e-mail para a equipe pode não ter sido disparado.)");
+        } else {
+          alert("Solicitação enviada com sucesso! Um e-mail foi disparado para nossa equipe de desenvolvimento.");
+        }
+      } else {
+        alert("Solicitação enviada com sucesso! Nossa equipe analisará em breve.");
+      }
+
+      // 3. Atualiza estado local para refletir o status sem precisar recarregar
+      updateSpeakerStatus('pending');
+      setIsVerificationOpen(false);
+    } catch (error: any) {
+      console.error(error);
+      alert("Erro ao enviar solicitação: " + error.message);
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleForceApproveAsSpeaker = async () => {
+    if (!window.confirm("Isso vai marcar sua conta como Palestrante Verificado imediatamente. Confirmar?")) return;
+    try {
+      const { error } = await supabase.rpc('dev_force_approve_self_as_speaker');
+      if (error) throw error;
+      updateSpeakerStatus('verified');
+      alert("✅ Conta marcada como Palestrante Verificado!");
+    } catch (err: any) {
+      alert("Erro: " + err.message);
+    }
   };
 
   return (
@@ -194,6 +282,31 @@ function ProfilePage() {
             >
               <Edit3 className="h-3.5 w-3.5" /> Editar dados do perfil
             </button>
+            {user.speakerStatus === "verified" ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600/20 px-4 py-1.5 text-xs font-bold text-emerald-600">
+                <CheckCircle2 className="h-3.5 w-3.5" /> Palestrante Verificado
+              </span>
+            ) : user.speakerStatus === "pending" ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/20 px-4 py-1.5 text-xs font-bold text-amber-600">
+                <Clock className="h-3.5 w-3.5" /> Em análise
+              </span>
+            ) : (
+              <button
+                onClick={() => setIsVerificationOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-full bg-secondary/80 px-4 py-1.5 text-xs font-bold text-foreground shadow-sm transition hover:bg-secondary border border-border"
+              >
+                <Award className="h-3.5 w-3.5" /> Solicitar verificação de Palestrante
+              </button>
+            )}
+            {user.speakerStatus !== "verified" && (
+              <button
+                onClick={handleForceApproveAsSpeaker}
+                className="inline-flex items-center gap-1.5 rounded-full bg-violet-600/15 px-4 py-1.5 text-xs font-bold text-violet-600 border border-violet-500/30 shadow-sm transition hover:bg-violet-600/25"
+                title="Aprovar imediatamente como palestrante verificado"
+              >
+                <ShieldCheck className="h-3.5 w-3.5" /> Tornar-me Palestrante Verificado
+              </button>
+            )}
           </div>
 
           <div className="mt-5 grid w-full grid-cols-4 gap-2">
@@ -530,6 +643,131 @@ function ProfilePage() {
                   ) : (
                     "Salvar Alterações"
                   )}
+                </Button>
+              </div>
+            </form>
+          </Card>
+        </div>
+      )}
+
+      {/* Modal de Solicitação de Verificação */}
+      {isVerificationOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200 overflow-y-auto">
+          <Card className="w-full max-w-lg rounded-3xl border-border bg-card p-6 shadow-lift my-8 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500 shadow-soft">
+                  <Award className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-foreground">Verificação de Palestrante</h3>
+                  <p className="text-xs text-muted-foreground">Preencha os dados para análise</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsVerificationOpen(false)}
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleVerificationSubmit} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="verify-name" className="text-xs font-bold text-foreground">Nome Completo *</Label>
+                <Input
+                  id="verify-name"
+                  value={verifyName}
+                  onChange={(e) => setVerifyName(e.target.value)}
+                  placeholder="Seu nome completo"
+                  className="h-11 rounded-2xl"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="verify-area" className="text-xs font-bold text-foreground">Área/tema em que atua como palestrante *</Label>
+                <Input
+                  id="verify-area"
+                  value={verifyArea}
+                  onChange={(e) => setVerifyArea(e.target.value)}
+                  placeholder="Ex: Inovação, Liderança, Vendas..."
+                  className="h-11 rounded-2xl"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="verify-desc" className="text-xs font-bold text-foreground">Breve descrição da experiência *</Label>
+                <Textarea
+                  id="verify-desc"
+                  value={verifyDesc}
+                  onChange={(e) => setVerifyDesc(e.target.value)}
+                  placeholder="Descreva sua experiência como orador/palestrante..."
+                  className="min-h-[80px] rounded-2xl text-xs"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="verify-exp" className="text-xs font-bold text-foreground">Experiência profissional relacionada</Label>
+                <Textarea
+                  id="verify-exp"
+                  value={verifyExp}
+                  onChange={(e) => setVerifyExp(e.target.value)}
+                  placeholder="Conte um pouco sobre sua carreira..."
+                  className="min-h-[80px] rounded-2xl text-xs"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="verify-social" className="text-xs font-bold text-foreground">Links de redes sociais, site, LinkedIn ou portfólio</Label>
+                <Input
+                  id="verify-social"
+                  value={verifySocial}
+                  onChange={(e) => setVerifySocial(e.target.value)}
+                  placeholder="https://..."
+                  className="h-11 rounded-2xl"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="verify-events" className="text-xs font-bold text-foreground">Links de palestras/eventos anteriores</Label>
+                <Textarea
+                  id="verify-events"
+                  value={verifyEvents}
+                  onChange={(e) => setVerifyEvents(e.target.value)}
+                  placeholder="Links do YouTube, Instagram, etc..."
+                  className="min-h-[80px] rounded-2xl text-xs"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="verify-info" className="text-xs font-bold text-foreground">Informações adicionais</Label>
+                <Textarea
+                  id="verify-info"
+                  value={verifyInfo}
+                  onChange={(e) => setVerifyInfo(e.target.value)}
+                  placeholder="Algo mais que ajude na análise?"
+                  className="min-h-[80px] rounded-2xl text-xs"
+                />
+              </div>
+
+              <div className="flex items-center gap-2 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsVerificationOpen(false)}
+                  className="h-11 flex-1 rounded-2xl border-border text-xs font-semibold"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isVerifying}
+                  className="h-11 flex-1 rounded-2xl text-xs font-bold shadow-soft transition bg-emerald-600 text-white hover:bg-emerald-700"
+                >
+                  {isVerifying ? "Enviando..." : "Confirmar Solicitação"}
                 </Button>
               </div>
             </form>

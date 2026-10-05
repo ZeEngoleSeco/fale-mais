@@ -1,16 +1,71 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Mic, MicOff, Video, Hand, Phone, MessageSquare, Timer, Settings, Users, Send, Star, ThumbsUp, Heart } from "lucide-react";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import {
+  Mic,
+  MicOff,
+  Phone,
+  MessageSquare,
+  Users,
+  Send,
+  Loader2,
+  Trash2,
+  Volume2,
+  VolumeX,
+  Radio,
+  Crown,
+  UserPlus,
+  X,
+  Lock,
+} from "lucide-react";
 import { AppShell, PageHeader } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { MOCK_ROOMS, CURRENT_USER } from "@/data/mock-data";
-import { getRoomById } from "@/lib/room-store";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Toaster } from "@/components/ui/sonner";
+import { toast } from "sonner";
+import {
+  fetchRoomById,
+  fetchRoomMessages,
+  fetchRoomParticipants,
+  sendRoomMessage,
+  joinRoomParticipant,
+  leaveRoomParticipant,
+  removeParticipant,
+  deleteRoom,
+  isUserRemovedFromRoom,
+  subscribeToRoomMessages,
+  subscribeToRoomParticipants,
+  subscribeToRoomDeletion,
+  addParticipant,
+  verifyRoomPassword,
+  type RoomDB,
+  type RoomMessageDB,
+  type RoomParticipantDB,
+} from "@/lib/supabase-room-store";
+import { voiceCallManager, type VoicePeer } from "@/lib/voice-call";
 import { useCurrentUser } from "@/lib/user-store";
-import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useState, useEffect, useRef } from "react";
 
 export const Route = createFileRoute("/rooms/$id/")({
-  head: () => ({ meta: [{ title: "Sala ao Vivo — Fale+" }] }),
+  head: () => ({ meta: [{ title: "Sala ao Vivo — Solta Voz" }] }),
   component: RoomPage,
 });
 
@@ -18,266 +73,763 @@ function RoomPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
   const { user } = useCurrentUser();
-  const room = getRoomById(id) || MOCK_ROOMS[0];
 
-  const [muted, setMuted] = useState(false);
-  const [videoOn, setVideoOn] = useState(true);
-  const [hand, setHand] = useState(false);
-  const [starRating, setStarRating] = useState<number | null>(null);
-  const [ratingSaved, setRatingSaved] = useState(false);
-
-  const [chatMessages, setChatMessages] = useState(
-    room.recentMessages.length > 0
-      ? room.recentMessages
-      : [
-          { id: "m1", sender: "Marina Alves", text: "Excelente gancho inicial na proposta de valor! 🚀", time: "Agora" },
-          { id: "m2", sender: "Lucas Duarte", text: "A dicção ficou super clara, parabéns!", time: "Há 1 min" },
-        ]
-  );
+  const [room, setRoom] = useState<RoomDB | null>(null);
+  const [messages, setMessages] = useState<RoomMessageDB[]>([]);
+  const [participants, setParticipants] = useState<RoomParticipantDB[]>([]);
+  const [loading, setLoading] = useState(true);
   const [msgInput, setMsgInput] = useState("");
+  const [sending, setSending] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const handleSendMessage = () => {
-    if (!msgInput.trim()) return;
-    const newMsg = {
-      id: `msg-${Date.now()}`,
-      sender: user.name || "Você",
-      text: msgInput.trim(),
-      time: "Agora",
-      isMe: true,
-    };
-    setChatMessages((prev) => [...prev, newMsg]);
-    setMsgInput("");
+  const [needsPassword, setNeedsPassword] = useState(false);
+  const [passwordInput, setPasswordInput] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [verifyingPwd, setVerifyingPwd] = useState(false);
 
-    // Simulate mock reply after 1.5s
-    setTimeout(() => {
-      setChatMessages((prev) => [
-        ...prev,
-        {
-          id: `msg-rep-${Date.now()}`,
-          sender: "Carlos Eduardo (Mentor)",
-          text: "Muito bom ponto! Atenção especial ao fechamento da fala.",
-          time: "Agora",
-        },
+  // Voice call state
+  const [voicePeers, setVoicePeers] = useState<VoicePeer[]>([]);
+  const [isMicActive, setIsMicActive] = useState(false);
+  const [myVolume, setMyVolume] = useState(0);
+  const [voiceLoading, setVoiceLoading] = useState(false);
+  const [inVoiceCall, setInVoiceCall] = useState(false);
+
+  const chatBottomRef = useRef<HTMLDivElement>(null);
+  const joinedRef = useRef(false);
+  const kickedRef = useRef(false);
+
+  const handleKicked = async () => {
+    if (kickedRef.current) return;
+    kickedRef.current = true;
+    voiceCallManager.leaveRoomVoice();
+    try {
+      await leaveRoomParticipant(id);
+    } catch {}
+    toast.error("Você foi removido dessa sala.", {
+      duration: 6000,
+    });
+    navigate({ to: "/rooms" });
+  };
+
+  // Get supabase user ID & check if removed
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  
+  useEffect(() => {
+    supabase.auth.getUser().then(async ({ data }) => {
+      const uid = data?.user?.id || null;
+      setCurrentUserId(uid);
+      if (uid) {
+        const isRemoved = await isUserRemovedFromRoom(id, uid);
+        if (isRemoved) {
+          handleKicked();
+        }
+      }
+    });
+  }, [id]);
+
+  // Load room data
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      const [roomData, msgs, parts] = await Promise.all([
+        fetchRoomById(id),
+        fetchRoomMessages(id),
+        fetchRoomParticipants(id),
       ]);
-    }, 1500);
+      setRoom(roomData);
+      setMessages(msgs);
+      setParticipants(parts);
+      setLoading(false);
+    };
+    load();
+  }, [id]);
+
+  // Join room as participant when loaded (if not removed)
+  useEffect(() => {
+    if (!loading && user && currentUserId && !joinedRef.current) {
+      if (room?.is_private && room.host_id !== currentUserId) {
+        const hasAccess = sessionStorage.getItem(`room_pwd_${id}`) === "verified" || participants.some(p => p.user_id === currentUserId);
+        if (!hasAccess) {
+          setNeedsPassword(true);
+          return;
+        }
+      }
+
+      const isHost = room && room.host_id === currentUserId;
+      joinRoomParticipant(id, isHost ? "Host" : "Ouvinte").then((res) => {
+        if (res.removed) {
+          handleKicked();
+          return;
+        }
+        if (res.success) {
+          joinedRef.current = true;
+        }
+      });
+    }
+  }, [loading, user, id, room, currentUserId, participants]);
+
+  // Fallback heartbeat polling to guarantee removal detection within 2s even if WS drops
+  useEffect(() => {
+    if (!currentUserId || !room || room.host_id === currentUserId) return;
+
+    const interval = setInterval(async () => {
+      if (kickedRef.current) return;
+      const isRemoved = await isUserRemovedFromRoom(id, currentUserId);
+      if (isRemoved) {
+        handleKicked();
+        return;
+      }
+      if (joinedRef.current) {
+        const parts = await fetchRoomParticipants(id);
+        if (!parts.some((p) => p.user_id === currentUserId)) {
+          handleKicked();
+        }
+      }
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [id, currentUserId, room]);
+
+  // Subscribe to realtime messages
+  useEffect(() => {
+    const unsub = subscribeToRoomMessages(id, (newMsg) => {
+      setMessages((prev) => {
+        // Avoid duplicate if we already have this message (from optimistic update)
+        if (prev.some((m) => m.id === newMsg.id)) return prev;
+        return [...prev, newMsg];
+      });
+    });
+    return unsub;
+  }, [id]);
+
+  // Subscribe to realtime participants & removals
+  useEffect(() => {
+    const unsub = subscribeToRoomParticipants(
+      id,
+      (parts) => {
+        setParticipants(parts);
+      },
+      (removedUserId) => {
+        // Only act if THIS client's user was the one removed
+        if (currentUserId && removedUserId === currentUserId) {
+          handleKicked();
+        }
+      }
+    );
+    return unsub;
+  }, [id, currentUserId]);
+
+  // Subscribe to room deletion
+  useEffect(() => {
+    const unsub = subscribeToRoomDeletion(id, () => {
+      toast.info("Esta sala foi encerrada pelo criador.");
+      voiceCallManager.leaveRoomVoice();
+      navigate({ to: "/rooms" });
+    });
+    return unsub;
+  }, [id, navigate]);
+
+  // Subscribe to voice call state
+  useEffect(() => {
+    const unsub = voiceCallManager.subscribe((peers, micActive, vol) => {
+      setVoicePeers(peers);
+      setIsMicActive(micActive);
+      setMyVolume(vol);
+    });
+    return () => {
+      unsub();
+    };
+  }, []);
+
+  // Auto scroll chat
+  useEffect(() => {
+    chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // Leave room on unmount
+  useEffect(() => {
+    return () => {
+      leaveRoomParticipant(id);
+      voiceCallManager.leaveRoomVoice();
+    };
+  }, [id]);
+
+  const handleSendMessage = async () => {
+    if (!msgInput.trim() || !user) return;
+    setSending(true);
+    const text = msgInput.trim();
+    setMsgInput("");
+    await sendRoomMessage(id, text);
+    setSending(false);
   };
 
-  const handleRate = (rating: number) => {
-    setStarRating(rating);
-    setRatingSaved(true);
-    setTimeout(() => setRatingSaved(false), 3000);
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
   };
 
-  const currentSpeaker = room.currentSpeaker || {
-    name: "João Ribeiro",
-    initials: "JR",
-    topic: "Pitch de Solução SaaS B2B · Turno 3",
-    turn: 3,
-    timeRemaining: "01:45",
+  const handleJoinVoice = async () => {
+    if (inVoiceCall) {
+      voiceCallManager.leaveRoomVoice();
+      setInVoiceCall(false);
+      toast.info("Você saiu da chamada de voz.");
+      return;
+    }
+    setVoiceLoading(true);
+    const ok = await voiceCallManager.joinRoomVoice(id, user ?? undefined);
+    setVoiceLoading(false);
+    if (ok) {
+      setInVoiceCall(true);
+      toast.success("Entrou na chamada de voz! 🎙️");
+    } else {
+      toast.error("Não foi possível entrar na chamada.");
+    }
   };
+
+  const handleToggleMic = async () => {
+    setVoiceLoading(true);
+    await voiceCallManager.toggleMicrophone();
+    setVoiceLoading(false);
+  };
+
+  const handleLeave = async () => {
+    await leaveRoomParticipant(id);
+    voiceCallManager.leaveRoomVoice();
+    navigate({ to: "/rooms" });
+  };
+
+  const handleDeleteRoom = async () => {
+    const ok = await deleteRoom(id);
+    if (ok) {
+      toast.success("Sala excluída.");
+      navigate({ to: "/rooms" });
+    } else {
+      toast.error("Não foi possível excluir a sala.");
+    }
+    setShowDeleteDialog(false);
+  };
+
+  const handleAddParticipant = async (selectedUser: any) => {
+    await addParticipant(id, {
+      id: selectedUser.id,
+      name: selectedUser.name,
+      initials: selectedUser.initials,
+    });
+    setIsAddOpen(false);
+    toast.success("Participante adicionado.");
+  };
+
+  const handleRemoveParticipant = async (participantId: string) => {
+    if (confirm("Remover participante?")) {
+      await removeParticipant(id, participantId);
+      toast.success("Participante removido.");
+    }
+  };
+
+  const { allUsers } = useCurrentUser();
+  const filteredUsers = allUsers.filter(u => 
+    !participants.find(p => p.user_id === u.id) &&
+    (u.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+     u.email.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  const isOwner = user?.id === room?.host_id;
+
+  if (needsPassword) {
+    return (
+      <AppShell hideNav>
+        <PageHeader title="Sala Privada" back="/rooms" />
+        <div className="flex h-[80vh] items-center justify-center px-5">
+          <Card className="w-full max-w-sm rounded-3xl border-border p-6 shadow-lift text-center">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/10">
+              <Lock className="h-7 w-7 text-amber-500" />
+            </div>
+            <h2 className="text-lg font-bold">Sala Protegida</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Esta sala requer uma senha para entrar.
+            </p>
+            <form 
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setVerifyingPwd(true);
+                setPasswordError("");
+                const result = await verifyRoomPassword(id, passwordInput.trim());
+                setVerifyingPwd(false);
+                if (result === "ok" || result === "not_private") {
+                  sessionStorage.setItem(`room_pwd_${id}`, "verified");
+                  setNeedsPassword(false);
+                } else {
+                  setPasswordError("Senha incorreta.");
+                }
+              }} 
+              className="mt-6 space-y-4"
+            >
+              <Input
+                type="password"
+                placeholder="Digite a senha..."
+                value={passwordInput}
+                onChange={(e) => setPasswordInput(e.target.value)}
+                className="h-12 rounded-2xl"
+              />
+              {passwordError && <p className="text-xs font-semibold text-destructive">{passwordError}</p>}
+              <Button type="submit" disabled={verifyingPwd || !passwordInput.trim()} className="w-full h-12 rounded-2xl bg-gradient-brand text-white font-semibold">
+                {verifyingPwd ? <Loader2 className="h-4 w-4 animate-spin inline mr-2" /> : null}
+                Entrar na Sala
+              </Button>
+            </form>
+          </Card>
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (loading) {
+    return (
+      <AppShell hideNav>
+        <div className="flex h-screen items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (!room) {
+    return (
+      <AppShell hideNav>
+        <PageHeader title="Sala não encontrada" back="/rooms" />
+        <div className="px-5 py-12 text-center text-muted-foreground">
+          <p className="text-sm">Esta sala não existe ou foi excluída.</p>
+          <Button onClick={() => navigate({ to: "/rooms" })} className="mt-4">
+            Ver salas
+          </Button>
+        </div>
+      </AppShell>
+    );
+  }
+
 
   return (
     <AppShell hideNav>
+      <Toaster position="top-center" />
+
       <PageHeader
         title={room.name}
-        subtitle={`Ao vivo · ${room.peopleCount} participantes`}
+        subtitle={`Ao vivo · ${participants.length} participante${participants.length !== 1 ? "s" : ""}`}
         back="/rooms"
         action={
-          <div className="flex items-center gap-1.5">
-            <Link
-              to="/rooms/$id/chat"
-              params={{ id }}
-              className="flex h-10 w-10 items-center justify-center rounded-2xl border border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 transition shadow-soft"
-              title="Bate-papo com o Host & Participantes"
+          isOwner ? (
+            <button
+              onClick={() => setShowDeleteDialog(true)}
+              className="flex h-10 w-10 items-center justify-center rounded-2xl border border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/20 transition"
+              title="Excluir sala"
             >
-              <MessageSquare className="h-4 w-4" />
-            </Link>
-            <Link
-              to="/rooms/$id/settings"
-              params={{ id }}
-              className="flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-card hover:bg-secondary"
-            >
-              <Settings className="h-4 w-4" />
-            </Link>
-          </div>
+              <Trash2 className="h-4 w-4" />
+            </button>
+          ) : undefined
         }
       />
+
       <div className="px-5 space-y-4 pb-36">
-        {/* Palco Principal / Orador */}
+
+        {/* Room info banner */}
         <Card className="rounded-3xl border-0 bg-gradient-brand p-5 text-white shadow-lift">
           <div className="flex items-center justify-between text-xs opacity-90">
             <span className="flex items-center gap-1.5 font-semibold">
               <span className="h-2 w-2 rounded-full bg-rose-400 animate-ping" />
-              NO PALCO AGORA
+              AO VIVO
             </span>
-            <span className="inline-flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-0.5 font-bold">
-              <Timer className="h-3.5 w-3.5" /> {currentSpeaker.timeRemaining}
-            </span>
+            <Badge className="bg-white/20 text-white text-[10px] border-0">
+              {room.category}
+            </Badge>
           </div>
 
-          <div className="mt-4 flex items-center gap-3.5">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/20 text-lg font-bold backdrop-blur shadow-inner">
-              {currentSpeaker.initials}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-lg font-bold leading-tight">{currentSpeaker.name}</p>
-              <p className="mt-0.5 text-xs opacity-90 truncate">{currentSpeaker.topic}</p>
-            </div>
+          <div className="mt-3">
+            <p className="text-lg font-bold leading-tight">{room.name}</p>
+            {room.description && (
+              <p className="mt-1 text-xs opacity-80 line-clamp-2">{room.description}</p>
+            )}
+            {room.initial_topic && (
+              <p className="mt-2 text-xs opacity-90 font-medium">📌 {room.initial_topic}</p>
+            )}
           </div>
 
-          <div className="mt-5 flex flex-wrap items-center gap-2">
-            <button
-              onClick={() => setHand(!hand)}
-              className="rounded-full bg-white px-4 py-2 text-xs font-semibold text-primary shadow hover:bg-white/90 transition"
-            >
-              {hand ? "✋ Mão Levantada (Na fila)" : "✋ Pedir a palavra"}
-            </button>
-            <Link
-              to="/rooms/$id/overview"
-              params={{ id }}
-              className="rounded-full bg-white/15 px-3.5 py-2 text-xs font-semibold text-white hover:bg-white/25 transition"
-            >
-              Visão geral da sala
-            </Link>
+          <div className="mt-3 flex items-center gap-2 text-xs opacity-90">
+            <Crown className="h-3.5 w-3.5" />
+            <span>Host: <strong>{room.host_name}</strong></span>
           </div>
         </Card>
 
-        {/* Participantes em Destaque */}
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
-            <span className="font-semibold">Participantes na sala ({room.participants.length})</span>
-            <Link to="/rooms/$id/participants" params={{ id }} className="text-primary font-medium hover:underline">
-              Ver todos
+        {/* Voice Call Section */}
+        <Card className="rounded-3xl border-border p-4 shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2 text-sm font-bold">
+              <Radio className="h-4 w-4 text-primary" />
+              Chamada de Voz
+              {inVoiceCall && (
+                <span className="text-[10px] font-normal text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 rounded-full px-2 py-0.5">
+                  Conectado
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {inVoiceCall && (
+                <button
+                  onClick={handleToggleMic}
+                  disabled={voiceLoading}
+                  className={`flex h-8 w-8 items-center justify-center rounded-xl transition ${
+                    isMicActive
+                      ? "bg-primary text-white shadow-soft"
+                      : "bg-secondary text-foreground"
+                  }`}
+                  title={isMicActive ? "Mutar microfone" : "Ativar microfone"}
+                >
+                  {voiceLoading ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : isMicActive ? (
+                    <Mic className="h-3.5 w-3.5" />
+                  ) : (
+                    <MicOff className="h-3.5 w-3.5" />
+                  )}
+                </button>
+              )}
+              <button
+                onClick={handleJoinVoice}
+                disabled={voiceLoading}
+                className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
+                  inVoiceCall
+                    ? "bg-destructive text-white hover:bg-destructive/90"
+                    : "bg-gradient-brand text-white hover:opacity-90 shadow-soft"
+                }`}
+              >
+                {voiceLoading ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin inline" />
+                ) : inVoiceCall ? (
+                  "Sair da voz"
+                ) : (
+                  "Entrar na voz"
+                )}
+              </button>
+            </div>
+          </div>
+
+          {inVoiceCall && (
+            <div className="space-y-2">
+              {/* My voice indicator */}
+              <VoiceUserBubble
+                name={user?.name || "Você"}
+                initials={user?.initials || "?"}
+                isMuted={!isMicActive}
+                isSpeaking={myVolume > 12}
+                volume={myVolume}
+                isMe
+              />
+              {/* Other voice peers */}
+              {voicePeers.map((peer) => (
+                <VoiceUserBubble
+                  key={peer.id}
+                  name={peer.name}
+                  initials={peer.initials}
+                  isMuted={peer.isMuted}
+                  isSpeaking={peer.isSpeaking}
+                  volume={peer.volume}
+                />
+              ))}
+              {voicePeers.length === 0 && (
+                <p className="text-[11px] text-muted-foreground text-center py-2">
+                  Nenhum outro participante na voz ainda. Convide alguém!
+                </p>
+              )}
+            </div>
+          )}
+
+          {!inVoiceCall && (
+            <p className="text-xs text-muted-foreground text-center py-1">
+              Entre na chamada para conversar com os participantes da sala.
+            </p>
+          )}
+        </Card>
+
+        {/* Participants */}
+        <Card className="rounded-3xl border-border p-4 shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2 text-sm font-bold">
+              <Users className="h-4 w-4 text-primary" />
+              Participantes ({participants.length})
+            </div>
+            <Link
+              to="/rooms/$id/participants"
+              params={{ id }}
+              className="text-xs font-semibold text-primary hover:underline hover:opacity-80 transition cursor-pointer"
+            >
+              {isOwner ? "Gerenciar / Adicionar" : "Ver todos"}
             </Link>
           </div>
-          <div className="grid grid-cols-4 gap-2">
-            {room.participants.slice(0, 4).map((p) => (
-              <div key={p.id} className="flex flex-col items-center gap-1 rounded-2xl border border-border bg-card p-2 text-center shadow-xs">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-soft text-xs font-bold text-primary">
-                  {p.initials}
+          <div className="flex flex-wrap gap-2">
+            {participants.map((p) => (
+              <div
+                key={p.id}
+                className="group flex items-center gap-1.5 rounded-full bg-secondary pl-1.5 pr-2.5 py-1 text-xs font-medium"
+              >
+                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-soft text-[9px] font-bold text-primary">
+                  {p.user_initials}
                 </div>
-                <p className="truncate w-full text-[11px] font-semibold">{p.name.split(" ")[0]}</p>
-                <span className="text-[9px] text-muted-foreground">{p.role}</span>
+                <span className="text-foreground">{p.user_name.split(" ")[0]}</span>
+                {p.role === "Host" && (
+                  <Crown className="h-3 w-3 text-amber-500" />
+                )}
+                {isOwner && p.user_id !== currentUserId && (
+                  <button
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      if (confirm(`Remover ${p.user_name} desta sala?`)) {
+                        setParticipants((prev) => prev.filter((item) => item.id !== p.id && item.user_id !== p.user_id));
+                        toast.success(`${p.user_name} foi removido da sala.`);
+                        await removeParticipant(id, p.user_id, p.id);
+                      }
+                    }}
+                    title="Remover da sala"
+                    className="ml-1 text-muted-foreground hover:text-destructive transition p-0.5 rounded-full"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </button>
+                )}
               </div>
             ))}
+            {participants.length === 0 && (
+              <p className="text-xs text-muted-foreground">Nenhum participante ainda.</p>
+            )}
           </div>
-        </div>
+        </Card>
 
-        {/* Chat da Sala */}
+        {/* Chat */}
         <Card className="rounded-3xl border-border p-4 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm font-bold">
               <MessageSquare className="h-4 w-4 text-primary" /> Chat da Sala
             </div>
-            <span className="text-[10px] text-muted-foreground">Mensagens em tempo real</span>
+            <span className="text-[10px] text-muted-foreground">Tempo real</span>
           </div>
 
-          <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1.5 minimal-scrollbar">
-            {chatMessages.map((msg) => (
-              <ChatLine key={msg.id} name={msg.sender} text={msg.text} time={msg.time} mine={msg.isMe} />
-            ))}
-          </div>
-
-          <div className="mt-3 flex items-center gap-2">
-            <Input
-              value={msgInput}
-              onChange={(e) => setMsgInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-              placeholder="Envie seu feedback ou aplauso..."
-              className="h-10 rounded-2xl"
-            />
-            <button
-              onClick={handleSendMessage}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-brand text-white shadow-soft"
-            >
-              <Send className="h-4 w-4" />
-            </button>
-          </div>
-        </Card>
-
-        {/* Avaliação Rápida */}
-        <Card className="rounded-3xl border-border p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-bold">Avaliar apresentação</p>
-              <p className="text-xs text-muted-foreground">Dê sua nota de 1 a 5 estrelas para {currentSpeaker.name}</p>
-            </div>
-            {ratingSaved && (
-              <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600">
-                Salvo! ✨
-              </span>
+          <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1.5 minimal-scrollbar">
+            {messages.length === 0 && (
+              <p className="text-xs text-muted-foreground text-center py-4">
+                Nenhuma mensagem ainda. Seja o primeiro a falar! 👋
+              </p>
             )}
-          </div>
-          <div className="mt-3 flex items-center gap-2">
-            {[1, 2, 3, 4, 5].map((star) => (
-              <button
-                key={star}
-                type="button"
-                onClick={() => handleRate(star)}
-                className="p-1 text-2xl transition hover:scale-125 focus:outline-none"
-              >
-                <Star
-                  className={`h-7 w-7 ${
-                    starRating && star <= starRating ? "text-amber-400 fill-amber-400" : "text-muted-foreground/30"
-                  }`}
+            {messages.map((msg) => {
+              const isMe = user?.id === msg.sender_id;
+              return (
+                <ChatLine
+                  key={msg.id}
+                  name={msg.sender_name}
+                  initials={msg.sender_initials}
+                  text={msg.text}
+                  time={new Date(msg.created_at).toLocaleTimeString("pt-BR", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                  mine={!!isMe}
                 />
-              </button>
-            ))}
-            {starRating && (
-              <span className="ml-2 text-sm font-bold text-primary">{starRating}.0</span>
-            )}
+              );
+            })}
+            <div ref={chatBottomRef} />
           </div>
+
+          {user ? (
+            <div className="mt-3 flex items-center gap-2">
+              <Input
+                value={msgInput}
+                onChange={(e) => setMsgInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Envie uma mensagem..."
+                className="h-10 rounded-2xl"
+                disabled={sending}
+              />
+              <button
+                onClick={handleSendMessage}
+                disabled={sending || !msgInput.trim()}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-brand text-white shadow-soft disabled:opacity-50"
+              >
+                {sending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </button>
+            </div>
+          ) : (
+            <p className="mt-3 text-center text-xs text-muted-foreground">
+              Faça login para participar do chat.
+            </p>
+          )}
         </Card>
       </div>
 
-      {/* Barra de Controles Inferior */}
+      {/* Bottom Controls */}
       <div className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-md px-4 pb-[max(env(safe-area-inset-bottom),0.75rem)]">
         <div className="flex justify-around gap-2 rounded-3xl border border-border/80 bg-card/95 p-3 shadow-lift backdrop-blur-xl">
-          <CtrlBtn active={!muted} onClick={() => setMuted(!muted)} label={muted ? "Mudo" : "Microfone"}>
-            {muted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+          {/* Mic toggle (only if in voice) */}
+          {inVoiceCall && (
+            <CtrlBtn
+              active={isMicActive}
+              onClick={handleToggleMic}
+              label={isMicActive ? "Microfone" : "Mudo"}
+            >
+              {isMicActive ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
+            </CtrlBtn>
+          )}
+
+          {/* Voice call toggle */}
+          <CtrlBtn
+            active={inVoiceCall}
+            onClick={handleJoinVoice}
+            label={inVoiceCall ? "Na voz" : "Voz"}
+          >
+            {inVoiceCall ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
           </CtrlBtn>
-          <CtrlBtn active={videoOn} onClick={() => setVideoOn(!videoOn)} label="Câmera">
-            <Video className="h-5 w-5" />
-          </CtrlBtn>
-          <CtrlBtn active={hand} onClick={() => setHand(!hand)} label={hand ? "Fila" : "Mão"}>
-            <Hand className="h-5 w-5" />
-          </CtrlBtn>
+
+          {/* Participants count button */}
           <Link
             to="/rooms/$id/participants"
             params={{ id }}
-            className="flex flex-col items-center gap-1 text-[10px] text-muted-foreground"
+            className="flex flex-col items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition cursor-pointer"
           >
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary hover:bg-secondary/80 transition">
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary relative">
               <Users className="h-5 w-5" />
+              {participants.length > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[8px] font-bold text-white shadow-sm">
+                  {participants.length}
+                </span>
+              )}
             </span>
             Pessoas
           </Link>
-          <CtrlBtn
-            destructive
-            onClick={() => navigate({ to: "/rooms" })}
-            label="Sair"
-          >
+
+          {/* Leave room */}
+          <CtrlBtn destructive onClick={handleLeave} label="Sair">
             <Phone className="h-5 w-5 rotate-[135deg]" />
           </CtrlBtn>
         </div>
       </div>
+
+      {/* Delete room dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir sala?</AlertDialogTitle>
+            <AlertDialogDescription>
+              A sala <strong>"{room.name}"</strong> e todas as suas mensagens serão excluídas permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteRoom}
+              className="bg-destructive hover:bg-destructive/90 text-white"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppShell>
   );
 }
 
-function ChatLine({ name, text, time, mine }: { name: string; text: string; time?: string; mine?: boolean }) {
+function VoiceUserBubble({
+  name,
+  initials,
+  isMuted,
+  isSpeaking,
+  volume,
+  isMe,
+}: {
+  name: string;
+  initials: string;
+  isMuted: boolean;
+  isSpeaking: boolean;
+  volume: number;
+  isMe?: boolean;
+}) {
   return (
-    <div className={`flex flex-col ${mine ? "items-end" : "items-start"}`}>
-      <div className="flex items-center gap-1 px-1 text-[10px] text-muted-foreground">
-        <span>{name}</span>
-        {time && <span>· {time}</span>}
-      </div>
+    <div
+      className={`flex items-center gap-2.5 rounded-2xl px-3 py-2 transition-all ${
+        isSpeaking
+          ? "bg-emerald-500/10 border border-emerald-500/30"
+          : "bg-secondary"
+      }`}
+    >
       <div
-        className={`mt-0.5 max-w-[85%] rounded-2xl px-3.5 py-2 text-xs leading-relaxed ${
-          mine ? "bg-gradient-brand text-white rounded-br-xs" : "bg-secondary text-foreground rounded-tl-xs"
+        className={`relative flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white transition-all ${
+          isSpeaking ? "bg-emerald-500 scale-110 shadow-lg" : "bg-gradient-brand"
         }`}
       >
-        {text}
+        {initials}
+        {isSpeaking && (
+          <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-400 border-2 border-background animate-pulse" />
+        )}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-semibold text-foreground truncate">
+          {name} {isMe && <span className="text-muted-foreground font-normal">(você)</span>}
+        </p>
+        {/* Volume bar */}
+        {!isMuted && volume > 0 && (
+          <div className="mt-1 h-1 w-full rounded-full bg-secondary overflow-hidden">
+            <div
+              className="h-full rounded-full bg-emerald-500 transition-all duration-100"
+              style={{ width: `${Math.min(100, volume)}%` }}
+            />
+          </div>
+        )}
+      </div>
+      {isMuted ? (
+        <MicOff className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+      ) : (
+        <Mic className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+      )}
+    </div>
+  );
+}
+
+function ChatLine({
+  name,
+  initials,
+  text,
+  time,
+  mine,
+}: {
+  name: string;
+  initials: string;
+  text: string;
+  time: string;
+  mine?: boolean;
+}) {
+  return (
+    <div className={`flex gap-2 ${mine ? "flex-row-reverse" : "flex-row"}`}>
+      {!mine && (
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-soft text-[9px] font-bold text-primary mt-0.5">
+          {initials}
+        </div>
+      )}
+      <div className={`flex flex-col max-w-[80%] ${mine ? "items-end" : "items-start"}`}>
+        <div className="flex items-center gap-1 px-1 text-[10px] text-muted-foreground">
+          {!mine && <span className="font-semibold">{name}</span>}
+          <span>{time}</span>
+        </div>
+        <div
+          className={`mt-0.5 rounded-2xl px-3.5 py-2 text-xs leading-relaxed ${
+            mine
+              ? "bg-gradient-brand text-white rounded-br-xs"
+              : "bg-secondary text-foreground rounded-tl-xs"
+          }`}
+        >
+          {text}
+        </div>
       </div>
     </div>
   );

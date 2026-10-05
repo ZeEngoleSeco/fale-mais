@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { MOCK_USERS, ALL_ACHIEVEMENTS, type UserProfile } from "@/data/mock-data";
 import { supabase } from "@/integrations/supabase/client";
 
+export type { UserProfile } from "@/data/mock-data";
+
 const STORAGE_USER_KEY = "fale_mais_user_profile";
 const STORAGE_USERS_LIST_KEY = "fale_mais_all_users_list";
 const STORAGE_REMEMBER_KEY = "fale_mais_remember_me";
@@ -139,7 +141,7 @@ export function mapSupabaseUserToProfile(sbUser: any, profileData?: any): UserPr
   const meta = sbUser.user_metadata || {};
   const cleanName = meta.name || profileData?.name || nameFromEmail(sbUser.email || "") || "Usuário";
   const role = meta.role || profileData?.role || "Orador Iniciante";
-  const bio = meta.bio || profileData?.bio || "Membro da comunidade Fale+ pronto para desenvolver a comunicação e vencer o palco.";
+  const bio = meta.bio || profileData?.bio || "Membro da comunidade Solta Voz pronto para desenvolver a comunicação e vencer o palco.";
   const avatarColor = profileData?.avatar_color || meta.avatarColor || GRADIENT_COLORS[0];
 
   const profile: UserProfile = {
@@ -155,6 +157,7 @@ export function mapSupabaseUserToProfile(sbUser: any, profileData?: any): UserPr
     avatarUrl: meta.avatarUrl || profileData?.avatar_url,
     bio: bio,
     streakDays: profileData?.streak_days || 1,
+    speakerStatus: profileData?.speaker_status || 'none',
     stats: {
       presentations: 0,
       roomsCreated: 0,
@@ -166,7 +169,7 @@ export function mapSupabaseUserToProfile(sbUser: any, profileData?: any): UserPr
       {
         id: "badge-welcome",
         title: "Primeiro Passo",
-        description: "Criou sua conta na plataforma Fale+ e iniciou a jornada.",
+        description: "Criou sua conta na plataforma Solta Voz e iniciou a jornada.",
         icon: "Compass",
         unlocked: true,
         unlockedAt: "Hoje",
@@ -183,7 +186,7 @@ export async function registerNewUserAsync(
   email: string,
   password?: string,
   role = "Orador Iniciante",
-  bio = "Membro da comunidade Fale+ pronto para desenvolver a comunicação e vencer o palco."
+  bio = "Membro da comunidade Solta Voz pronto para desenvolver a comunicação e vencer o palco."
 ): Promise<AuthResult> {
   const cleanEmail = email.trim().toLowerCase();
   if (!cleanEmail) {
@@ -477,17 +480,17 @@ export function logoutUser() {
   logoutUserAsync();
 }
 
-const DEFAULT_INITIAL_USER: UserProfile = ensureFullBadges({
+export const DEFAULT_INITIAL_USER: UserProfile = ensureFullBadges({
   id: "user-default",
   name: "Visitante",
-  email: "visitante@fale-mais.com",
+  email: "visitante@soltavoz.com",
   role: "Orador em Desenvolvimento",
   level: 1,
   xp: 0,
   xpNextLevel: 100,
   initials: "VI",
   avatarColor: "from-blue-600 to-indigo-600",
-  bio: "Conhecendo a plataforma Fale+ para aprimorar comunicação.",
+  bio: "Conhecendo a plataforma Solta Voz para aprimorar comunicação.",
   streakDays: 1,
   stats: {
     presentations: 0,
@@ -503,11 +506,30 @@ const DEFAULT_INITIAL_USER: UserProfile = ensureFullBadges({
   })),
 });
 
+export async function fetchAndApplySpeakerStatus(userId: string, currentProfile: UserProfile): Promise<UserProfile> {
+  try {
+    const { data } = await supabase
+      .from('profiles')
+      .select('speaker_status')
+      .eq('id', userId)
+      .single();
+    if (data?.speaker_status) {
+      const updated = { ...currentProfile, speakerStatus: data.speaker_status as UserProfile['speakerStatus'] };
+      saveUser(updated);
+      return updated;
+    }
+  } catch (e) {
+    console.warn('Could not fetch speaker_status from profiles', e);
+  }
+  return currentProfile;
+}
+
 export function useCurrentUser(): {
   user: UserProfile;
   allUsers: UserProfile[];
   updateName: (newName: string, role?: string, bio?: string, avatarUrl?: string | null) => Promise<UserProfile>;
   setUser: (user: UserProfile) => void;
+  updateSpeakerStatus: (status: UserProfile['speakerStatus']) => void;
   registerUser: (name: string, email: string, password?: string, role?: string, bio?: string) => Promise<AuthResult>;
   loginUser: (email: string, password?: string) => Promise<AuthResult>;
   resetPassword: (email: string, newPassword?: string) => Promise<AuthResult>;
@@ -518,21 +540,23 @@ export function useCurrentUser(): {
   const [allUsers, setAllUsers] = useState<UserProfile[]>(getAllUsers);
 
   useEffect(() => {
-    // 1. Initial Supabase Session check
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // 1. Initial Supabase Session check (also fetches speaker_status from profiles)
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
         const userProfile = mapSupabaseUserToProfile(session.user);
-        setUserState(userProfile);
-        saveUser(userProfile);
+        const withSpeaker = await fetchAndApplySpeakerStatus(session.user.id, userProfile);
+        setUserState(withSpeaker);
+        saveUser(withSpeaker);
       }
     });
 
     // 2. Real-time auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
         const userProfile = mapSupabaseUserToProfile(session.user);
-        setUserState(userProfile);
-        saveUser(userProfile);
+        const withSpeaker = await fetchAndApplySpeakerStatus(session.user.id, userProfile);
+        setUserState(withSpeaker);
+        saveUser(withSpeaker);
       } else if (_event === "SIGNED_OUT") {
         setUserState(DEFAULT_INITIAL_USER);
       }
@@ -561,6 +585,12 @@ export function useCurrentUser(): {
   const setUser = (newUser: UserProfile) => {
     saveUser(newUser);
     setUserState(newUser);
+  };
+
+  const updateSpeakerStatus = (status: UserProfile['speakerStatus']) => {
+    const updated = { ...user, speakerStatus: status };
+    saveUser(updated);
+    setUserState(updated);
   };
 
   const registerUser = async (name: string, email: string, password?: string, role?: string, bio?: string) => {
@@ -594,5 +624,5 @@ export function useCurrentUser(): {
     setUserState(DEFAULT_INITIAL_USER);
   };
 
-  return { user, allUsers, updateName, setUser, registerUser, loginUser, resetPassword, updatePassword, logout };
+  return { user, allUsers, updateName, setUser, updateSpeakerStatus, registerUser, loginUser, resetPassword, updatePassword, logout };
 }
